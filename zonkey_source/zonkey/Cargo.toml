@@ -1,0 +1,10 @@
+[package]
+name = "zonkey"
+version = "0.1.0"
+edition = "2021"
+description = "CLI Interpreter for the Zonkey programming language"
+authors = ["Sam Bowden"]
+
+[dependencies]
+clap = { version = "4.0.26", features = ["derive"] }
+interpreter = { path = "../interpreter" }

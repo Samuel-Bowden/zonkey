@@ -3,4 +3,12 @@
 members = [
 	"interpreter",
 	"browser",
+	"zonkey",
 ]
+
+[profile.release]
+strip = true
+lto = true
+opt-level = 3
+panic = "abort"
+codegen-units = 1
