@@ -1,7 +1,7 @@
 +++
 title = "Language Design"
 date = 2022-11-15T14:57:47Z
-weight = 5
+weight = 1
 chapter = true
 pre = "<b>1. </b>"
 +++
