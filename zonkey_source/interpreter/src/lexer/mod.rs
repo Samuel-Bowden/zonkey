@@ -3,10 +3,9 @@ pub mod err;
 use unicode_segmentation::UnicodeSegmentation;
 use super::{token::{Token, token_type::TokenType}, literal::Literal};
 use self::err::LexerErr;
-use std::mem;
 
 pub struct Lexer<'a> {
-    tokens: Vec<Token>,
+    pub tokens: Vec<Token>,
     start: usize,
     current: usize,
     line: u64,
@@ -24,7 +23,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn run(&mut self) -> Result<Vec<Token>, LexerErr> {
+    pub fn run(mut self) -> Result<Self, LexerErr> {
         while !self.is_at_end() {
             self.start = self.current;
             self.scan_token()?;
@@ -32,7 +31,7 @@ impl<'a> Lexer<'a> {
 
         self.add_token(TokenType::EOF);
         
-        Ok(mem::take(&mut self.tokens))
+        Ok(self)
     }
 
     fn scan_token(&mut self) -> Result<(), LexerErr> {
@@ -256,10 +255,116 @@ impl<'a> Lexer<'a> {
     }
 
     fn add_token(&mut self, token_type: TokenType) {
-        self.tokens.push(Token::new(token_type, None));
+        self.tokens.push(Token::new(token_type));
     }
 
     fn add_token_with_literal(&mut self, token_type: TokenType, literal: Literal) {
-        self.tokens.push(Token::new(token_type, Some(literal)));
+        self.tokens.push(Token::new_with_literal(token_type, literal));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{token::token_type::TokenType, literal::Literal};
+    use super::*;
+
+    #[derive(Debug)]
+    enum LexerTestErr {
+        Incorrect,
+        LexerFailed(LexerErr),
+    }
+
+    impl Literal {
+        pub fn string(string: &str) -> Self {
+            Self::String(String::from(string))
+        }
+    }
+
+    #[test]
+    fn test_lexer_functions() -> Result<(), LexerTestErr> {
+        let source = "function hello(String name) {
+            print(\"Hello \" + name);
+        }";
+
+        let lexer = Lexer::new(source).run();
+
+        let source = match lexer {
+            Ok(lexer) => lexer.tokens.into_iter(),
+            Err(e) => return Err(LexerTestErr::LexerFailed(e)),
+        };
+
+        let test = vec![
+            Token::new(TokenType::Function),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("hello")),
+            Token::new(TokenType::LeftParen),
+            Token::new(TokenType::StringType),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
+            Token::new(TokenType::RightParen),
+            Token::new(TokenType::LeftBrace),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("print")),
+            Token::new(TokenType::LeftParen),
+            Token::new_with_literal(TokenType::String, Literal::string("Hello ")),
+            Token::new(TokenType::Plus),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
+            Token::new(TokenType::RightParen),
+            Token::new(TokenType::SemiColon),
+            Token::new(TokenType::RightBrace),
+            Token::new(TokenType::EOF),
+        ].into_iter();
+
+        if source.eq(test) {
+            Ok(())
+        } else {
+            Err(LexerTestErr::Incorrect)
+        }
+    }
+
+    #[test]
+    fn test_lexer_start() -> Result<(), LexerTestErr> {
+        let source = "start(String? name) {
+            if (name.exists()) {
+                print(name);
+            }
+        }";
+
+        let lexer = Lexer::new(source).run();
+
+        let source = match lexer {
+            Ok(lexer) => lexer.tokens.into_iter(),
+            Err(e) => return Err(LexerTestErr::LexerFailed(e)),
+        };
+
+        let test = vec![
+            Token::new(TokenType::Start),
+            Token::new(TokenType::LeftParen),
+            Token::new(TokenType::StringType),
+            Token::new(TokenType::QuestionMark),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
+            Token::new(TokenType::RightParen),
+            Token::new(TokenType::LeftBrace),
+            Token::new(TokenType::If),
+            Token::new(TokenType::LeftParen),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
+            Token::new(TokenType::Dot),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("exists")),
+            Token::new(TokenType::LeftParen),
+            Token::new(TokenType::RightParen),
+            Token::new(TokenType::RightParen),
+            Token::new(TokenType::LeftBrace),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("print")),
+            Token::new(TokenType::LeftParen),
+            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
+            Token::new(TokenType::RightParen),
+            Token::new(TokenType::SemiColon),
+            Token::new(TokenType::RightBrace),
+            Token::new(TokenType::RightBrace),
+            Token::new(TokenType::EOF),
+        ].into_iter();
+
+        if source.eq(test) {
+            Ok(())
+        } else {
+            Err(LexerTestErr::Incorrect)
+        }
     }
 }

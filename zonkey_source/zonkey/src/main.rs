@@ -16,7 +16,7 @@ struct Args {
 fn main() -> ExitCode {
     let args = Args::parse();
 
-    let shell = Shell::new(args.debug);
+    let mut shell = Shell::new(args.debug);
 
     if let Some(f) = args.file {
         shell.file(f)

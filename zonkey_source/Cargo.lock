@@ -79,6 +79,7 @@ dependencies = [
 name = "interpreter"
 version = "0.1.0"
 dependencies = [
+ "termcolor",
  "unicode-segmentation",
 ]
 
@@ -223,4 +224,5 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "interpreter",
+ "termcolor",
 ]

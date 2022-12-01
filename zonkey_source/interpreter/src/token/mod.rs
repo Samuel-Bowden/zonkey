@@ -5,16 +5,23 @@ use super::literal::Literal;
 
 pub mod token_type;
 
+#[derive(Debug, PartialEq)]
 pub struct Token {
     token_type: TokenType,
     literal: Option<Literal>,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, literal: Option<Literal>) -> Self {
+    pub fn new(token_type: TokenType) -> Self {
         Self {
             token_type,
-            literal,
+            literal: None,
+        }
+    }
+    pub fn new_with_literal(token_type: TokenType, literal: Literal) -> Self {
+        Self {
+            token_type,
+            literal: Some(literal),
         }
     }
 }
