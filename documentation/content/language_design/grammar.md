@@ -5,13 +5,9 @@ weight: 16
 
 This is the current grammar that I'm implementing in the parser, which is a subset of the language. It uses the notation defined in Crafting Interpreters.
 
-Ambigious Grammar
+Grammar
 ```grammar
-expression -> literal | unary | binary | grouping;
-
-literal -> Integer | Float | String | "true" | "false";
-grouping -> "(" expression ")";
-unary -> "!" expression;
-binary -> expression operator expression;
-operator -> "==" | "!=" | "<" | ">" | "<=" | ">" | ">=" | "+" | "-" | "*" | "/";
+expression -> arithemtic;
+arithemtic -> literal (("-" | "+") literal)*;
+literal -> Integer | Float;
 ```

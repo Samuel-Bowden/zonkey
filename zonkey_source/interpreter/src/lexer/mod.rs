@@ -29,8 +29,6 @@ impl<'a> Lexer<'a> {
             self.scan_token()?;
         }
 
-        self.add_token(TokenType::EOF);
-        
         Ok(self)
     }
 
@@ -309,7 +307,6 @@ mod tests {
             Token::new(TokenType::RightParen),
             Token::new(TokenType::SemiColon),
             Token::new(TokenType::RightBrace),
-            Token::new(TokenType::EOF),
         ].into_iter();
 
         if source.eq(test) {
@@ -358,7 +355,6 @@ mod tests {
             Token::new(TokenType::SemiColon),
             Token::new(TokenType::RightBrace),
             Token::new(TokenType::RightBrace),
-            Token::new(TokenType::EOF),
         ].into_iter();
 
         if source.eq(test) {

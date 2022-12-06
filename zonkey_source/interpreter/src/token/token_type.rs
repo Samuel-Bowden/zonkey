@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
     // Single grapheme tokens
     LeftParen, RightParen,
@@ -40,6 +40,4 @@ pub enum TokenType {
     FloatType,
     StringType,
     BooleanType,
-
-    EOF,
 }

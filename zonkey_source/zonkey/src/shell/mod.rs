@@ -1,10 +1,11 @@
-use std::{process::ExitCode, io::{stdout, stdin, Write}, fs::read_to_string, path::Path};
+use std::{process::ExitCode, io::{stdin, Write}, fs::read_to_string, path::Path};
 use interpreter::Interpreter;
 use termcolor::{StandardStream, Color, ColorSpec, WriteColor};
 
 pub struct Shell {
     debug: bool,
     stderr: StandardStream,
+    stdout: StandardStream,
 }
 
 impl Shell {
@@ -12,13 +13,17 @@ impl Shell {
         Self {
             debug,
             stderr: StandardStream::stderr(termcolor::ColorChoice::Always),
+            stdout: StandardStream::stdout(termcolor::ColorChoice::Always),
         }
     }
 
     pub fn prompt(&mut self) -> ExitCode {
         loop {
-            print!("> ");
-            stdout()
+            self.stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green))).expect("Failed to change the color of stdout.");
+            write!(&mut self.stdout, "> ").expect("Failed to write `>` to stdout.");
+            self.stdout.reset().expect("Failed to reset color of stderr.");
+
+            self.stdout
                 .flush()
                 .expect("Failed to flush stdout for prompt.");
 

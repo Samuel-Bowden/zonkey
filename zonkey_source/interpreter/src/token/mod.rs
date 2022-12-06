@@ -5,10 +5,10 @@ use super::literal::Literal;
 
 pub mod token_type;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
-    token_type: TokenType,
-    literal: Option<Literal>,
+    pub token_type: TokenType,
+    pub literal: Option<Literal>,
 }
 
 impl Token {
