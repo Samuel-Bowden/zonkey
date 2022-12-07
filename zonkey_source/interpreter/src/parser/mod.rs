@@ -1,15 +1,17 @@
+use std::iter::Peekable;
+
 use crate::{token::{Token, token_type::TokenType}, abstract_syntax_tree::{AbstractSyntaxTree, Expr}};
 use self::err::ParserErr;
 
 pub mod err;
 
 pub struct Parser<'a> {
-    tokens: &'a mut std::slice::Iter<'a, Token>,
+    tokens: &'a mut Peekable<std::slice::Iter<'a, Token>>,
     pub abstract_syntax_tree: Option<AbstractSyntaxTree>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a mut std::slice::Iter<'a, Token>) -> Self {
+    pub fn new(tokens: &'a mut Peekable<std::slice::Iter<'a, Token>>) -> Self {
         Self {
             tokens,
             abstract_syntax_tree: None,
@@ -25,16 +27,38 @@ impl<'a> Parser<'a> {
     }
 
     fn expression(&mut self) -> Result<Expr, ParserErr> {
-        self.arithmetic()
+        self.addsub()
     }
 
-    fn arithmetic(&mut self) -> Result<Expr, ParserErr> {
+    fn addsub(&mut self) -> Result<Expr, ParserErr> {
+        let mut left = self.multdiv()?;
+
+        loop {
+            if let Some(Token { token_type: TokenType::Minus | TokenType::Plus, literal: _ }) = self.tokens.peek() {
+                let operator = self.tokens.next();
+
+                let right = self.multdiv()?;
+
+                left = Expr::Binary { 
+                    left: Box::new(left),
+                    operator: operator.unwrap().token_type.clone(),
+                    right: Box::new(right),
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(left) 
+    }
+
+    fn multdiv(&mut self) -> Result<Expr, ParserErr> {
         let mut left = self.literal()?;
 
         loop {
-            let operator = self.tokens.next();
+            if let Some(Token { token_type: TokenType::Star | TokenType::Slash, literal: _ }) = self.tokens.peek() {
+                let operator = self.tokens.next();
 
-            if let Some(Token { token_type: TokenType::Minus | TokenType::Plus, literal: _ }) = operator {
                 let right = self.literal()?;
 
                 left = Expr::Binary { 
@@ -56,6 +80,9 @@ impl<'a> Parser<'a> {
                Ok(Expr::Literal(val.clone().unwrap()))
             }
             Some(Token { token_type: TokenType::Float, literal: val }) => {
+               Ok(Expr::Literal(val.clone().unwrap()))
+            }
+            Some(Token { token_type: TokenType::String, literal: val }) => {
                Ok(Expr::Literal(val.clone().unwrap()))
             }
             _ => Err(ParserErr::ExpectedLiteral),

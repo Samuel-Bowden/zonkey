@@ -182,8 +182,12 @@ impl<'a> Lexer<'a> {
             match self.graphemes[self.current] {
                 "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9" => self.current += 1,
                 "." => {
-                    float = true;
-                    self.current += 1;
+                    if !float {
+                        float = true;
+                        self.current += 1;
+                    } else {
+                        return Err(LexerErr::FloatMoreThanOneDecimalPoint);
+                    }
                 }
                 _ => {
                     break;

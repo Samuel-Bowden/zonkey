@@ -26,10 +26,16 @@ impl<'a> TreeWalker<'a> {
             Expr::Binary { left, operator, right } => {
                 match operator {
                     TokenType::Minus => {
-                        Ok(Self::interpret(&left)? - Self::interpret(&right)?)
+                        Ok((Self::interpret(&left)? - Self::interpret(&right)?)?)
                     }
                     TokenType::Plus => {
-                        Ok(Self::interpret(&right)? + Self::interpret(&left)?)
+                        Ok((Self::interpret(&left)? + Self::interpret(&right)?)?)
+                    }
+                    TokenType::Slash => {
+                        Ok((Self::interpret(&left)? / Self::interpret(&right)?)?)
+                    }
+                    TokenType::Star => {
+                        Ok((Self::interpret(&left)? * Self::interpret(&right)?)?)
                     }
                     _ => Err(TreeWalkerErr::UnsupportedOperator),
                 }
@@ -40,7 +46,9 @@ impl<'a> TreeWalker<'a> {
             Expr::Literal(Literal::Float(val)) => {
                 Ok(Value::Float(*val))
             }
-            _ => Err(TreeWalkerErr::UnsupportedExpression)
+            Expr::Literal(Literal::String(val)) => {
+                Ok(Value::String(val.clone()))
+            }
         }
     }
 }

@@ -66,7 +66,7 @@ impl<'a> Interpreter<'a> {
     fn run_parser(&mut self) -> Result<(), InterpreterErr> {
         self.status("Starting parser:");
 
-        let mut binding = self.tokens.iter();
+        let mut binding = self.tokens.iter().peekable();
         let parser = Parser::new(&mut binding).run();
 
         match parser {
