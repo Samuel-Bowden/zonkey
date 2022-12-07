@@ -1,11 +1,11 @@
-use std::{process::ExitCode, io::{stdin, Write}, fs::read_to_string, path::Path};
+use std::{process::ExitCode, io::Write, fs::read_to_string, path::Path};
 use interpreter::Interpreter;
+use rustyline::{Editor, error::ReadlineError};
 use termcolor::{StandardStream, Color, ColorSpec, WriteColor};
 
 pub struct Shell {
     debug: bool,
     stderr: StandardStream,
-    stdout: StandardStream,
 }
 
 impl Shell {
@@ -13,34 +13,41 @@ impl Shell {
         Self {
             debug,
             stderr: StandardStream::stderr(termcolor::ColorChoice::Always),
-            stdout: StandardStream::stdout(termcolor::ColorChoice::Always),
         }
     }
 
     pub fn prompt(&mut self) -> ExitCode {
-        loop {
-            self.stdout.set_color(ColorSpec::new().set_fg(Some(Color::Green))).expect("Failed to change the color of stdout.");
-            write!(&mut self.stdout, "> ").expect("Failed to write `>` to stdout.");
-            self.stdout.reset().expect("Failed to reset color of stderr.");
-
-            self.stdout
-                .flush()
-                .expect("Failed to flush stdout for prompt.");
-
-            let mut input = String::new();
-
-            stdin()
-                .read_line(&mut input)
-                .expect("Failed to read line for input.");
-
-            let command = input.trim();
-
-            if command == "exit" {
-                break;
+        let mut prompt = match Editor::<()>::new() {
+            Ok(p) => p,
+            Err(e) => {
+                self.error(format!("Failed to setup prompt: {e}"));
+                return ExitCode::FAILURE;
             }
+        };
 
-            if let Err(e) = Interpreter::new(self.debug, command).run() {
-                self.error(format!("{}", e));
+        loop {
+            match prompt.readline("> ") {
+                Ok(command) => {
+                    if command == "exit" {
+                        break;
+                    }
+
+                    prompt.add_history_entry(command.as_str());
+
+                    if let Err(e) = Interpreter::new(self.debug, &command).run() {
+                        self.error(format!("{}", e));
+                    }
+                }
+                Err(ReadlineError::Interrupted) => {
+                    break
+                },
+                Err(ReadlineError::Eof) => {
+                    break
+                },
+                Err(e) => {
+                    self.error(format!("Failed to readline from prompt: {e}"));
+                    return ExitCode::FAILURE;
+                },
             }
         }
 

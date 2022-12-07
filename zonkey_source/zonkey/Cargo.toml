@@ -9,3 +9,4 @@ authors = ["Sam Bowden"]
 clap = { version = "4.0.26", features = ["derive"] }
 interpreter = { path = "../interpreter" }
 termcolor = "1.1"
+rustyline = "10.0"
