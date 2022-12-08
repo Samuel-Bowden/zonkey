@@ -32,6 +32,7 @@ impl Display for Token {
             Some(Literal::String(v)) => write!(f, "{:?}: {}", self.token_type, v),
             Some(Literal::Integer(v)) => write!(f, "{:?}: {}", self.token_type, v),
             Some(Literal::Float(v)) => write!(f, "{:?}: {}", self.token_type, v),
+            Some(Literal::Boolean(v)) => write!(f, "{:?}: {}", self.token_type, v),
             None => write!(f, "{:?}", self.token_type),
         }
     }

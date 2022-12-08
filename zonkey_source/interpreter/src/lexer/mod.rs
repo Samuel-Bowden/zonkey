@@ -262,6 +262,8 @@ impl<'a> Lexer<'a> {
             "Float" => self.add_token(TokenType::FloatType),
             "String" => self.add_token(TokenType::StringType),
             "Boolean" => self.add_token(TokenType::BooleanType),
+            "false" => self.add_token_with_literal(TokenType::Boolean, Literal::Boolean(false)),
+            "true" => self.add_token_with_literal(TokenType::Boolean, Literal::Boolean(true)),
             _ => self.add_token_with_literal(TokenType::Identifier, Literal::String(literal)),
         }
 

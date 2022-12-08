@@ -37,6 +37,24 @@ impl<'a> TreeWalker<'a> {
                     TokenType::Star => {
                         Ok((Self::interpret(&left)? * Self::interpret(&right)?)?)
                     }
+                    TokenType::EqualEqual => {
+                        Ok(Value::Boolean(Self::interpret(&left)?.equal(&Self::interpret(&right)?)?))
+                    }
+                    TokenType::BangEqual => {
+                        Ok(Value::Boolean(!(Self::interpret(&left)?.equal(&Self::interpret(&right)?)?)))
+                    }
+                    TokenType::LessEqual => {
+                        Ok(Value::Boolean(Self::interpret(&left)?.less_equal(&Self::interpret(&right)?)?))
+                    }
+                    TokenType::Less => {
+                        Ok(Value::Boolean(Self::interpret(&left)?.less(&Self::interpret(&right)?)?))
+                    }
+                    TokenType::MoreEqual => {
+                        Ok(Value::Boolean(Self::interpret(&left)?.more_equal(&Self::interpret(&right)?)?))
+                    }
+                    TokenType::More => {
+                        Ok(Value::Boolean(Self::interpret(&left)?.more(&Self::interpret(&right)?)?))
+                    }
                     _ => Err(TreeWalkerErr::UnsupportedOperator),
                 }
             }
@@ -48,6 +66,9 @@ impl<'a> TreeWalker<'a> {
             }
             Expr::Literal(Literal::String(val)) => {
                 Ok(Value::String(val.clone()))
+            }
+            Expr::Literal(Literal::Boolean(val)) => {
+                Ok(Value::Boolean(val.clone()))
             }
         }
     }

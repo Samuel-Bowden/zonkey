@@ -27,7 +27,53 @@ impl<'a> Parser<'a> {
     }
 
     fn expression(&mut self) -> Result<Expr, ParserErr> {
-        self.addsub()
+        self.equality()
+    }
+
+    fn equality(&mut self) -> Result<Expr, ParserErr> {
+        let mut left = self.comparision()?;
+
+        loop {
+            if let Some(Token { token_type: TokenType::EqualEqual | TokenType::BangEqual, literal: _ }) = self.tokens.peek() {
+                let operator = self.tokens.next();
+
+                let right = self.comparision()?;
+
+                left = Expr::Binary { 
+                    left: Box::new(left),
+                    operator: operator.unwrap().token_type.clone(),
+                    right: Box::new(right),
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(left) 
+    }
+
+    fn comparision(&mut self) -> Result<Expr, ParserErr> {
+        let mut left = self.addsub()?;
+
+        loop {
+            if let Some(Token { token_type: TokenType::MoreEqual | TokenType::LessEqual | TokenType::Less | TokenType::More,
+                literal: _ }) = self.tokens.peek() 
+            {
+                let operator = self.tokens.next();
+
+                let right = self.addsub()?;
+
+                left = Expr::Binary { 
+                    left: Box::new(left),
+                    operator: operator.unwrap().token_type.clone(),
+                    right: Box::new(right),
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(left) 
     }
 
     fn addsub(&mut self) -> Result<Expr, ParserErr> {
@@ -83,6 +129,9 @@ impl<'a> Parser<'a> {
                Ok(Expr::Literal(val.clone().unwrap()))
             }
             Some(Token { token_type: TokenType::String, literal: val }) => {
+               Ok(Expr::Literal(val.clone().unwrap()))
+            }
+            Some(Token { token_type: TokenType::Boolean, literal: val }) => {
                Ok(Expr::Literal(val.clone().unwrap()))
             }
             _ => Err(ParserErr::ExpectedLiteral),
