@@ -47,6 +47,8 @@ pub enum Token {
     While,
     Break,
     Continue,
+    Print,
+    Exit,
     Return,
     IntegerType,
     FloatType,

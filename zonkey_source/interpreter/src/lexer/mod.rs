@@ -278,6 +278,8 @@ impl<'a> Lexer<'a> {
             "Boolean" => self.add_token(Token::BooleanType),
             "false" => self.add_token(Token::Boolean(false)),
             "true" => self.add_token(Token::Boolean(true)),
+            "print" => self.add_token(Token::Print),
+            "exit" => self.add_token(Token::Exit),
             _ => self.add_token(Token::Identifier(literal)),
         }
 
@@ -321,7 +323,7 @@ mod tests {
             Token::Identifier("name".to_string()),
             Token::RightParen,
             Token::LeftBrace,
-            Token::Identifier("print".to_string()),
+            Token::Print,
             Token::LeftParen,
             Token::String("Hello ".to_string()),
             Token::Plus,
@@ -371,7 +373,7 @@ mod tests {
             Token::RightParen,
             Token::RightParen,
             Token::LeftBrace,
-            Token::Identifier("print".to_string()),
+            Token::Print,
             Token::LeftParen,
             Token::Identifier("name".to_string()),
             Token::RightParen,

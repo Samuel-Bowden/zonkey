@@ -1,55 +1,74 @@
-use self::{err::TreeWalkerErr, value::Value};
-use crate::{expr::Expr, literal::Literal, token::Token};
+use self::{err::TreeWalkerErr, status::TreeWalkerStatus, value::Value};
+use crate::{expr::Expr, literal::Literal, stmt::Stmt, token::Token};
 use std::slice::Iter;
 
 pub mod err;
+pub mod status;
 mod value;
 
 pub struct TreeWalker<'a> {
-    expressions: &'a mut Iter<'a, Expr>,
+    statements: &'a mut Iter<'a, Stmt>,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(expressions: &'a mut Iter<'a, Expr>) -> Self {
-        Self { expressions }
+    pub fn new(statements: &'a mut Iter<'a, Stmt>) -> Self {
+        Self { statements }
     }
 
-    pub fn run(self) -> Result<(), TreeWalkerErr> {
-        for expression in self.expressions {
-            println!("{}", Self::interpret(&expression)?);
+    pub fn run(self) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+        for statement in self.statements {
+            match Self::interpret(&statement) {
+                Ok(TreeWalkerStatus::Ok) => continue,
+                Ok(TreeWalkerStatus::Exit) => return Ok(TreeWalkerStatus::Exit),
+                Err(err) => return Err(err),
+            }
         }
 
-        Ok(())
+        Ok(TreeWalkerStatus::Ok)
     }
 
-    fn interpret(expression: &Expr) -> Result<Value, TreeWalkerErr> {
+    fn interpret(statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+        match statement {
+            Stmt::Print(expr) => {
+                println!("{}", Self::evaluate(expr)?);
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::Expression(expr) => {
+                Self::evaluate(expr)?;
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::Exit => Ok(TreeWalkerStatus::Exit),
+        }
+    }
+
+    fn evaluate(expression: &Expr) -> Result<Value, TreeWalkerErr> {
         match expression {
             Expr::Binary {
                 left,
                 operator,
                 right,
             } => match operator {
-                Token::Minus => Ok((Self::interpret(&left)? - Self::interpret(&right)?)?),
-                Token::Plus => Ok((Self::interpret(&left)? + Self::interpret(&right)?)?),
-                Token::Slash => Ok((Self::interpret(&left)? / Self::interpret(&right)?)?),
-                Token::Star => Ok((Self::interpret(&left)? * Self::interpret(&right)?)?),
+                Token::Minus => Ok((Self::evaluate(&left)? - Self::evaluate(&right)?)?),
+                Token::Plus => Ok((Self::evaluate(&left)? + Self::evaluate(&right)?)?),
+                Token::Slash => Ok((Self::evaluate(&left)? / Self::evaluate(&right)?)?),
+                Token::Star => Ok((Self::evaluate(&left)? * Self::evaluate(&right)?)?),
                 Token::EqualEqual => Ok(Value::Boolean(
-                    Self::interpret(&left)?.equal(&Self::interpret(&right)?)?,
+                    Self::evaluate(&left)?.equal(&Self::evaluate(&right)?)?,
                 )),
                 Token::BangEqual => Ok(Value::Boolean(
-                    !(Self::interpret(&left)?.equal(&Self::interpret(&right)?)?),
+                    !(Self::evaluate(&left)?.equal(&Self::evaluate(&right)?)?),
                 )),
                 Token::LessEqual => Ok(Value::Boolean(
-                    Self::interpret(&left)?.less_equal(&Self::interpret(&right)?)?,
+                    Self::evaluate(&left)?.less_equal(&Self::evaluate(&right)?)?,
                 )),
                 Token::Less => Ok(Value::Boolean(
-                    Self::interpret(&left)?.less(&Self::interpret(&right)?)?,
+                    Self::evaluate(&left)?.less(&Self::evaluate(&right)?)?,
                 )),
                 Token::MoreEqual => Ok(Value::Boolean(
-                    Self::interpret(&left)?.more_equal(&Self::interpret(&right)?)?,
+                    Self::evaluate(&left)?.more_equal(&Self::evaluate(&right)?)?,
                 )),
                 Token::More => Ok(Value::Boolean(
-                    Self::interpret(&left)?.more(&Self::interpret(&right)?)?,
+                    Self::evaluate(&left)?.more(&Self::evaluate(&right)?)?,
                 )),
                 _ => Err(TreeWalkerErr::UnsupportedOperator),
             },

@@ -1,29 +1,29 @@
 use self::err::ParserErr;
-use crate::{expr::Expr, literal::Literal, token::Token};
+use crate::{expr::Expr, literal::Literal, stmt::Stmt, token::Token};
 use std::{iter::Peekable, slice::Iter};
 
 pub mod err;
 
 pub struct Parser<'a> {
     tokens: &'a mut Peekable<Iter<'a, Token>>,
-    pub expressions: Vec<Expr>,
+    pub statements: Vec<Stmt>,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a mut Peekable<Iter<'a, Token>>) -> Self {
         Self {
             tokens,
-            expressions: Vec::new(),
+            statements: Vec::new(),
         }
     }
 
     pub fn run(mut self) -> Result<Self, ParserErr> {
-        self.expressions = self.program()?;
+        self.statements = self.program()?;
 
         Ok(self)
     }
 
-    fn program(&mut self) -> Result<Vec<Expr>, ParserErr> {
+    fn program(&mut self) -> Result<Vec<Stmt>, ParserErr> {
         let mut statements = vec![];
 
         while self.tokens.peek() != None {
@@ -33,8 +33,18 @@ impl<'a> Parser<'a> {
         Ok(statements)
     }
 
-    fn statement(&mut self) -> Result<Expr, ParserErr> {
-        let expression = self.expression()?;
+    fn statement(&mut self) -> Result<Stmt, ParserErr> {
+        let expression = match self.tokens.peek() {
+            Some(Token::Print) => {
+                self.tokens.next();
+                self.print_statement()?
+            }
+            Some(Token::Exit) => {
+                self.tokens.next();
+                self.exit_statement()?
+            }
+            _ => self.expression_statement()?,
+        };
 
         if let Some(Token::SemiColon) = self.tokens.next() {
             Ok(expression)
@@ -43,8 +53,33 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn expression(&mut self) -> Result<Expr, ParserErr> {
-        self.equality()
+    fn print_statement(&mut self) -> Result<Stmt, ParserErr> {
+        match self.tokens.next() {
+            Some(Token::LeftParen) => (),
+            _ => return Err(ParserErr::PrintMissingLeftParen),
+        }
+        let expression = self.equality()?;
+        match self.tokens.next() {
+            Some(Token::RightParen) => (),
+            _ => return Err(ParserErr::PrintMissingRightParen),
+        }
+        Ok(Stmt::Print(expression))
+    }
+
+    fn expression_statement(&mut self) -> Result<Stmt, ParserErr> {
+        Ok(Stmt::Expression(self.equality()?))
+    }
+
+    fn exit_statement(&mut self) -> Result<Stmt, ParserErr> {
+        match self.tokens.next() {
+            Some(Token::LeftParen) => (),
+            _ => return Err(ParserErr::ExitMissingLeftParen),
+        }
+        match self.tokens.next() {
+            Some(Token::RightParen) => (),
+            _ => return Err(ParserErr::ExitMissingRightParen),
+        }
+        Ok(Stmt::Exit)
     }
 
     fn equality(&mut self) -> Result<Expr, ParserErr> {

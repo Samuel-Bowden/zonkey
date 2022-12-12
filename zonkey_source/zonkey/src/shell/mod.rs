@@ -1,4 +1,4 @@
-use interpreter::Interpreter;
+use interpreter::{status::InterpreterStatus, Interpreter};
 use rustyline::{error::ReadlineError, Editor};
 use std::{fs::read_to_string, io::Write, path::Path, process::ExitCode};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
@@ -25,17 +25,17 @@ impl Shell {
             }
         };
 
+        let mut interpreter = Interpreter::new(self.debug);
+
         loop {
             match prompt.readline("> ") {
                 Ok(command) => {
-                    if command == "exit" {
-                        break;
-                    }
-
                     prompt.add_history_entry(command.as_str());
 
-                    if let Err(e) = Interpreter::new(self.debug, &command).run() {
-                        self.error(format!("{}", e));
+                    match interpreter.run(&command) {
+                        Ok(InterpreterStatus::Alive) => continue,
+                        Ok(InterpreterStatus::Dead) => break,
+                        Err(err) => self.error(format!("{}", err)),
                     }
                 }
                 Err(ReadlineError::Interrupted) => break,
@@ -60,7 +60,7 @@ impl Shell {
             }
         };
 
-        match Interpreter::new(self.debug, &source).run() {
+        match Interpreter::new(self.debug).run(&source) {
             Ok(_) => ExitCode::SUCCESS,
             Err(e) => {
                 self.error(format!("{e}"));

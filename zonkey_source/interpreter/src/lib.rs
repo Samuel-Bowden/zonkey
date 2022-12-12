@@ -1,53 +1,52 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
-use expr::Expr;
 use parser::Parser;
+use status::InterpreterStatus;
 use std::io::Write;
+use stmt::Stmt;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
-use tree_walker::TreeWalker;
+use tree_walker::{status::TreeWalkerStatus, TreeWalker};
 
 mod err;
 mod expr;
 mod lexer;
 mod literal;
 mod parser;
+pub mod status;
+mod stmt;
 mod token;
 mod tree_walker;
 
-pub struct Interpreter<'a> {
+pub struct Interpreter {
     debug: bool,
     tokens: Vec<Token>,
-    source: &'a str,
     stdout: StandardStream,
-    expressions: Vec<Expr>,
+    statements: Vec<Stmt>,
 }
 
-impl<'a> Interpreter<'a> {
-    pub fn new(debug: bool, source: &'a str) -> Self {
+impl Interpreter {
+    pub fn new(debug: bool) -> Self {
         Self {
             debug,
             tokens: Vec::new(),
-            source,
             stdout: StandardStream::stdout(termcolor::ColorChoice::Always),
-            expressions: Vec::new(),
+            statements: Vec::new(),
         }
     }
 
-    pub fn run(mut self) -> Result<Self, InterpreterErr> {
+    pub fn run(&mut self, source: &str) -> Result<InterpreterStatus, InterpreterErr> {
         self.status("Debug mode is on");
 
-        self.run_lexer()?;
+        self.run_lexer(source)?;
 
         self.run_parser()?;
 
-        self.run_tree_walker()?;
-
-        Ok(self)
+        self.run_tree_walker()
     }
 
-    fn run_lexer(&mut self) -> Result<(), InterpreterErr> {
+    fn run_lexer(&mut self, source: &str) -> Result<(), InterpreterErr> {
         self.status("Starting lexer");
 
-        let lexer = Lexer::new(self.source).run();
+        let lexer = Lexer::new(source).run();
 
         match lexer {
             Ok(lexer) => self.tokens = lexer.tokens,
@@ -70,30 +69,33 @@ impl<'a> Interpreter<'a> {
         let parser = Parser::new(&mut binding).run();
 
         match parser {
-            Ok(parser) => self.expressions = parser.expressions,
+            Ok(parser) => self.statements = parser.statements,
             Err(e) => return Err(InterpreterErr::ParserFailed(e)),
         }
 
         self.status("Parser completed successfully.");
 
         if self.debug {
-            self.debug_information("Printing expressions:");
-            println!("  {:?}", self.expressions);
+            self.debug_information("Printing statements:");
+            println!("  {:?}", self.statements);
         }
 
         Ok(())
     }
 
-    fn run_tree_walker(&mut self) -> Result<(), InterpreterErr> {
+    fn run_tree_walker(&mut self) -> Result<InterpreterStatus, InterpreterErr> {
         self.status("Starting tree walker:");
 
-        if let Err(e) = TreeWalker::new(&mut self.expressions.iter()).run() {
-            return Err(InterpreterErr::TreeWalkerFailed(e));
+        match TreeWalker::new(&mut self.statements.iter()).run() {
+            Ok(status) => {
+                self.status("Tree walker completed successfully.");
+                match status {
+                    TreeWalkerStatus::Ok => Ok(InterpreterStatus::Alive),
+                    TreeWalkerStatus::Exit => Ok(InterpreterStatus::Dead),
+                }
+            }
+            Err(err) => return Err(InterpreterErr::TreeWalkerFailed(err)),
         }
-
-        self.status("Tree walker completed successfully.");
-
-        Ok(())
     }
 
     fn print_tokens(&mut self) {

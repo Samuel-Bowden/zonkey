@@ -10,8 +10,10 @@ Print will eventually be implemented as a function but for now I will be impleme
 Grammar
 ```grammar
 program -> statement*;
-statement -> expression ";";
-expression -> equality;
+statement -> (expression_statement | print_statement | exit_statement) ";";
+expression_statement -> equality;
+print_statement -> print "(" equality ")";
+exit_statement -> exit "(" ")";
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
