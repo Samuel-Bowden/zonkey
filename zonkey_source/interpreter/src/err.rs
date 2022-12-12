@@ -1,7 +1,7 @@
-use std::fmt::Display;
-use super::tree_walker::err::TreeWalkerErr;
 use super::lexer::err::LexerErr;
 use super::parser::err::ParserErr;
+use super::tree_walker::err::TreeWalkerErr;
+use std::fmt::Display;
 
 #[derive(Debug)]
 pub enum InterpreterErr {

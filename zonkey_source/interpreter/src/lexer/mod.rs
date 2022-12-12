@@ -1,8 +1,8 @@
 pub mod err;
 
-use unicode_segmentation::UnicodeSegmentation;
-use super::{token::{Token, token_type::TokenType}, literal::Literal};
 use self::err::LexerErr;
+use super::token::Token;
+use unicode_segmentation::UnicodeSegmentation;
 
 pub struct Lexer<'a> {
     pub tokens: Vec<Token>,
@@ -38,102 +38,104 @@ impl<'a> Lexer<'a> {
 
         match grapheme {
             // Single grapheme
-            "(" => self.add_token(TokenType::LeftParen),
-            ")" => self.add_token(TokenType::RightParen),
-            "{" => self.add_token(TokenType::LeftBrace),
-            "}" => self.add_token(TokenType::RightBrace),
-            "," => self.add_token(TokenType::Comma),
-            "." => self.add_token(TokenType::Dot),
-            ";" => self.add_token(TokenType::SemiColon),
-            "?" => self.add_token(TokenType::QuestionMark),
+            "(" => self.add_token(Token::LeftParen),
+            ")" => self.add_token(Token::RightParen),
+            "{" => self.add_token(Token::LeftBrace),
+            "}" => self.add_token(Token::RightBrace),
+            "," => self.add_token(Token::Comma),
+            "." => self.add_token(Token::Dot),
+            ";" => self.add_token(Token::SemiColon),
+            "?" => self.add_token(Token::QuestionMark),
             // Single or double graphemes
             "!" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::BangEqual,
-                    false => TokenType::Bang,
+                    true => Token::BangEqual,
+                    false => Token::Bang,
                 };
                 self.add_token(token);
             }
             "=" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::EqualEqual,
-                    false => TokenType::Equal,
+                    true => Token::EqualEqual,
+                    false => Token::Equal,
                 };
                 self.add_token(token);
             }
             "<" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::LessEqual,
-                    false => TokenType::Less,
+                    true => Token::LessEqual,
+                    false => Token::Less,
                 };
                 self.add_token(token);
             }
             ">" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::MoreEqual,
-                    false => TokenType::More,
+                    true => Token::MoreEqual,
+                    false => Token::More,
                 };
                 self.add_token(token);
             }
             "+" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::PlusEqual,
-                    false => TokenType::Plus,
+                    true => Token::PlusEqual,
+                    false => Token::Plus,
                 };
                 self.add_token(token);
             }
             "-" => {
                 match self.next_grapheme("=") {
-                    true => self.add_token(TokenType::MinusEqual),
+                    true => self.add_token(Token::MinusEqual),
                     false => match self.next_grapheme(">") {
-                        true => self.add_token(TokenType::Arrow),
+                        true => self.add_token(Token::Arrow),
                         false => match self.next_grapheme_number() {
                             true => {
                                 self.number()?;
                             }
-                            false => self.add_token(TokenType::Minus),
+                            false => self.add_token(Token::Minus),
                         },
                     },
                 };
             }
             "*" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::StarEqual,
-                    false => TokenType::Star,
+                    true => Token::StarEqual,
+                    false => Token::Star,
                 };
                 self.add_token(token);
             }
             "/" => {
                 let token = match self.next_grapheme("=") {
-                    true => TokenType::SlashEqual,
-                    false => TokenType::Slash,
+                    true => Token::SlashEqual,
+                    false => Token::Slash,
                 };
                 self.add_token(token);
             }
             // String literals
             "\"" => self.string()?,
             // Number literals - e.g. Integer or Float
-            "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9" => self.number()?,
+            "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.number()?,
             // Identifier
-            "a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|
-                "k"|"l"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|
-                "t"|"u"|"v"|"w"|"x"|"y"|"z"|"A"|"B"|
-                "C"|"D"|"E"|"F"|"G"|"H"|"I"|"J"|"K"|
-                "L"|"M"|"N"|"O"|"P"|"Q"|"R"|"S"|"T"|
-                "U"|"V"|"W"|"X"|"Y"|"Z"|"_"
-                => self.identifier()?,
+            "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n"
+            | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B"
+            | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P"
+            | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "_" => {
+                self.identifier()?
+            }
             // Comments - ignore all characters until the next line
             "#" => {
                 while !self.is_at_end() && self.graphemes[self.current] != "\n" {
                     self.current += 1
                 }
-            },
+            }
             // Whitespace and newlines
             " " | "\r" | "\t" => (),
             "\n" => self.line += 1,
-            unexpected_grapheme => return Err(
-                LexerErr::UnexpectedGrapheme(self.line, String::from(unexpected_grapheme))
-            ),
+            unexpected_grapheme => {
+                return Err(LexerErr::UnexpectedGrapheme(
+                    self.line,
+                    String::from(unexpected_grapheme),
+                ))
+            }
         }
 
         Ok(())
@@ -144,44 +146,54 @@ impl<'a> Lexer<'a> {
     }
 
     fn next_grapheme(&mut self, expected: &str) -> bool {
-        if self.is_at_end() { return false }
+        if self.is_at_end() {
+            return false;
+        }
 
-        if self.graphemes[self.current] != expected { return false }
+        if self.graphemes[self.current] != expected {
+            return false;
+        }
 
         self.current += 1;
         true
     }
 
     fn next_grapheme_number(&mut self) -> bool {
-        if self.is_at_end() { return false }
+        if self.is_at_end() {
+            return false;
+        }
 
-        if let "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9" = self.graphemes[self.current] { return true }
+        if let "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" =
+            self.graphemes[self.current]
+        {
+            return true;
+        }
 
-        false 
+        false
     }
 
     fn string(&mut self) -> Result<(), LexerErr> {
         while !self.is_at_end() && self.graphemes[self.current] != "\"" {
             if self.graphemes[self.current] == "\n" {
-                return Err(LexerErr::UnterminatedString(self.line))
+                return Err(LexerErr::UnterminatedString(self.line));
             }
             self.current += 1;
         }
-        
+
         if self.is_at_end() {
-            return Err(LexerErr::UnterminatedString(self.line))
+            return Err(LexerErr::UnterminatedString(self.line));
         }
 
         self.current += 1;
 
         let mut literal = String::new();
 
-        for i in self.start + 1 .. self.current - 1 {
+        for i in self.start + 1..self.current - 1 {
             literal.push_str(self.graphemes[i]);
         }
 
-        self.add_token_with_literal(TokenType::String, Literal::String(literal));
-        
+        self.add_token(Token::String(literal));
+
         Ok(())
     }
 
@@ -189,10 +201,12 @@ impl<'a> Lexer<'a> {
         let mut float = false;
 
         loop {
-            if self.is_at_end() { break; }
+            if self.is_at_end() {
+                break;
+            }
 
             match self.graphemes[self.current] {
-                "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9" => self.current += 1,
+                "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" => self.current += 1,
                 "." => {
                     if !float {
                         float = true;
@@ -208,16 +222,16 @@ impl<'a> Lexer<'a> {
         }
 
         let mut literal = String::new();
-        for i in self.start .. self.current {
+        for i in self.start..self.current {
             literal.push_str(self.graphemes[i]);
         }
 
         if float {
             let val = literal.parse::<f64>().unwrap();
-            self.add_token_with_literal(TokenType::Float, Literal::Float(val));
+            self.add_token(Token::Float(val));
         } else {
             let val = literal.parse::<i64>().unwrap();
-            self.add_token_with_literal(TokenType::Integer, Literal::Integer(val));
+            self.add_token(Token::Integer(val));
         }
 
         Ok(())
@@ -225,16 +239,16 @@ impl<'a> Lexer<'a> {
 
     fn identifier(&mut self) -> Result<(), LexerErr> {
         loop {
-            if self.is_at_end() { break; }
+            if self.is_at_end() {
+                break;
+            }
 
             match self.graphemes[self.current] {
-                "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|
-                "a"|"b"|"c"|"d"|"e"|"f"|"g"|"h"|"i"|"j"|
-                "k"|"l"|"m"|"n"|"o"|"p"|"q"|"r"|"s"|"t"|
-                "u"|"v"|"w"|"x"|"y"|"z"|"A"|"B"|"C"|"D"|
-                "E"|"F"|"G"|"H"|"I"|"J"|"K"|"L"|"M"|"N"|
-                "O"|"P"|"Q"|"R"|"S"|"T"|"U"|"V"|"W"|"X"|
-                "Y"|"Z"|"_" => {
+                "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c"
+                | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p"
+                | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C"
+                | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P"
+                | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "_" => {
                     self.current += 1;
                 }
                 _ => break,
@@ -242,58 +256,48 @@ impl<'a> Lexer<'a> {
         }
 
         let mut literal = String::new();
-        for i in self.start .. self.current {
+        for i in self.start..self.current {
             literal.push_str(self.graphemes[i]);
         }
 
         match literal.as_str() {
-            "function" => self.add_token(TokenType::Function),
-            "start" => self.add_token(TokenType::Start),
-            "loop" => self.add_token(TokenType::Loop),
-            "infinite" => self.add_token(TokenType::Infinite),
-            "if" => self.add_token(TokenType::If),
-            "else" => self.add_token(TokenType::Else),
-            "for" => self.add_token(TokenType::For),
-            "while" => self.add_token(TokenType::While),
-            "break" => self.add_token(TokenType::Break),
-            "return" => self.add_token(TokenType::Return),
-            "continue" => self.add_token(TokenType::Continue),
-            "Integer" => self.add_token(TokenType::IntegerType),
-            "Float" => self.add_token(TokenType::FloatType),
-            "String" => self.add_token(TokenType::StringType),
-            "Boolean" => self.add_token(TokenType::BooleanType),
-            "false" => self.add_token_with_literal(TokenType::Boolean, Literal::Boolean(false)),
-            "true" => self.add_token_with_literal(TokenType::Boolean, Literal::Boolean(true)),
-            _ => self.add_token_with_literal(TokenType::Identifier, Literal::String(literal)),
+            "function" => self.add_token(Token::Function),
+            "start" => self.add_token(Token::Start),
+            "loop" => self.add_token(Token::Loop),
+            "infinite" => self.add_token(Token::Infinite),
+            "if" => self.add_token(Token::If),
+            "else" => self.add_token(Token::Else),
+            "for" => self.add_token(Token::For),
+            "while" => self.add_token(Token::While),
+            "break" => self.add_token(Token::Break),
+            "return" => self.add_token(Token::Return),
+            "continue" => self.add_token(Token::Continue),
+            "Integer" => self.add_token(Token::IntegerType),
+            "Float" => self.add_token(Token::FloatType),
+            "String" => self.add_token(Token::StringType),
+            "Boolean" => self.add_token(Token::BooleanType),
+            "false" => self.add_token(Token::Boolean(false)),
+            "true" => self.add_token(Token::Boolean(true)),
+            _ => self.add_token(Token::Identifier(literal)),
         }
 
         Ok(())
     }
 
-    fn add_token(&mut self, token_type: TokenType) {
-        self.tokens.push(Token::new(token_type));
-    }
-
-    fn add_token_with_literal(&mut self, token_type: TokenType, literal: Literal) {
-        self.tokens.push(Token::new_with_literal(token_type, literal));
+    fn add_token(&mut self, token: Token) {
+        self.tokens.push(token);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{token::token_type::TokenType, literal::Literal};
     use super::*;
+    use crate::token::Token;
 
     #[derive(Debug)]
     enum LexerTestErr {
         Incorrect,
         LexerFailed(LexerErr),
-    }
-
-    impl Literal {
-        pub fn string(string: &str) -> Self {
-            Self::String(String::from(string))
-        }
     }
 
     #[test]
@@ -310,22 +314,23 @@ mod tests {
         };
 
         let test = vec![
-            Token::new(TokenType::Function),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("hello")),
-            Token::new(TokenType::LeftParen),
-            Token::new(TokenType::StringType),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
-            Token::new(TokenType::RightParen),
-            Token::new(TokenType::LeftBrace),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("print")),
-            Token::new(TokenType::LeftParen),
-            Token::new_with_literal(TokenType::String, Literal::string("Hello ")),
-            Token::new(TokenType::Plus),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
-            Token::new(TokenType::RightParen),
-            Token::new(TokenType::SemiColon),
-            Token::new(TokenType::RightBrace),
-        ].into_iter();
+            Token::Function,
+            Token::Identifier("hello".to_string()),
+            Token::LeftParen,
+            Token::StringType,
+            Token::Identifier("name".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Identifier("print".to_string()),
+            Token::LeftParen,
+            Token::String("Hello ".to_string()),
+            Token::Plus,
+            Token::Identifier("name".to_string()),
+            Token::RightParen,
+            Token::SemiColon,
+            Token::RightBrace,
+        ]
+        .into_iter();
 
         if source.eq(test) {
             Ok(())
@@ -350,30 +355,31 @@ mod tests {
         };
 
         let test = vec![
-            Token::new(TokenType::Start),
-            Token::new(TokenType::LeftParen),
-            Token::new(TokenType::StringType),
-            Token::new(TokenType::QuestionMark),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
-            Token::new(TokenType::RightParen),
-            Token::new(TokenType::LeftBrace),
-            Token::new(TokenType::If),
-            Token::new(TokenType::LeftParen),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
-            Token::new(TokenType::Dot),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("exists")),
-            Token::new(TokenType::LeftParen),
-            Token::new(TokenType::RightParen),
-            Token::new(TokenType::RightParen),
-            Token::new(TokenType::LeftBrace),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("print")),
-            Token::new(TokenType::LeftParen),
-            Token::new_with_literal(TokenType::Identifier, Literal::string("name")),
-            Token::new(TokenType::RightParen),
-            Token::new(TokenType::SemiColon),
-            Token::new(TokenType::RightBrace),
-            Token::new(TokenType::RightBrace),
-        ].into_iter();
+            Token::Start,
+            Token::LeftParen,
+            Token::StringType,
+            Token::QuestionMark,
+            Token::Identifier("name".to_string()),
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::If,
+            Token::LeftParen,
+            Token::Identifier("name".to_string()),
+            Token::Dot,
+            Token::Identifier("exists".to_string()),
+            Token::LeftParen,
+            Token::RightParen,
+            Token::RightParen,
+            Token::LeftBrace,
+            Token::Identifier("print".to_string()),
+            Token::LeftParen,
+            Token::Identifier("name".to_string()),
+            Token::RightParen,
+            Token::SemiColon,
+            Token::RightBrace,
+            Token::RightBrace,
+        ]
+        .into_iter();
 
         if source.eq(test) {
             Ok(())

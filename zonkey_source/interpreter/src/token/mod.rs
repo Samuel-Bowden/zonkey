@@ -1,39 +1,55 @@
-use std::fmt::Display;
-
-use self::token_type::TokenType;
-use super::literal::Literal;
-
-pub mod token_type;
-
 #[derive(Debug, PartialEq, Clone)]
-pub struct Token {
-    pub token_type: TokenType,
-    pub literal: Option<Literal>,
-}
+pub enum Token {
+    // Single grapheme tokens
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    Comma,
+    Dot,
+    SemiColon,
+    QuestionMark,
 
-impl Token {
-    pub fn new(token_type: TokenType) -> Self {
-        Self {
-            token_type,
-            literal: None,
-        }
-    }
-    pub fn new_with_literal(token_type: TokenType, literal: Literal) -> Self {
-        Self {
-            token_type,
-            literal: Some(literal),
-        }
-    }
-}
+    // One or more grapheme tokens
+    Bang,
+    BangEqual,
+    Equal,
+    EqualEqual,
+    Less,
+    LessEqual,
+    More,
+    MoreEqual,
+    Plus,
+    PlusEqual,
+    Minus,
+    MinusEqual,
+    Arrow,
+    Star,
+    StarEqual,
+    Slash,
+    SlashEqual,
 
-impl Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self.literal {
-            Some(Literal::String(v)) => write!(f, "{:?}: {}", self.token_type, v),
-            Some(Literal::Integer(v)) => write!(f, "{:?}: {}", self.token_type, v),
-            Some(Literal::Float(v)) => write!(f, "{:?}: {}", self.token_type, v),
-            Some(Literal::Boolean(v)) => write!(f, "{:?}: {}", self.token_type, v),
-            None => write!(f, "{:?}", self.token_type),
-        }
-    }
+    // Literals
+    String(String),
+    Integer(i64),
+    Float(f64),
+    Boolean(bool),
+    Identifier(String),
+
+    // Keywords
+    Start,
+    Function,
+    Loop,
+    Infinite,
+    If,
+    Else,
+    For,
+    While,
+    Break,
+    Continue,
+    Return,
+    IntegerType,
+    FloatType,
+    StringType,
+    BooleanType,
 }

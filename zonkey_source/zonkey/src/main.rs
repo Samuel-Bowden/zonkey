@@ -1,8 +1,8 @@
 mod shell;
 
-use std::process::ExitCode;
 use clap::Parser;
 use shell::Shell;
+use std::process::ExitCode;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]

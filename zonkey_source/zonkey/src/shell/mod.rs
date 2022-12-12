@@ -1,7 +1,7 @@
-use std::{process::ExitCode, io::Write, fs::read_to_string, path::Path};
 use interpreter::Interpreter;
-use rustyline::{Editor, error::ReadlineError};
-use termcolor::{StandardStream, Color, ColorSpec, WriteColor};
+use rustyline::{error::ReadlineError, Editor};
+use std::{fs::read_to_string, io::Write, path::Path, process::ExitCode};
+use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 pub struct Shell {
     debug: bool,
@@ -38,16 +38,12 @@ impl Shell {
                         self.error(format!("{}", e));
                     }
                 }
-                Err(ReadlineError::Interrupted) => {
-                    break
-                },
-                Err(ReadlineError::Eof) => {
-                    break
-                },
+                Err(ReadlineError::Interrupted) => break,
+                Err(ReadlineError::Eof) => break,
                 Err(e) => {
                     self.error(format!("Failed to readline from prompt: {e}"));
                     return ExitCode::FAILURE;
-                },
+                }
             }
         }
 
@@ -74,11 +70,15 @@ impl Shell {
     }
 
     fn error(&mut self, string: String) {
-        self.stderr.set_color(ColorSpec::new().set_fg(Some(Color::Red))).expect("Failed to change the color of stderr.");
+        self.stderr
+            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
+            .expect("Failed to change the color of stderr.");
 
         write!(&mut self.stderr, "(ERROR)").expect("Failed to write `(ERROR)` to stderr.");
 
-        self.stderr.reset().expect("Failed to reset color of stderr.");
+        self.stderr
+            .reset()
+            .expect("Failed to reset color of stderr.");
 
         writeln!(&mut self.stderr, " {string}").expect("Failed to write error message to stderr.")
     }

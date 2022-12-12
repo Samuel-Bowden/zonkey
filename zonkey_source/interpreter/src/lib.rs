@@ -1,16 +1,16 @@
-use std::io::Write;
-use abstract_syntax_tree::AbstractSyntaxTree;
+use self::{err::InterpreterErr, lexer::Lexer, token::Token};
+use expr::Expr;
 use parser::Parser;
-use termcolor::{StandardStream, ColorSpec, Color, WriteColor};
+use std::io::Write;
+use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 use tree_walker::TreeWalker;
-use self::{token::Token, lexer::Lexer, err::InterpreterErr};
 
-mod lexer;
-mod token;
 mod err;
+mod expr;
+mod lexer;
 mod literal;
 mod parser;
-mod abstract_syntax_tree;
+mod token;
 mod tree_walker;
 
 pub struct Interpreter<'a> {
@@ -18,7 +18,7 @@ pub struct Interpreter<'a> {
     tokens: Vec<Token>,
     source: &'a str,
     stdout: StandardStream,
-    abstract_syntax_tree: Option<AbstractSyntaxTree>,
+    expressions: Vec<Expr>,
 }
 
 impl<'a> Interpreter<'a> {
@@ -28,7 +28,7 @@ impl<'a> Interpreter<'a> {
             tokens: Vec::new(),
             source,
             stdout: StandardStream::stdout(termcolor::ColorChoice::Always),
-            abstract_syntax_tree: None,
+            expressions: Vec::new(),
         }
     }
 
@@ -70,15 +70,15 @@ impl<'a> Interpreter<'a> {
         let parser = Parser::new(&mut binding).run();
 
         match parser {
-            Ok(parser) => self.abstract_syntax_tree = parser.abstract_syntax_tree,
+            Ok(parser) => self.expressions = parser.expressions,
             Err(e) => return Err(InterpreterErr::ParserFailed(e)),
         }
 
         self.status("Parser completed successfully.");
 
         if self.debug {
-            self.debug_information("Printing abstract syntax tree:");
-            println!("  {:?}", self.abstract_syntax_tree);
+            self.debug_information("Printing expressions:");
+            println!("  {:?}", self.expressions);
         }
 
         Ok(())
@@ -87,10 +87,8 @@ impl<'a> Interpreter<'a> {
     fn run_tree_walker(&mut self) -> Result<(), InterpreterErr> {
         self.status("Starting tree walker:");
 
-        if let Some(ast) = &self.abstract_syntax_tree {
-            if let Err(e) = TreeWalker::new(ast).run() {
-                return Err(InterpreterErr::TreeWalkerFailed(e));
-            }
+        if let Err(e) = TreeWalker::new(&mut self.expressions.iter()).run() {
+            return Err(InterpreterErr::TreeWalkerFailed(e));
         }
 
         self.status("Tree walker completed successfully.");
@@ -101,31 +99,42 @@ impl<'a> Interpreter<'a> {
     fn print_tokens(&mut self) {
         self.debug_information("Printing tokens:");
         for (i, token) in self.tokens.iter().enumerate() {
-            println!("  {}. {token}", i+1);
+            println!("  {}. {:?}", i + 1, token);
         }
     }
 
     fn status(&mut self, string: &str) {
         if self.debug {
-            self.stdout.set_color(ColorSpec::new().set_fg(Some(Color::Yellow))).expect("Failed to change colour of stdout.");
+            self.stdout
+                .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
+                .expect("Failed to change colour of stdout.");
 
             write!(&mut self.stdout, "(STATUS)").expect("Failed to write `(STATUS)` to stdout.");
 
-            self.stdout.reset().expect("Failed to reset color of stdout.");
+            self.stdout
+                .reset()
+                .expect("Failed to reset color of stdout.");
 
-            writeln!(&mut self.stdout, " {string}").expect("Failed to write status message to stdout.");
+            writeln!(&mut self.stdout, " {string}")
+                .expect("Failed to write status message to stdout.");
         }
     }
 
     fn debug_information(&mut self, string: &str) {
         if self.debug {
-            self.stdout.set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255,114,20)))).expect("Failed to change colour of stdout.");
+            self.stdout
+                .set_color(ColorSpec::new().set_fg(Some(Color::Rgb(255, 114, 20))))
+                .expect("Failed to change colour of stdout.");
 
-            write!(&mut self.stdout, "(DEBUG INFO)").expect("Failed to write `(DEBUG INFO)` to stdout.");
+            write!(&mut self.stdout, "(DEBUG INFO)")
+                .expect("Failed to write `(DEBUG INFO)` to stdout.");
 
-            self.stdout.reset().expect("Failed to reset color of stdout.");
+            self.stdout
+                .reset()
+                .expect("Failed to reset color of stdout.");
 
-            writeln!(&mut self.stdout, " {string}").expect("Failed to write status message to stdout.");
+            writeln!(&mut self.stdout, " {string}")
+                .expect("Failed to write status message to stdout.");
         }
     }
 }
