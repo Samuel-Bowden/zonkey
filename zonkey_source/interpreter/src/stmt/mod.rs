@@ -6,4 +6,5 @@ pub enum Stmt {
     Expression(Expr),
     Exit,
     VariableDeclaration(ValueType, String, Expr),
+    VariableAssignment(String, Expr),
 }

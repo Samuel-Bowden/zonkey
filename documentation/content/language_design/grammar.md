@@ -11,7 +11,7 @@ Grammar
 ```grammar
 program -> statement*;
 statement -> (expression_statement | print_statement | exit_statement | variable_declaration) ";";
-expression_statement -> equality;
+expression_statement -> IDENTIFIER "=" equality | equality;
 print_statement -> print "(" equality ")";
 exit_statement -> exit "(" ")";
 variable_declaration = ("Integer" | "String" | "Float" | "Boolean") IDENTIFIER "=" expression; 

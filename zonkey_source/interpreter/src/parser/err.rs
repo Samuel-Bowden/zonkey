@@ -11,6 +11,7 @@ pub enum ParserErr {
     ExitMissingRightParen,
     ExpectedVariableName,
     ExpectedVariableEqual,
+    LeftValueNotVariable,
 }
 
 impl Display for ParserErr {
@@ -36,6 +37,9 @@ impl Display for ParserErr {
             }
             Self::ExpectedVariableEqual => {
                 write!(f, "Expected '=' after variable declaration - variables must be initialised with an expression")
+            }
+            Self::LeftValueNotVariable => {
+                write!(f, "Left hand side of assignment must be a variable name")
             }
         }
     }

@@ -45,6 +45,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::VariableDeclaration(data_type, name, expr) => {
                 self.variable_declaration(data_type, name, expr)
             }
+            Stmt::VariableAssignment(name, expr) => self.variable_assignment(name, expr),
         }
     }
 
@@ -104,6 +105,32 @@ impl<'a> TreeWalker<'a> {
             return Err(TreeWalkerErr::VariableAssignmentIncompatibleTypes(
                 data_type.clone(),
                 value_data_type,
+            ));
+        }
+
+        self.environment.insert(name.clone(), value);
+
+        Ok(TreeWalkerStatus::Ok)
+    }
+
+    fn variable_assignment(
+        &mut self,
+        name: &String,
+        expression: &Expr,
+    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+        let variable = match self.environment.get(name) {
+            Some(var) => var,
+            None => return Err(TreeWalkerErr::VariableNotDefined(name.clone())),
+        };
+        let variable_type = variable.get_value_type();
+
+        let value = self.evaluate(expression)?;
+        let value_type = value.get_value_type();
+
+        if variable_type != value_type {
+            return Err(TreeWalkerErr::VariableAssignmentIncompatibleTypes(
+                variable_type,
+                value_type,
             ));
         }
 

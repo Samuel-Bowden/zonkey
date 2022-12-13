@@ -72,7 +72,21 @@ impl<'a> Parser<'a> {
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, ParserErr> {
-        Ok(Stmt::Expression(self.equality()?))
+        let expr = self.equality()?;
+
+        if let Some(Token::Equal) = self.tokens.peek() {
+            self.tokens.next();
+
+            let value = self.equality()?;
+
+            if let Expr::Variable(name) = expr {
+                return Ok(Stmt::VariableAssignment(name, value));
+            } else {
+                return Err(ParserErr::LeftValueNotVariable);
+            }
+        }
+
+        Ok(Stmt::Expression(expr))
     }
 
     fn exit_statement(&mut self) -> Result<Stmt, ParserErr> {
