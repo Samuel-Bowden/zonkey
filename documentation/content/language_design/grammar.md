@@ -10,13 +10,14 @@ Print will eventually be implemented as a function but for now I will be impleme
 Grammar
 ```grammar
 program -> statement*;
-statement -> (expression_statement | print_statement | exit_statement) ";";
+statement -> (expression_statement | print_statement | exit_statement | variable_declaration) ";";
 expression_statement -> equality;
 print_statement -> print "(" equality ")";
 exit_statement -> exit "(" ")";
+variable_declaration = ("Integer" | "String" | "Float" | "Boolean") IDENTIFIER "=" expression; 
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
-literal -> INTEGER | FLOAT | STRING | "true" | "false";
+literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER;
 ```

@@ -1,10 +1,10 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
 use parser::Parser;
 use status::InterpreterStatus;
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 use stmt::Stmt;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
-use tree_walker::{status::TreeWalkerStatus, TreeWalker};
+use tree_walker::{status::TreeWalkerStatus, value::Value, TreeWalker};
 
 mod err;
 mod expr;
@@ -21,6 +21,7 @@ pub struct Interpreter {
     tokens: Vec<Token>,
     stdout: StandardStream,
     statements: Vec<Stmt>,
+    environment: HashMap<String, Value>,
 }
 
 impl Interpreter {
@@ -30,6 +31,7 @@ impl Interpreter {
             tokens: Vec::new(),
             stdout: StandardStream::stdout(termcolor::ColorChoice::Always),
             statements: Vec::new(),
+            environment: HashMap::new(),
         }
     }
 
@@ -86,7 +88,7 @@ impl Interpreter {
     fn run_tree_walker(&mut self) -> Result<InterpreterStatus, InterpreterErr> {
         self.status("Starting tree walker:");
 
-        match TreeWalker::new(&mut self.statements.iter()).run() {
+        match TreeWalker::new(&mut self.environment).run(self.statements.iter()) {
             Ok(status) => {
                 self.status("Tree walker completed successfully.");
                 match status {

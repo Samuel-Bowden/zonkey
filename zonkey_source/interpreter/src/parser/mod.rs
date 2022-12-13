@@ -1,5 +1,7 @@
 use self::err::ParserErr;
-use crate::{expr::Expr, literal::Literal, stmt::Stmt, token::Token};
+use crate::{
+    expr::Expr, literal::Literal, stmt::Stmt, token::Token, tree_walker::value::ValueType,
+};
 use std::{iter::Peekable, slice::Iter};
 
 pub mod err;
@@ -35,6 +37,9 @@ impl<'a> Parser<'a> {
 
     fn statement(&mut self) -> Result<Stmt, ParserErr> {
         let expression = match self.tokens.peek() {
+            Some(
+                Token::IntegerType | Token::StringType | Token::BooleanType | Token::FloatType,
+            ) => self.variable_declaration()?,
             Some(Token::Print) => {
                 self.tokens.next();
                 self.print_statement()?
@@ -80,6 +85,30 @@ impl<'a> Parser<'a> {
             _ => return Err(ParserErr::ExitMissingRightParen),
         }
         Ok(Stmt::Exit)
+    }
+
+    fn variable_declaration(&mut self) -> Result<Stmt, ParserErr> {
+        let data_type = match self.tokens.next().unwrap() {
+            Token::IntegerType => ValueType::Integer,
+            Token::FloatType => ValueType::Float,
+            Token::BooleanType => ValueType::Boolean,
+            Token::StringType => ValueType::String,
+            _ => panic!("Data type token should represent a data type."),
+        };
+
+        let name = match self.tokens.next() {
+            Some(Token::Identifier(name)) => name,
+            _ => return Err(ParserErr::ExpectedVariableName),
+        };
+
+        match self.tokens.next() {
+            Some(Token::Equal) => (),
+            _ => return Err(ParserErr::ExpectedVariableEqual),
+        }
+
+        let expr = self.equality()?;
+
+        Ok(Stmt::VariableDeclaration(data_type, name.clone(), expr))
     }
 
     fn equality(&mut self) -> Result<Expr, ParserErr> {
@@ -178,6 +207,7 @@ impl<'a> Parser<'a> {
             Some(Token::Float(val)) => Ok(Expr::Literal(Literal::Float(*val))),
             Some(Token::String(val)) => Ok(Expr::Literal(Literal::String(val.clone()))),
             Some(Token::Boolean(val)) => Ok(Expr::Literal(Literal::Boolean(*val))),
+            Some(Token::Identifier(val)) => Ok(Expr::Variable(val.clone())),
             _ => Err(ParserErr::ExpectedLiteral),
         }
     }

@@ -9,6 +9,8 @@ pub enum ParserErr {
     PrintMissingRightParen,
     ExitMissingLeftParen,
     ExitMissingRightParen,
+    ExpectedVariableName,
+    ExpectedVariableEqual,
 }
 
 impl Display for ParserErr {
@@ -28,6 +30,12 @@ impl Display for ParserErr {
             }
             Self::ExitMissingRightParen => {
                 write!(f, "Exit statement is missing ')'")
+            }
+            Self::ExpectedVariableName => {
+                write!(f, "Expected variable name")
+            }
+            Self::ExpectedVariableEqual => {
+                write!(f, "Expected '=' after variable declaration - variables must be initialised with an expression")
             }
         }
     }

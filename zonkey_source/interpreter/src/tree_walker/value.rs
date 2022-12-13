@@ -4,6 +4,7 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
+#[derive(Clone)]
 pub enum Value {
     Integer(i64),
     Float(f64),
@@ -11,7 +12,7 @@ pub enum Value {
     Boolean(bool),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ValueType {
     Integer,
     Float,
@@ -448,6 +449,15 @@ impl Value {
 
     pub fn more_equal(&self, other: &Self) -> Result<bool, TreeWalkerErr> {
         Ok(!(self.less(other)?))
+    }
+
+    pub fn get_value_type(&self) -> ValueType {
+        match self {
+            Self::Integer(_) => ValueType::Integer,
+            Self::Float(_) => ValueType::Float,
+            Self::Boolean(_) => ValueType::Boolean,
+            Self::String(_) => ValueType::String,
+        }
     }
 }
 

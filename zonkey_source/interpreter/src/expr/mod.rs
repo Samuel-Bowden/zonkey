@@ -8,6 +8,7 @@ pub enum Expr {
         right: Box<Expr>,
     },
     Literal(Literal),
+    Variable(String),
 }
 
 #[cfg(test)]
