@@ -1,11 +1,13 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
+use environment::Environment;
 use parser::Parser;
 use status::InterpreterStatus;
-use std::{collections::HashMap, io::Write};
+use std::io::Write;
 use stmt::Stmt;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
-use tree_walker::{status::TreeWalkerStatus, value::Value, TreeWalker};
+use tree_walker::{status::TreeWalkerStatus, TreeWalker};
 
+mod environment;
 mod err;
 mod expr;
 mod lexer;
@@ -21,7 +23,7 @@ pub struct Interpreter {
     tokens: Vec<Token>,
     stdout: StandardStream,
     statements: Vec<Stmt>,
-    environment: HashMap<String, Value>,
+    environment: Environment,
 }
 
 impl Interpreter {
@@ -31,7 +33,7 @@ impl Interpreter {
             tokens: Vec::new(),
             stdout: StandardStream::stdout(termcolor::ColorChoice::Always),
             statements: Vec::new(),
-            environment: HashMap::new(),
+            environment: Environment::new(),
         }
     }
 

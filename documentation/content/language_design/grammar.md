@@ -9,15 +9,18 @@ Print will eventually be implemented as a function but for now I will be impleme
 
 Grammar
 ```grammar
-program -> statement*;
-statement -> (expression_statement | print_statement | exit_statement | variable_declaration) ";";
-expression_statement -> IDENTIFIER "=" equality | equality;
+program -> declaration*;
+declaration -> variable_declaration | statement;
+statement -> terminated_statement | block;
+terminated_statement -> (expression_statement | print_statement | exit_statement) ";";
+expression_statement -> (IDENTIFIER "=")? equality;
 print_statement -> print "(" equality ")";
 exit_statement -> exit "(" ")";
-variable_declaration = ("Integer" | "String" | "Float" | "Boolean") IDENTIFIER "=" expression; 
+variable_declaration = ("Integer" | "String" | "Float" | "Boolean") IDENTIFIER "=" expression ";"; 
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER;
+block -> "{" declaration* "}"
 ```

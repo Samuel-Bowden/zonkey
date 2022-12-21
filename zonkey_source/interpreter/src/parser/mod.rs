@@ -29,17 +29,34 @@ impl<'a> Parser<'a> {
         let mut statements = vec![];
 
         while self.tokens.peek() != None {
-            statements.push(self.statement()?);
+            statements.push(self.declaration()?);
         }
 
         Ok(statements)
     }
 
+    fn declaration(&mut self) -> Result<Stmt, ParserErr> {
+        if let Some(
+            Token::IntegerType | Token::StringType | Token::BooleanType | Token::FloatType,
+        ) = self.tokens.peek()
+        {
+            self.variable_declaration()
+        } else {
+            self.statement()
+        }
+    }
+
     fn statement(&mut self) -> Result<Stmt, ParserErr> {
+        if let Some(Token::LeftBrace) = self.tokens.peek() {
+            self.tokens.next();
+            self.block()
+        } else {
+            self.terminated_statement()
+        }
+    }
+
+    fn terminated_statement(&mut self) -> Result<Stmt, ParserErr> {
         let expression = match self.tokens.peek() {
-            Some(
-                Token::IntegerType | Token::StringType | Token::BooleanType | Token::FloatType,
-            ) => self.variable_declaration()?,
             Some(Token::Print) => {
                 self.tokens.next();
                 self.print_statement()?
@@ -55,6 +72,21 @@ impl<'a> Parser<'a> {
             Ok(expression)
         } else {
             Err(ParserErr::UnterminatedStatement)
+        }
+    }
+
+    fn block(&mut self) -> Result<Stmt, ParserErr> {
+        let mut statements = vec![];
+
+        loop {
+            match self.tokens.peek() {
+                Some(Token::RightBrace) => {
+                    self.tokens.next();
+                    return Ok(Stmt::Block(statements));
+                }
+                Some(_) => statements.push(self.declaration()?),
+                None => return Err(ParserErr::ExpectedRightBraceAfterBlock),
+            }
         }
     }
 
@@ -122,7 +154,11 @@ impl<'a> Parser<'a> {
 
         let expr = self.equality()?;
 
-        Ok(Stmt::VariableDeclaration(data_type, name.clone(), expr))
+        if let Some(Token::SemiColon) = self.tokens.next() {
+            Ok(Stmt::VariableDeclaration(data_type, name.clone(), expr))
+        } else {
+            Err(ParserErr::UnterminatedStatement)
+        }
     }
 
     fn equality(&mut self) -> Result<Expr, ParserErr> {

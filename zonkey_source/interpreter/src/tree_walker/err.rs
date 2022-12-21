@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use super::value::ValueType;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum TreeWalkerErr {
     UnsupportedOperator,
     AddErr(ValueType, ValueType),

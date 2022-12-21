@@ -7,4 +7,5 @@ pub enum Stmt {
     Exit,
     VariableDeclaration(ValueType, String, Expr),
     VariableAssignment(String, Expr),
+    Block(Vec<Stmt>),
 }
