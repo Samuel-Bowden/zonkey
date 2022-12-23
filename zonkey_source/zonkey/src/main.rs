@@ -9,6 +9,7 @@ use std::process::ExitCode;
 struct Args {
     file: Option<String>,
 
+    /// Turn debugging information on (requires debug build - not available in release build)
     #[arg(short, long)]
     debug: bool,
 }

@@ -1,5 +1,7 @@
 pub mod err;
 
+use crate::lexer_debug;
+
 use self::err::LexerErr;
 use super::token::Token;
 use unicode_segmentation::UnicodeSegmentation;
@@ -10,16 +12,20 @@ pub struct Lexer<'a> {
     current: usize,
     line: u64,
     graphemes: Vec<&'a str>,
+    #[cfg(debug_assertions)]
+    debug: bool,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str) -> Self {
+    pub fn new(source: &'a str, _debug: bool) -> Self {
         Self {
             tokens: vec![],
             start: 0,
             current: 0,
             line: 1,
             graphemes: source.graphemes(true).collect(),
+            #[cfg(debug_assertions)]
+            debug: _debug,
         }
     }
 
@@ -27,6 +33,15 @@ impl<'a> Lexer<'a> {
         while !self.is_at_end() {
             self.start = self.current;
             self.scan_token()?;
+        }
+
+        lexer_debug!(self.debug, "Printing tokens");
+
+        #[cfg(debug_assertions)]
+        if self.debug {
+            for (i, token) in self.tokens.iter().enumerate() {
+                println!("  {}: {:?}", i+1, token);
+            }
         }
 
         Ok(self)
@@ -308,7 +323,7 @@ mod tests {
             print(\"Hello \" + name);
         }";
 
-        let lexer = Lexer::new(source).run();
+        let lexer = Lexer::new(source, false).run();
 
         let source = match lexer {
             Ok(lexer) => lexer.tokens.into_iter(),
@@ -349,7 +364,7 @@ mod tests {
             }
         }";
 
-        let lexer = Lexer::new(source).run();
+        let lexer = Lexer::new(source, false).run();
 
         let source = match lexer {
             Ok(lexer) => lexer.tokens.into_iter(),

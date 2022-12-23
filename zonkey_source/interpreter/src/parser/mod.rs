@@ -1,6 +1,7 @@
 use self::err::ParserErr;
 use crate::{
-    expr::Expr, literal::Literal, stmt::Stmt, token::Token, tree_walker::value::ValueType,
+    expr::Expr, literal::Literal, stmt::Stmt, token::Token,
+    tree_walker::value::ValueType, parser_debug, debug_information,
 };
 use std::{iter::Peekable, slice::Iter};
 
@@ -9,23 +10,40 @@ pub mod err;
 pub struct Parser<'a> {
     tokens: &'a mut Peekable<Iter<'a, Token>>,
     pub statements: Vec<Stmt>,
+    #[cfg(debug_assertions)]
+    debug: bool,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a mut Peekable<Iter<'a, Token>>) -> Self {
+    pub fn new(tokens: &'a mut Peekable<Iter<'a, Token>>, _debug: bool) -> Self {
         Self {
             tokens,
             statements: Vec::new(),
+            #[cfg(debug_assertions)]
+            debug: _debug,
         }
     }
 
     pub fn run(mut self) -> Result<Self, ParserErr> {
+        parser_debug!(self.debug, "Production rule path:");
+
         self.statements = self.program()?;
+
+        parser_debug!(self.debug, "Printing statements");
+
+        #[cfg(debug_assertions)]
+        if self.debug {
+            for (i, statement) in self.statements.iter().enumerate() {
+                println!("  {}: {:?}", i+1, statement);
+            }
+        }
 
         Ok(self)
     }
 
     fn program(&mut self) -> Result<Vec<Stmt>, ParserErr> {
+        debug_information!(self.debug, "program");
+
         let mut statements = vec![];
 
         while self.tokens.peek() != None {
@@ -36,6 +54,8 @@ impl<'a> Parser<'a> {
     }
 
     fn declaration(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "declaration");
+
         if let Some(
             Token::IntegerType | Token::StringType | Token::BooleanType | Token::FloatType,
         ) = self.tokens.peek()
@@ -47,15 +67,19 @@ impl<'a> Parser<'a> {
     }
 
     fn statement(&mut self) -> Result<Stmt, ParserErr> {
-        if let Some(Token::LeftBrace) = self.tokens.peek() {
-            self.tokens.next();
-            self.block()
-        } else {
-            self.terminated_statement()
+        debug_information!(self.debug, "statement");
+
+        match self.tokens.peek() {
+            Some(Token::LeftBrace) => {
+                self.block()
+            }
+            _ => Ok(self.terminated_statement()?),
         }
     }
 
     fn terminated_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "terminated_statement");
+
         let expression = match self.tokens.peek() {
             Some(Token::Print) => {
                 self.tokens.next();
@@ -76,6 +100,13 @@ impl<'a> Parser<'a> {
     }
 
     fn block(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "block");
+
+        match self.tokens.next() {
+            Some(Token::LeftBrace) => (),
+            _ => return Err(ParserErr::ExpectedLeftBraceBeforeBlock),
+        }
+
         let mut statements = vec![];
 
         loop {
@@ -91,19 +122,26 @@ impl<'a> Parser<'a> {
     }
 
     fn print_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "print_statement");
+
         match self.tokens.next() {
             Some(Token::LeftParen) => (),
             _ => return Err(ParserErr::PrintMissingLeftParen),
         }
+
         let expression = self.equality()?;
+
         match self.tokens.next() {
             Some(Token::RightParen) => (),
             _ => return Err(ParserErr::PrintMissingRightParen),
         }
+
         Ok(Stmt::Print(expression))
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "expression_statement");
+
         let expr = self.equality()?;
 
         if let Some(Token::Equal) = self.tokens.peek() {
@@ -122,6 +160,8 @@ impl<'a> Parser<'a> {
     }
 
     fn exit_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "exit_statement");
+
         match self.tokens.next() {
             Some(Token::LeftParen) => (),
             _ => return Err(ParserErr::ExitMissingLeftParen),
@@ -130,10 +170,13 @@ impl<'a> Parser<'a> {
             Some(Token::RightParen) => (),
             _ => return Err(ParserErr::ExitMissingRightParen),
         }
+
         Ok(Stmt::Exit)
     }
 
     fn variable_declaration(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "variable_declaration");
+
         let data_type = match self.tokens.next().unwrap() {
             Token::IntegerType => ValueType::Integer,
             Token::FloatType => ValueType::Float,
@@ -162,6 +205,8 @@ impl<'a> Parser<'a> {
     }
 
     fn equality(&mut self) -> Result<Expr, ParserErr> {
+        debug_information!(self.debug, "equality");
+
         let mut left = self.comparision()?;
 
         loop {
@@ -184,6 +229,8 @@ impl<'a> Parser<'a> {
     }
 
     fn comparision(&mut self) -> Result<Expr, ParserErr> {
+        debug_information!(self.debug, "comparison");
+
         let mut left = self.addsub()?;
 
         loop {
@@ -208,6 +255,8 @@ impl<'a> Parser<'a> {
     }
 
     fn addsub(&mut self) -> Result<Expr, ParserErr> {
+        debug_information!(self.debug, "addsub");
+
         let mut left = self.multdiv()?;
 
         loop {
@@ -230,6 +279,8 @@ impl<'a> Parser<'a> {
     }
 
     fn multdiv(&mut self) -> Result<Expr, ParserErr> {
+        debug_information!(self.debug, "multdiv");
+
         let mut left = self.literal()?;
 
         loop {
@@ -252,13 +303,15 @@ impl<'a> Parser<'a> {
     }
 
     fn literal(&mut self) -> Result<Expr, ParserErr> {
+        debug_information!(self.debug, "literal");
+
         match self.tokens.next() {
             Some(Token::Integer(val)) => Ok(Expr::Literal(Literal::Integer(*val))),
             Some(Token::Float(val)) => Ok(Expr::Literal(Literal::Float(*val))),
             Some(Token::String(val)) => Ok(Expr::Literal(Literal::String(val.clone()))),
             Some(Token::Boolean(val)) => Ok(Expr::Literal(Literal::Boolean(*val))),
             Some(Token::Identifier(val)) => Ok(Expr::Variable(val.clone())),
-            _ => Err(ParserErr::ExpectedLiteral),
+            _ => return Err(ParserErr::ExpectedLiteral),
         }
     }
 }

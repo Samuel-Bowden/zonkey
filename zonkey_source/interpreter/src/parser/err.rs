@@ -12,6 +12,7 @@ pub enum ParserErr {
     ExpectedVariableName,
     ExpectedVariableEqual,
     LeftValueNotVariable,
+    ExpectedLeftBraceBeforeBlock,
     ExpectedRightBraceAfterBlock,
 }
 
@@ -41,6 +42,9 @@ impl Display for ParserErr {
             }
             Self::LeftValueNotVariable => {
                 write!(f, "Left hand side of assignment must be a variable name")
+            }
+            Self::ExpectedLeftBraceBeforeBlock => {
+                write!(f, "Expected '{{' before block")
             }
             Self::ExpectedRightBraceAfterBlock => {
                 write!(f, "Expected '}}' after block")
