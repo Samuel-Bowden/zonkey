@@ -7,6 +7,8 @@ pub enum ParserErr {
     ParserNotReachedEOF,
     PrintMissingLeftParen,
     PrintMissingRightParen,
+    IfMissingLeftParen,
+    IfMissingRightParen,
     ExitMissingLeftParen,
     ExitMissingRightParen,
     ExpectedVariableName,
@@ -27,6 +29,12 @@ impl Display for ParserErr {
             }
             Self::PrintMissingRightParen => {
                 write!(f, "Print statement is missing ')' to wrap expression")
+            }
+            Self::IfMissingLeftParen => {
+                write!(f, "If statement is missing '(` to wrap condition")
+            }
+            Self::IfMissingRightParen => {
+                write!(f, "If statement is missing ')` to wrap condition")
             }
             Self::ExitMissingLeftParen => {
                 write!(f, "Exit statement is missing '('")

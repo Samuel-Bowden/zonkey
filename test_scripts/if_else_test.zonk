@@ -1,0 +1,82 @@
+# Testing whether if, else and calculations are performed correctly.
+
+print("For a three digit number where all the digits are the same, that number divided by the sum of its digits should equal 37.");
+print("Lets test whether that holds in Zonkey lang 🧪");
+
+print("Numbers:");
+Integer one = 111;
+print(one);
+
+Integer two = 222;
+print(two);
+
+Integer three = 333;
+print(three);
+
+Integer four = 444;
+print(four);
+
+Integer five = 555;
+print(five);
+
+Integer six = 666;
+print(six);
+
+Integer seven = 777;
+print(seven);
+
+Integer eight = 888;
+print(eight);
+
+Integer nine = 999;
+print(nine);
+
+#------------------
+
+print("Each number divided by the sum of their digits:");
+Integer sum_digits = 3;
+
+one = one / sum_digits;
+sum_digits = sum_digits + 3;
+print(one);
+
+two = two / sum_digits;
+sum_digits = sum_digits + 3;
+print(two);
+
+three = three / sum_digits;
+sum_digits = sum_digits + 3;
+print(three);
+
+four = four / sum_digits;
+sum_digits = sum_digits + 3;
+print(four);
+
+five = five / sum_digits;
+sum_digits = sum_digits + 3;
+print(five);
+
+six = six / sum_digits;
+sum_digits = sum_digits + 3;
+print(six);
+
+seven = seven / sum_digits;
+sum_digits = sum_digits + 3;
+print(seven);
+
+eight = eight / sum_digits;
+sum_digits = sum_digits + 3;
+print(eight);
+
+nine = nine / sum_digits;
+sum_digits = sum_digits + 3;
+print(nine);
+
+# Sum of numbers should equal 333 as 37 * 9 = 333
+Integer sum_of_numbers = one + two + three + four + five + six + seven + eight + nine;
+
+if (sum_of_numbers == 333) {
+  print("It holds true!");
+} else {
+  print("That doesn't seem quite right?!");
+}

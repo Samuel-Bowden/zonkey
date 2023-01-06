@@ -61,6 +61,17 @@ impl<'a> TreeWalker<'a> {
 
                 Ok(TreeWalkerStatus::Ok)
             }
+            Stmt::If(condition, true_branch, false_branch) => match self.evaluate(condition)? {
+                Value::Boolean(true) => self.interpret(true_branch),
+                Value::Boolean(false) => {
+                    if let Some(branch) = false_branch {
+                        self.interpret(branch)
+                    } else {
+                        Ok(TreeWalkerStatus::Ok)
+                    }
+                }
+                _ => Err(TreeWalkerErr::IfConditionMustEvaluateToBoolean),
+            }
         }
     }
 

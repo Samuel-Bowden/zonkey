@@ -12,6 +12,7 @@ pub enum TreeWalkerErr {
     EqualityErr(ValueType, ValueType),
     VariableAssignmentIncompatibleTypes(ValueType, ValueType),
     VariableNotDefined(String),
+    IfConditionMustEvaluateToBoolean,
 }
 
 impl Display for TreeWalkerErr {
@@ -24,7 +25,8 @@ impl Display for TreeWalkerErr {
             Self::MultiplyErr(left, right) => write!(f, "Cannot multiply {left} by {right}"),
             Self::EqualityErr(left, right) => write!(f, "Cannot compare {left} to {right}"),
             Self::VariableAssignmentIncompatibleTypes(variable_type, evaluation_type) => write!(f, "Cannot assign the evaluated value (of {evaluation_type} type) to the variable (of {variable_type} type) as they have different types"),
-            Self::VariableNotDefined(name) => write!(f, "Variable '{name}' has not been defined")
+            Self::VariableNotDefined(name) => write!(f, "Variable '{name}' has not been defined"),
+            Self::IfConditionMustEvaluateToBoolean => write!(f, "Condition of an if statement must evaluate to a boolean"),
         }
     }
 }

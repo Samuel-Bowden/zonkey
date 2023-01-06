@@ -11,7 +11,7 @@ Grammar
 ```grammar
 program -> declaration*;
 declaration -> variable_declaration | statement;
-statement -> terminated_statement | block;
+statement -> terminated_statement | block | if_statement;
 terminated_statement -> (expression_statement | print_statement | exit_statement) ";";
 expression_statement -> (IDENTIFIER "=")? equality;
 print_statement -> print "(" equality ")";
@@ -23,4 +23,5 @@ addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER;
 block -> "{" declaration* "}"
+if_statement -> "if" "(" equality ")" block ("else" block)?; 
 ```

@@ -73,6 +73,10 @@ impl<'a> Parser<'a> {
             Some(Token::LeftBrace) => {
                 self.block()
             }
+            Some(Token::If) => {
+                self.tokens.next();
+                self.if_statement()
+            }
             _ => Ok(self.terminated_statement()?),
         }
     }
@@ -97,6 +101,35 @@ impl<'a> Parser<'a> {
         } else {
             Err(ParserErr::UnterminatedStatement)
         }
+    }
+
+    fn if_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "if_statement");
+
+        match self.tokens.next() {
+            Some(Token::LeftParen) => (),
+            _ => return Err(ParserErr::IfMissingLeftParen),
+        }
+
+        let expression = self.equality()?;
+
+        match self.tokens.next() {
+            Some(Token::RightParen) => (),
+            _ => return Err(ParserErr::IfMissingRightParen),
+        }
+
+        let true_branch = Box::new(self.block()?);
+
+        let false_branch = match self.tokens.peek() {
+            Some(Token::Else) => {
+                self.tokens.next();
+
+                Some(Box::new(self.statement()?))
+            }
+            _ => None,
+        };
+
+        Ok(Stmt::If(expression, true_branch, false_branch))
     }
 
     fn block(&mut self) -> Result<Stmt, ParserErr> {

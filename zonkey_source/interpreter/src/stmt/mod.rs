@@ -8,4 +8,5 @@ pub enum Stmt {
     VariableDeclaration(ValueType, String, Expr),
     VariableAssignment(String, Expr),
     Block(Vec<Stmt>),
+    If(Expr, Box<Stmt>, Option<Box<Stmt>>),
 }
