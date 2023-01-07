@@ -40,7 +40,7 @@ impl<'a> Lexer<'a> {
         #[cfg(debug_assertions)]
         if self.debug {
             for (i, token) in self.tokens.iter().enumerate() {
-                println!("  {}: {:?}", i+1, token);
+                println!("  {}: {:?}", i + 1, token);
             }
         }
 
@@ -279,7 +279,6 @@ impl<'a> Lexer<'a> {
             "function" => self.add_token(Token::Function),
             "start" => self.add_token(Token::Start),
             "loop" => self.add_token(Token::Loop),
-            "infinite" => self.add_token(Token::Infinite),
             "if" => self.add_token(Token::If),
             "else" => self.add_token(Token::Else),
             "for" => self.add_token(Token::For),

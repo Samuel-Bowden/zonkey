@@ -6,11 +6,9 @@ weight: 3
 Variables are initialised with their type and identifier. Variables must be initialised by the programmer unless they are optional (e.g "Integer?").
 
 ```zonkey
-start {
-	Integer a = 5;
-	Integer b = 0;
-	print("Sum: " + (a+b));
-}
+Integer a = 5;
+Integer b = 0;
+print("Sum: " + (a+b));
 ```
 
 ```output
@@ -21,16 +19,25 @@ Sum: 5
 If a programmer does not initialise a variable, the program will refuse to execute.
 
 ```zonkey
-start {
-	Integer a = 5;
-	Integer b;
-	print("Sum: " + (a+b));
-}
+Integer a = 5;
+Integer b;
+print("Sum: " + (a+b));
 ```
 
 ```output
 $ zonkey incorrect-variables.zonk
 Error on line 2: Integer b has not been initialised with a value
+```
+
+Variables can be assigned with following syntax:
+
+```zonkey
+Integer a = 5;
+a = 1;
+a += 1;
+a -= 1;
+a *= 1;
+a /= 1;
 ```
 
 ## Casting the type of variables

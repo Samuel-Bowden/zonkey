@@ -1,7 +1,7 @@
 use self::err::ParserErr;
 use crate::{
-    expr::Expr, literal::Literal, stmt::Stmt, token::Token,
-    tree_walker::value::ValueType, parser_debug, debug_information,
+    debug_information, expr::Expr, literal::Literal, parser_debug, stmt::Stmt, token::Token,
+    tree_walker::value::ValueType,
 };
 use std::{iter::Peekable, slice::Iter};
 
@@ -34,7 +34,7 @@ impl<'a> Parser<'a> {
         #[cfg(debug_assertions)]
         if self.debug {
             for (i, statement) in self.statements.iter().enumerate() {
-                println!("  {}: {:?}", i+1, statement);
+                println!("  {}: {:?}", i + 1, statement);
             }
         }
 
@@ -70,12 +70,18 @@ impl<'a> Parser<'a> {
         debug_information!(self.debug, "statement");
 
         match self.tokens.peek() {
-            Some(Token::LeftBrace) => {
-                self.block()
-            }
+            Some(Token::LeftBrace) => self.block(),
             Some(Token::If) => {
                 self.tokens.next();
                 self.if_statement()
+            }
+            Some(Token::While) => {
+                self.tokens.next();
+                self.while_statement()
+            }
+            Some(Token::Loop) => {
+                self.tokens.next();
+                self.loop_statement()
             }
             _ => Ok(self.terminated_statement()?),
         }
@@ -92,6 +98,14 @@ impl<'a> Parser<'a> {
             Some(Token::Exit) => {
                 self.tokens.next();
                 self.exit_statement()?
+            }
+            Some(Token::Break) => {
+                self.tokens.next();
+                Stmt::Break
+            }
+            Some(Token::Continue) => {
+                self.tokens.next();
+                Stmt::Continue
             }
             _ => self.expression_statement()?,
         };
@@ -130,6 +144,34 @@ impl<'a> Parser<'a> {
         };
 
         Ok(Stmt::If(expression, true_branch, false_branch))
+    }
+
+    fn while_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "while_statement");
+
+        match self.tokens.next() {
+            Some(Token::LeftParen) => (),
+            _ => return Err(ParserErr::WhileMissingLeftParen),
+        }
+
+        let expression = self.equality()?;
+
+        match self.tokens.next() {
+            Some(Token::RightParen) => (),
+            _ => return Err(ParserErr::WhileMissingRightParen),
+        }
+
+        let block = Box::new(self.block()?);
+
+        Ok(Stmt::While(expression, block))
+    }
+
+    fn loop_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "loop_statement");
+
+        let block = Box::new(self.block()?);
+
+        Ok(Stmt::Loop(block))
     }
 
     fn block(&mut self) -> Result<Stmt, ParserErr> {
@@ -177,19 +219,30 @@ impl<'a> Parser<'a> {
 
         let expr = self.equality()?;
 
-        if let Some(Token::Equal) = self.tokens.peek() {
-            self.tokens.next();
+        match self.tokens.peek() {
+            Some(
+                Token::Equal
+                | Token::PlusEqual
+                | Token::MinusEqual
+                | Token::StarEqual
+                | Token::SlashEqual,
+            ) => {
+                let assignment_operator = self.tokens.next();
 
-            let value = self.equality()?;
+                let value = self.equality()?;
 
-            if let Expr::Variable(name) = expr {
-                return Ok(Stmt::VariableAssignment(name, value));
-            } else {
-                return Err(ParserErr::LeftValueNotVariable);
+                if let Expr::Variable(name) = expr {
+                    Ok(Stmt::VariableAssignment(
+                        name,
+                        value,
+                        assignment_operator.unwrap().clone(),
+                    ))
+                } else {
+                    Err(ParserErr::LeftValueNotVariable)
+                }
             }
+            _ => Ok(Stmt::Expression(expr)),
         }
-
-        Ok(Stmt::Expression(expr))
     }
 
     fn exit_statement(&mut self) -> Result<Stmt, ParserErr> {

@@ -40,7 +40,6 @@ pub enum Token {
     Start,
     Function,
     Loop,
-    Infinite,
     If,
     Else,
     For,

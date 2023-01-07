@@ -11,9 +11,9 @@ Grammar
 ```grammar
 program -> declaration*;
 declaration -> variable_declaration | statement;
-statement -> terminated_statement | block | if_statement;
-terminated_statement -> (expression_statement | print_statement | exit_statement) ";";
-expression_statement -> (IDENTIFIER "=")? equality;
+statement -> terminated_statement | block | if_statement | while_statement | loop_statement;
+terminated_statement -> (expression_statement | print_statement | exit_statement | "break" | "continue") ";";
+expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
 print_statement -> print "(" equality ")";
 exit_statement -> exit "(" ")";
 variable_declaration = ("Integer" | "String" | "Float" | "Boolean") IDENTIFIER "=" expression ";"; 
@@ -24,4 +24,6 @@ multdiv -> literal (("/" | "*") literal)*;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER;
 block -> "{" declaration* "}"
 if_statement -> "if" "(" equality ")" block ("else" block)?; 
+while_statement -> "while" "(" equality ")" block;
+loop_statement -> "loop" block;
 ```

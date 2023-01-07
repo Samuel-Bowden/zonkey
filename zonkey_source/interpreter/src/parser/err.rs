@@ -9,6 +9,8 @@ pub enum ParserErr {
     PrintMissingRightParen,
     IfMissingLeftParen,
     IfMissingRightParen,
+    WhileMissingLeftParen,
+    WhileMissingRightParen,
     ExitMissingLeftParen,
     ExitMissingRightParen,
     ExpectedVariableName,
@@ -35,6 +37,12 @@ impl Display for ParserErr {
             }
             Self::IfMissingRightParen => {
                 write!(f, "If statement is missing ')` to wrap condition")
+            }
+            Self::WhileMissingLeftParen => {
+                write!(f, "While statement is missing '(` to wrap condition")
+            }
+            Self::WhileMissingRightParen => {
+                write!(f, "While statement is missing ')` to wrap condition")
             }
             Self::ExitMissingLeftParen => {
                 write!(f, "Exit statement is missing '('")

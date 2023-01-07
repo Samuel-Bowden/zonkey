@@ -9,7 +9,7 @@ weight: 9
 ...
 Boolean quit = false;
 
-infinite loop {
+loop {
 	# Some operations
 	...
 
@@ -20,17 +20,13 @@ infinite loop {
 ...
 ```
 
-In most programming languages, you would need to set up something like `while(true)` to create an infinite loop. Infinite loops are often used in programming, however they are dangerous if used incorrectly, therefore Zonkey denotes these with `infinite loop` in order for the user to understand what they are using and the dangers that come along from using them.
-
 ## For Loop
 
 ### Normal
 
 ```zonkey
-start {
-	for (Integer i, i < 10, i+=1) {
-		print(i);
-	}
+for (Integer i, i < 10, i+=1) {
+	print(i);
 }
 ```
 
@@ -39,12 +35,10 @@ start {
 A common need when programming is to iterate over elements of a set or a range. Zonkey will support iterators, and this is a special type of for loop to support iterating over elements of an iterator.
 
 ```zonkey
-start {
-	Array<Integer> arr = [1, 2, 3];
+Array<Integer> arr = [1, 2, 3];
 
-	for (i in arr) {
-		print(i);
-	}
+for (i in arr) {
+	print(i);
 }
 ```
 
@@ -63,11 +57,9 @@ The value for each iteration that is used in the for loop, "i" in this case, wil
 ## While Loop
 
 ```zonkey
-start {
-	Integer i = 10;	
+Integer i = 10;	
 
-	while (i < 20) {
-		print(i);
-	}
+while (i < 20) {
+	print(i);
 }
 ```

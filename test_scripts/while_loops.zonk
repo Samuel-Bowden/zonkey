@@ -1,0 +1,14 @@
+# Should print from 0-99
+
+Integer i = 0;
+
+while (i <= 90) {
+  Integer j = 0;
+
+  while (j <= 9) {
+    print(i + j);
+    j += 1;
+  }
+
+  i += 10;
+}

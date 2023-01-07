@@ -13,6 +13,7 @@ pub enum TreeWalkerErr {
     VariableAssignmentIncompatibleTypes(ValueType, ValueType),
     VariableNotDefined(String),
     IfConditionMustEvaluateToBoolean,
+    BreakOutsideLoop,
 }
 
 impl Display for TreeWalkerErr {
@@ -27,6 +28,7 @@ impl Display for TreeWalkerErr {
             Self::VariableAssignmentIncompatibleTypes(variable_type, evaluation_type) => write!(f, "Cannot assign the evaluated value (of {evaluation_type} type) to the variable (of {variable_type} type) as they have different types"),
             Self::VariableNotDefined(name) => write!(f, "Variable '{name}' has not been defined"),
             Self::IfConditionMustEvaluateToBoolean => write!(f, "Condition of an if statement must evaluate to a boolean"),
+            Self::BreakOutsideLoop => write!(f, "Break statement outside of loop"),
         }
     }
 }

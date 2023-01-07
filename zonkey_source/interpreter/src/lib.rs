@@ -30,7 +30,11 @@ impl Interpreter {
 
         #[cfg(not(debug_assertions))]
         if debug {
-            crate::debugger::report("WARNING", "Debug mode not available in release build", termcolor::Color::Yellow);
+            crate::debugger::report(
+                "WARNING",
+                "Debug mode not available in release build",
+                termcolor::Color::Yellow,
+            );
         }
 
         Self {
@@ -87,7 +91,7 @@ impl Interpreter {
             Ok(status) => {
                 interpreter_debug!(self.debug, "Tree walker completed successfully");
                 match status {
-                    TreeWalkerStatus::Ok => Ok(InterpreterStatus::Alive),
+                    TreeWalkerStatus::Ok | TreeWalkerStatus::Break => Ok(InterpreterStatus::Alive),
                     TreeWalkerStatus::Exit => Ok(InterpreterStatus::Dead),
                 }
             }

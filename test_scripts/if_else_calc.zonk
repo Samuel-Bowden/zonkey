@@ -36,40 +36,40 @@ print(nine);
 print("Each number divided by the sum of their digits:");
 Integer sum_digits = 3;
 
-one = one / sum_digits;
-sum_digits = sum_digits + 3;
+one /= sum_digits;
+sum_digits += 3;
 print(one);
 
-two = two / sum_digits;
-sum_digits = sum_digits + 3;
+two /= sum_digits;
+sum_digits += 3;
 print(two);
 
-three = three / sum_digits;
-sum_digits = sum_digits + 3;
+three /= sum_digits;
+sum_digits += 3;
 print(three);
 
-four = four / sum_digits;
-sum_digits = sum_digits + 3;
+four /= sum_digits;
+sum_digits += 3;
 print(four);
 
-five = five / sum_digits;
-sum_digits = sum_digits + 3;
+five /= sum_digits;
+sum_digits += 3;
 print(five);
 
-six = six / sum_digits;
-sum_digits = sum_digits + 3;
+six /= sum_digits;
+sum_digits += 3;
 print(six);
 
-seven = seven / sum_digits;
-sum_digits = sum_digits + 3;
+seven /= sum_digits;
+sum_digits += 3;
 print(seven);
 
-eight = eight / sum_digits;
-sum_digits = sum_digits + 3;
+eight /= sum_digits;
+sum_digits += 3;
 print(eight);
 
-nine = nine / sum_digits;
-sum_digits = sum_digits + 3;
+nine /= sum_digits;
+sum_digits += 3;
 print(nine);
 
 # Sum of numbers should equal 333 as 37 * 9 = 333

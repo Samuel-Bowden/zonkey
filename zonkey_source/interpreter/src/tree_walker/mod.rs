@@ -24,6 +24,7 @@ impl<'a> TreeWalker<'a> {
             match self.interpret(&statement) {
                 Ok(TreeWalkerStatus::Ok) => continue,
                 Ok(TreeWalkerStatus::Exit) => return Ok(TreeWalkerStatus::Exit),
+                Ok(TreeWalkerStatus::Break) => return Err(TreeWalkerErr::BreakOutsideLoop),
                 Err(err) => return Err(err),
             }
         }
@@ -45,21 +46,32 @@ impl<'a> TreeWalker<'a> {
             Stmt::VariableDeclaration(data_type, name, expr) => {
                 self.variable_declaration(data_type, name, expr)
             }
-            Stmt::VariableAssignment(name, expr) => self.variable_assignment(name, expr),
+            Stmt::VariableAssignment(name, expr, operator) => {
+                self.variable_assignment(name, expr, operator)
+            }
             Stmt::Block(statements) => {
                 self.environment.push();
+
+                let mut return_value = Ok(TreeWalkerStatus::Ok);
 
                 for statement in statements {
                     match self.interpret(&statement) {
                         Ok(TreeWalkerStatus::Ok) => continue,
-                        Ok(TreeWalkerStatus::Exit) => return Ok(TreeWalkerStatus::Exit),
+                        Ok(TreeWalkerStatus::Exit) => {
+                            return_value = Ok(TreeWalkerStatus::Exit);
+                            break;
+                        }
+                        Ok(TreeWalkerStatus::Break) => {
+                            return_value = Ok(TreeWalkerStatus::Break);
+                            break;
+                        }
                         Err(err) => return Err(err),
                     }
                 }
 
                 self.environment.pop();
 
-                Ok(TreeWalkerStatus::Ok)
+                return_value
             }
             Stmt::If(condition, true_branch, false_branch) => match self.evaluate(condition)? {
                 Value::Boolean(true) => self.interpret(true_branch),
@@ -71,7 +83,35 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
                 _ => Err(TreeWalkerErr::IfConditionMustEvaluateToBoolean),
+            },
+            Stmt::While(condition, block) => {
+                while match self.evaluate(condition)? {
+                    Value::Boolean(true) => true,
+                    Value::Boolean(false) => false,
+                    _ => return Err(TreeWalkerErr::IfConditionMustEvaluateToBoolean),
+                } {
+                    match self.interpret(block)? {
+                        TreeWalkerStatus::Break => break,
+                        TreeWalkerStatus::Ok => continue,
+                        TreeWalkerStatus::Exit => return Ok(TreeWalkerStatus::Exit),
+                    }
+                }
+
+                Ok(TreeWalkerStatus::Ok)
             }
+            Stmt::Loop(block) => {
+                loop {
+                    match self.interpret(block)? {
+                        TreeWalkerStatus::Break => break,
+                        TreeWalkerStatus::Ok => continue,
+                        TreeWalkerStatus::Exit => return Ok(TreeWalkerStatus::Exit),
+                    }
+                }
+
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::Break => Ok(TreeWalkerStatus::Break),
+            Stmt::Continue => Ok(TreeWalkerStatus::Ok),
         }
     }
 
@@ -143,6 +183,7 @@ impl<'a> TreeWalker<'a> {
         &mut self,
         name: &String,
         expression: &Expr,
+        operator: &Token,
     ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         let variable = match self.environment.get(name) {
             Some(var) => var,
@@ -160,7 +201,7 @@ impl<'a> TreeWalker<'a> {
             ));
         }
 
-        self.environment.assign(name, value);
+        self.environment.assign(name, value, operator);
 
         Ok(TreeWalkerStatus::Ok)
     }

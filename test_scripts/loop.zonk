@@ -1,0 +1,15 @@
+# Loop should count from 0-9, but skip 5
+
+Integer count = 0;
+
+loop {
+  if (count == 10) {
+    break;
+  } else if (count == 5) {
+    continue;
+  } else {
+    print(count);
+  }
+
+  count += 1;
+}

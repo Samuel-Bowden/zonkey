@@ -1,4 +1,4 @@
-use crate::tree_walker::value::Value;
+use crate::{token::Token, tree_walker::value::Value};
 use std::collections::HashMap;
 
 pub struct Environment {
@@ -22,10 +22,17 @@ impl Environment {
         None
     }
 
-    pub fn assign(&mut self, name: &String, value: Value) {
+    pub fn assign(&mut self, name: &String, value: Value, operator: &Token) {
         for element in self.stack.iter_mut().rev() {
             if let Some(key) = element.get_mut(name) {
-                *key = value;
+                match operator {
+                    Token::Equal => *key = value,
+                    Token::PlusEqual => *key = (key.clone() + value).unwrap(),
+                    Token::MinusEqual => *key = (key.clone() - value).unwrap(),
+                    Token::SlashEqual => *key = (key.clone() / value).unwrap(),
+                    Token::StarEqual => *key = (key.clone() * value).unwrap(),
+                    _ => (),
+                }
                 break;
             }
         }
