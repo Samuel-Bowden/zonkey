@@ -4,15 +4,12 @@
 
 print("First 10 elements of Fibonacci Sequence:");
 
-Integer i = 0;
-
 Integer n1 = 0;
 Integer n2 = 1;
 
-while (i < 10) {
+for (Integer i = 0, i < 10, i += 1) {
   print(n1);
   Integer nth = n1 + n2;
   n1 = n2;
   n2 = nth;
-  i += 1;
 }

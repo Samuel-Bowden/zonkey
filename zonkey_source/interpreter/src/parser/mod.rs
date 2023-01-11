@@ -60,7 +60,7 @@ impl<'a> Parser<'a> {
             Token::IntegerType | Token::StringType | Token::BooleanType | Token::FloatType,
         ) = self.tokens.peek()
         {
-            self.variable_declaration()
+            self.terminated_variable_declaration()
         } else {
             self.statement()
         }
@@ -82,6 +82,10 @@ impl<'a> Parser<'a> {
             Some(Token::Loop) => {
                 self.tokens.next();
                 self.loop_statement()
+            }
+            Some(Token::For) => {
+                self.tokens.next();
+                self.for_statement()
             }
             _ => Ok(self.terminated_statement()?),
         }
@@ -164,6 +168,47 @@ impl<'a> Parser<'a> {
         let block = Box::new(self.block()?);
 
         Ok(Stmt::While(expression, block))
+    }
+
+    fn for_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "for_statement");
+
+        match self.tokens.next() {
+            Some(Token::LeftParen) => (),
+            _ => return Err(ParserErr::ForMissingLeftParen),
+        }
+
+        let initialiser_statement = self.variable_declaration()?;
+
+        match self.tokens.next() {
+            Some(Token::Comma) => (),
+            _ => return Err(ParserErr::ForMissingCommaAfterInitialiserStatement),
+        }
+
+        let test_statement = self.equality()?;
+
+        match self.tokens.next() {
+            Some(Token::Comma) => (),
+            _ => return Err(ParserErr::ForMissingCommaAfterTestStatement),
+        }
+
+        let update_statement = self.expression_statement()?;
+
+        match self.tokens.next() {
+            Some(Token::RightParen) => (),
+            _ => return Err(ParserErr::ForMissingRightParen),
+        }
+
+        let mut block = self.block()?;
+
+        if let Stmt::Block(b) = &mut block {
+            b.push(update_statement);
+        }
+
+        Ok(Stmt::Block(vec![
+            initialiser_statement,
+            Stmt::While(test_statement, Box::new(block)),
+        ]))
     }
 
     fn loop_statement(&mut self) -> Result<Stmt, ParserErr> {
@@ -268,7 +313,7 @@ impl<'a> Parser<'a> {
             Token::FloatType => ValueType::Float,
             Token::BooleanType => ValueType::Boolean,
             Token::StringType => ValueType::String,
-            _ => panic!("Data type token should represent a data type."),
+            _ => return Err(ParserErr::NoDataTypeForVariableDeclaration),
         };
 
         let name = match self.tokens.next() {
@@ -283,8 +328,16 @@ impl<'a> Parser<'a> {
 
         let expr = self.equality()?;
 
+        Ok(Stmt::VariableDeclaration(data_type, name.clone(), expr))
+    }
+
+    fn terminated_variable_declaration(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!(self.debug, "terminated_variable_declaration");
+
+        let variable_declaration = self.variable_declaration()?;
+
         if let Some(Token::SemiColon) = self.tokens.next() {
-            Ok(Stmt::VariableDeclaration(data_type, name.clone(), expr))
+            Ok(variable_declaration)
         } else {
             Err(ParserErr::UnterminatedStatement)
         }

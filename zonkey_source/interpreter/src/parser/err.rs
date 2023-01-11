@@ -18,6 +18,11 @@ pub enum ParserErr {
     LeftValueNotVariable,
     ExpectedLeftBraceBeforeBlock,
     ExpectedRightBraceAfterBlock,
+    NoDataTypeForVariableDeclaration,
+    ForMissingLeftParen,
+    ForMissingRightParen,
+    ForMissingCommaAfterInitialiserStatement,
+    ForMissingCommaAfterTestStatement,
 }
 
 impl Display for ParserErr {
@@ -64,6 +69,24 @@ impl Display for ParserErr {
             }
             Self::ExpectedRightBraceAfterBlock => {
                 write!(f, "Expected '}}' after block")
+            }
+            Self::NoDataTypeForVariableDeclaration => {
+                write!(f, "No data type given for variable declaration")
+            }
+            Self::ForMissingLeftParen => {
+                write!(f, "For statement is missing '(` to wrap clauses")
+            }
+            Self::ForMissingRightParen => {
+                write!(f, "For statement is missing ')` to wrap clauses")
+            }
+            Self::ForMissingCommaAfterInitialiserStatement => {
+                write!(f, "For statement is missing ',' to separate initialiser statement from test statement")
+            }
+            Self::ForMissingCommaAfterTestStatement => {
+                write!(
+                    f,
+                    "For statement is missing ',' to separate test statement from update statement"
+                )
             }
         }
     }

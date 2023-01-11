@@ -255,6 +255,7 @@ mod tests {
                                 operator: Token::Star,
                                 right: Box::new(Expr::Variable(String::from("b"))),
                             },
+                            Token::Equal,
                         ),
                     ]),
                     Stmt::VariableAssignment(
@@ -264,6 +265,7 @@ mod tests {
                             operator: Token::Minus,
                             right: Box::new(Expr::Literal(Literal::Integer(8))),
                         },
+                        Token::Equal,
                     ),
                 ]
                 .iter(),
