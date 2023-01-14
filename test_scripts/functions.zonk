@@ -1,0 +1,7 @@
+start {
+	preemptiveHappyBirthday("Sam", "22");
+}
+
+function preemptiveHappyBirthday(String first, String age) {
+	printLine("Happy birthday " + first + " for when you are " + age + " years old!");
+}

@@ -43,3 +43,5 @@ The start of the function is labeled with ‘function’ as this language is aim
 The syntax for returning values follows the C-style, with the return label before the value to be returned.
 
 Functions are also called in a C-style, with arguments to the function seperated by commas and surrounded by mandatory round brackets.
+
+Functions cannot be nested in Zonkey and must only be declared in the global scope.

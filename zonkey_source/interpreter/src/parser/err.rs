@@ -18,11 +18,19 @@ pub enum ParserErr {
     LeftValueNotVariable,
     ExpectedLeftBraceBeforeBlock,
     ExpectedRightBraceAfterBlock,
-    NoDataTypeForVariableDeclaration,
+    VariableDeclarationBadDataType,
     ForMissingLeftParen,
     ForMissingRightParen,
     ForMissingCommaAfterInitialiserStatement,
     ForMissingCommaAfterTestStatement,
+    FunctionDeclarationMissingName,
+    FunctionDeclarationMissingLeftParen,
+    FunctionDeclarationMissingRightParen,
+    FunctionDeclarationParameterBadDataType,
+    FunctionDeclarationParameterMissingName,
+    FunctionDeclarationExpectedCommaOrRightParen,
+    CallMissingArgument,
+    CallExpectedCommaOrRightParen,
 }
 
 impl Display for ParserErr {
@@ -70,8 +78,8 @@ impl Display for ParserErr {
             Self::ExpectedRightBraceAfterBlock => {
                 write!(f, "Expected '}}' after block")
             }
-            Self::NoDataTypeForVariableDeclaration => {
-                write!(f, "No data type given for variable declaration")
+            Self::VariableDeclarationBadDataType => {
+                write!(f, "Variable declaration has a missing or invalid data type")
             }
             Self::ForMissingLeftParen => {
                 write!(f, "For statement is missing '(` to wrap clauses")
@@ -87,6 +95,33 @@ impl Display for ParserErr {
                     f,
                     "For statement is missing ',' to separate test statement from update statement"
                 )
+            }
+            Self::FunctionDeclarationMissingName => {
+                write!(f, "Function declaration is missing a name")
+            }
+            Self::FunctionDeclarationMissingLeftParen => {
+                write!(f, "Function declaration is missing '(' to wrap parameters")
+            }
+            Self::FunctionDeclarationMissingRightParen => {
+                write!(f, "Function declaration is missing ')' to wrap parameters")
+            }
+            Self::FunctionDeclarationParameterBadDataType => {
+                write!(
+                    f,
+                    "Parameter has a missing or invalid data type in function declaration"
+                )
+            }
+            Self::FunctionDeclarationParameterMissingName => {
+                write!(f, "Parameter is missing a name in function declaration")
+            }
+            Self::FunctionDeclarationExpectedCommaOrRightParen => {
+                write!(f, "Expected ')' to finish list of parameters or ',' to add another parameter for the function declaration")
+            }
+            Self::CallMissingArgument => {
+                write!(f, "Expected an argument in function call")
+            }
+            Self::CallExpectedCommaOrRightParen => {
+                write!(f, "Expected ')' to finish list of arguments or ',' to add another argument for the call")
             }
         }
     }

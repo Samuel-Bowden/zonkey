@@ -3,8 +3,10 @@ use self::{
     status::TreeWalkerStatus,
     value::{Value, ValueType},
 };
-use crate::{environment::Environment, expr::Expr, literal::Literal, stmt::Stmt, token::Token};
-use std::slice::Iter;
+use crate::{
+    environment::Environment, expr::Expr, global::Global, literal::Literal, stmt::Stmt,
+    token::Token,
+};
 
 pub mod err;
 pub mod status;
@@ -12,32 +14,19 @@ pub mod value;
 
 pub struct TreeWalker<'a> {
     environment: &'a mut Environment,
+    global: &'a Global,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(environment: &'a mut Environment) -> Self {
-        Self { environment }
-    }
-
-    pub fn run(mut self, statements: Iter<'a, Stmt>) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        for statement in statements {
-            match self.interpret(&statement) {
-                Ok(TreeWalkerStatus::Ok) => continue,
-                Ok(TreeWalkerStatus::Exit) => return Ok(TreeWalkerStatus::Exit),
-                Ok(TreeWalkerStatus::Break) => return Err(TreeWalkerErr::BreakOutsideLoop),
-                Err(err) => return Err(err),
-            }
+    pub fn new(environment: &'a mut Environment, global: &'a Global) -> Self {
+        Self {
+            environment,
+            global,
         }
-
-        Ok(TreeWalkerStatus::Ok)
     }
 
-    fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+    pub fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         match statement {
-            Stmt::Print(expr) => {
-                println!("{}", self.evaluate(expr)?);
-                Ok(TreeWalkerStatus::Ok)
-            }
             Stmt::Expression(expr) => {
                 self.evaluate(expr)?;
                 Ok(TreeWalkerStatus::Ok)
@@ -112,10 +101,12 @@ impl<'a> TreeWalker<'a> {
             }
             Stmt::Break => Ok(TreeWalkerStatus::Break),
             Stmt::Continue => Ok(TreeWalkerStatus::Ok),
+            Stmt::FunctionDeclaration(_, _, _) => Err(TreeWalkerErr::NestedFunctionsNotAllowed),
+            Stmt::Start(_) => Err(TreeWalkerErr::StartNotInGlobalScope),
         }
     }
 
-    fn evaluate(&mut self, expression: &Expr) -> Result<Value, TreeWalkerErr> {
+    fn evaluate(&self, expression: &Expr) -> Result<Value, TreeWalkerErr> {
         match expression {
             Expr::Binary {
                 left,
@@ -149,10 +140,24 @@ impl<'a> TreeWalker<'a> {
             Expr::Literal(Literal::Integer(val)) => Ok(Value::Integer(*val)),
             Expr::Literal(Literal::Float(val)) => Ok(Value::Float(*val)),
             Expr::Literal(Literal::String(val)) => Ok(Value::String(val.clone())),
-            Expr::Literal(Literal::Boolean(val)) => Ok(Value::Boolean(val.clone())),
-            Expr::Variable(name) => match self.environment.get(name) {
+            Expr::Literal(Literal::Boolean(val)) => Ok(Value::Boolean(*val)),
+            Expr::Variable(name) => match self.environment.get(&name) {
                 Some(value) => Ok(value.clone()),
-                None => return Err(TreeWalkerErr::VariableNotDefined(name.clone())),
+                None => Err(TreeWalkerErr::VariableNotDefined(name.clone())),
+            },
+            Expr::Call(name, arguments) => match self.global.get_function(name) {
+                Some(function) => {
+                    let mut argument_values = vec![];
+
+                    for argument in arguments {
+                        argument_values.push(self.evaluate(argument)?);
+                    }
+
+                    function.call(&argument_values, self.global)?;
+
+                    Ok(Value::Boolean(true))
+                }
+                None => Err(TreeWalkerErr::FunctionNotDefined(name.clone())),
             },
         }
     }
@@ -185,7 +190,7 @@ impl<'a> TreeWalker<'a> {
         expression: &Expr,
         operator: &Token,
     ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        let variable = match self.environment.get(name) {
+        let variable = match self.environment.get(&name) {
             Some(var) => var,
             None => return Err(TreeWalkerErr::VariableNotDefined(name.clone())),
         };
@@ -201,106 +206,9 @@ impl<'a> TreeWalker<'a> {
             ));
         }
 
-        self.environment.assign(name, value, operator);
+        self.environment
+            .assign(name.clone(), value, operator.clone());
 
         Ok(TreeWalkerStatus::Ok)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{value::ValueType, TreeWalker};
-    use crate::{
-        environment::Environment,
-        expr::Expr,
-        literal::Literal,
-        stmt::Stmt,
-        token::Token,
-        tree_walker::{err::TreeWalkerErr, value::Value},
-    };
-
-    #[test]
-    fn test_scope_1() {
-        let mut environment = Environment::new();
-        let tree_walker = TreeWalker::new(&mut environment);
-
-        // This program tests scope by checking the result variable is 30 at the end of execution.
-        // Global variables 'result' and 'a' are initialised to 0 and 2 respectively.
-        // A scope is then created with the local variable 'b' initialised to 19.
-        // 'result' is then reassigned to the multiplication of a*b inside the local scope (result=38).
-        // Finally, 8 is subtracted from result in the global scope (result=30).
-        tree_walker
-            .run(
-                vec![
-                    Stmt::VariableDeclaration(
-                        ValueType::Integer,
-                        String::from("result"),
-                        Expr::Literal(Literal::Integer(0)),
-                    ),
-                    Stmt::VariableDeclaration(
-                        ValueType::Integer,
-                        String::from("a"),
-                        Expr::Literal(Literal::Integer(2)),
-                    ),
-                    Stmt::Block(vec![
-                        Stmt::VariableDeclaration(
-                            ValueType::Integer,
-                            String::from("b"),
-                            Expr::Literal(Literal::Integer(19)),
-                        ),
-                        Stmt::VariableAssignment(
-                            String::from("result"),
-                            Expr::Binary {
-                                left: Box::new(Expr::Variable(String::from("a"))),
-                                operator: Token::Star,
-                                right: Box::new(Expr::Variable(String::from("b"))),
-                            },
-                            Token::Equal,
-                        ),
-                    ]),
-                    Stmt::VariableAssignment(
-                        String::from("result"),
-                        Expr::Binary {
-                            left: Box::new(Expr::Variable(String::from("result"))),
-                            operator: Token::Minus,
-                            right: Box::new(Expr::Literal(Literal::Integer(8))),
-                        },
-                        Token::Equal,
-                    ),
-                ]
-                .iter(),
-            )
-            .expect("Tree walker failed to run test program");
-
-        assert_eq!(
-            *environment.get(&String::from("result")).unwrap(),
-            Value::Integer(30)
-        );
-    }
-
-    #[test]
-    fn test_scope_2() {
-        let mut environment = Environment::new();
-        let tree_walker = TreeWalker::new(&mut environment);
-
-        // Try to print a variable that was created in a local scope in the global scope.
-        let result = tree_walker.run(
-            vec![
-                Stmt::Block(vec![Stmt::VariableDeclaration(
-                    ValueType::String,
-                    String::from("local_variable"),
-                    Expr::Literal(Literal::String(String::from("Hello"))),
-                )]),
-                Stmt::Print(Expr::Variable(String::from("local_variable"))),
-            ]
-            .iter(),
-        );
-
-        assert_eq!(
-            result,
-            Err(TreeWalkerErr::VariableNotDefined(String::from(
-                "local_variable"
-            )))
-        );
     }
 }

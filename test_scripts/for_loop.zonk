@@ -1,7 +1,9 @@
 # Should print from 0-99
 
-for (Integer i = 0, i <= 90, i += 10) {
-  for (Integer j = 0, j <= 9, j += 1) {
-    print(i + j);
-  }
+start {
+	for (Integer i = 0, i <= 90, i += 10) {
+		for (Integer j = 0, j <= 9, j += 1) {
+			printLineInteger(i + j);
+		}
+	}
 }

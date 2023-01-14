@@ -1,8 +1,7 @@
 use crate::{expr::Expr, token::Token, tree_walker::value::ValueType};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Stmt {
-    Print(Expr),
     Expression(Expr),
     Exit,
     VariableDeclaration(ValueType, String, Expr),
@@ -11,6 +10,8 @@ pub enum Stmt {
     If(Expr, Box<Stmt>, Option<Box<Stmt>>),
     While(Expr, Box<Stmt>),
     Loop(Box<Stmt>),
+    FunctionDeclaration(String, Vec<(ValueType, String)>, Box<Stmt>),
+    Start(Box<Stmt>),
     Break,
     Continue,
 }

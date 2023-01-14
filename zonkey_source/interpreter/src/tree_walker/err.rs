@@ -14,6 +14,14 @@ pub enum TreeWalkerErr {
     VariableNotDefined(String),
     IfConditionMustEvaluateToBoolean,
     BreakOutsideLoop,
+    StartNotInGlobalScope,
+    MultipleStartDeclarations,
+    InvalidCodeInGlobalScope,
+    NoStartDeclaration,
+    FunctionNotDefined(String),
+    CallIncorrectArity(String, usize, usize),
+    CallArgumentIncompatibleTypes(String, usize),
+    NestedFunctionsNotAllowed,
 }
 
 impl Display for TreeWalkerErr {
@@ -29,6 +37,14 @@ impl Display for TreeWalkerErr {
             Self::VariableNotDefined(name) => write!(f, "Variable '{name}' has not been defined"),
             Self::IfConditionMustEvaluateToBoolean => write!(f, "Condition of an if statement must evaluate to a boolean"),
             Self::BreakOutsideLoop => write!(f, "Break statement outside of loop"),
+            Self::StartNotInGlobalScope => write!(f, "Start must be defined once in the global scope"),
+            Self::MultipleStartDeclarations => write!(f, "More than one start declaration has been defined"),
+            Self::InvalidCodeInGlobalScope => write!(f, "Zonkey source files must not have anything but function and start declarations in the global scope"),
+            Self::NoStartDeclaration => write!(f, "No start declaration found"),
+            Self::FunctionNotDefined(name) => write!(f, "Function '{name}' has not been defined"),
+            Self::CallIncorrectArity(name, expected, given) => write!(f, "Call '{name}' expected {expected} arguments but was given {given}"),
+            Self::CallArgumentIncompatibleTypes(name, arg_num) => write!(f, "Call '{name}' received an incorrect type for argument {arg_num}"),
+            Self::NestedFunctionsNotAllowed => write!(f, "Nested functions are not allowed in Zonkey"),
         }
     }
 }

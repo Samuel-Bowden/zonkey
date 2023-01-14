@@ -2,18 +2,18 @@ use crate::{token::Token, tree_walker::value::Value};
 use std::collections::HashMap;
 
 pub struct Environment {
-    pub stack: Vec<HashMap<String, Value>>,
+    pub value_stack: Vec<HashMap<String, Value>>,
 }
 
 impl Environment {
     pub fn new() -> Self {
         Self {
-            stack: vec![HashMap::new()],
+            value_stack: vec![HashMap::new()],
         }
     }
 
     pub fn get(&self, name: &String) -> Option<&Value> {
-        for element in self.stack.iter().rev() {
+        for element in self.value_stack.iter().rev() {
             if let Some(val) = element.get(name) {
                 return Some(val);
             }
@@ -22,9 +22,9 @@ impl Environment {
         None
     }
 
-    pub fn assign(&mut self, name: &String, value: Value, operator: &Token) {
-        for element in self.stack.iter_mut().rev() {
-            if let Some(key) = element.get_mut(name) {
+    pub fn assign(&mut self, name: String, value: Value, operator: Token) {
+        for element in self.value_stack.iter_mut().rev() {
+            if let Some(key) = element.get_mut(&name) {
                 match operator {
                     Token::Equal => *key = value,
                     Token::PlusEqual => *key = (key.clone() + value).unwrap(),
@@ -39,15 +39,15 @@ impl Environment {
     }
 
     pub fn push(&mut self) {
-        self.stack.push(HashMap::new());
+        self.value_stack.push(HashMap::new());
     }
 
     pub fn pop(&mut self) {
-        self.stack.pop();
+        self.value_stack.pop();
     }
 
     pub fn insert(&mut self, name: String, value: Value) {
-        if let Some(values) = self.stack.last_mut() {
+        if let Some(values) = self.value_stack.last_mut() {
             values.insert(name, value);
         }
     }

@@ -1,5 +1,7 @@
 pub mod err;
 
+use std::collections::VecDeque;
+
 use crate::lexer_debug;
 
 use self::err::LexerErr;
@@ -7,7 +9,7 @@ use super::token::Token;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub struct Lexer<'a> {
-    pub tokens: Vec<Token>,
+    pub tokens: VecDeque<Token>,
     start: usize,
     current: usize,
     line: u64,
@@ -19,7 +21,7 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     pub fn new(source: &'a str, _debug: bool) -> Self {
         Self {
-            tokens: vec![],
+            tokens: VecDeque::new(),
             start: 0,
             current: 0,
             line: 1,
@@ -292,7 +294,6 @@ impl<'a> Lexer<'a> {
             "Boolean" => self.add_token(Token::BooleanType),
             "false" => self.add_token(Token::Boolean(false)),
             "true" => self.add_token(Token::Boolean(true)),
-            "print" => self.add_token(Token::Print),
             "exit" => self.add_token(Token::Exit),
             _ => self.add_token(Token::Identifier(literal)),
         }
@@ -301,106 +302,6 @@ impl<'a> Lexer<'a> {
     }
 
     fn add_token(&mut self, token: Token) {
-        self.tokens.push(token);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::token::Token;
-
-    #[derive(Debug)]
-    enum LexerTestErr {
-        Incorrect,
-        LexerFailed(LexerErr),
-    }
-
-    #[test]
-    fn test_lexer_functions() -> Result<(), LexerTestErr> {
-        let source = "function hello(String name) {
-            print(\"Hello \" + name);
-        }";
-
-        let lexer = Lexer::new(source, false).run();
-
-        let source = match lexer {
-            Ok(lexer) => lexer.tokens.into_iter(),
-            Err(e) => return Err(LexerTestErr::LexerFailed(e)),
-        };
-
-        let test = vec![
-            Token::Function,
-            Token::Identifier("hello".to_string()),
-            Token::LeftParen,
-            Token::StringType,
-            Token::Identifier("name".to_string()),
-            Token::RightParen,
-            Token::LeftBrace,
-            Token::Print,
-            Token::LeftParen,
-            Token::String("Hello ".to_string()),
-            Token::Plus,
-            Token::Identifier("name".to_string()),
-            Token::RightParen,
-            Token::SemiColon,
-            Token::RightBrace,
-        ]
-        .into_iter();
-
-        if source.eq(test) {
-            Ok(())
-        } else {
-            Err(LexerTestErr::Incorrect)
-        }
-    }
-
-    #[test]
-    fn test_lexer_start() -> Result<(), LexerTestErr> {
-        let source = "start(String? name) {
-            if (name.exists()) {
-                print(name);
-            }
-        }";
-
-        let lexer = Lexer::new(source, false).run();
-
-        let source = match lexer {
-            Ok(lexer) => lexer.tokens.into_iter(),
-            Err(e) => return Err(LexerTestErr::LexerFailed(e)),
-        };
-
-        let test = vec![
-            Token::Start,
-            Token::LeftParen,
-            Token::StringType,
-            Token::QuestionMark,
-            Token::Identifier("name".to_string()),
-            Token::RightParen,
-            Token::LeftBrace,
-            Token::If,
-            Token::LeftParen,
-            Token::Identifier("name".to_string()),
-            Token::Dot,
-            Token::Identifier("exists".to_string()),
-            Token::LeftParen,
-            Token::RightParen,
-            Token::RightParen,
-            Token::LeftBrace,
-            Token::Print,
-            Token::LeftParen,
-            Token::Identifier("name".to_string()),
-            Token::RightParen,
-            Token::SemiColon,
-            Token::RightBrace,
-            Token::RightBrace,
-        ]
-        .into_iter();
-
-        if source.eq(test) {
-            Ok(())
-        } else {
-            Err(LexerTestErr::Incorrect)
-        }
+        self.tokens.push_back(token);
     }
 }

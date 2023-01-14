@@ -2,14 +2,22 @@
 
 # Test that unix shebangs work correctly
 
-print("First 10 elements of Fibonacci Sequence:");
+start {
+	printLine("First 10 elements of Fibonacci Sequence: ");
 
-Integer n1 = 0;
-Integer n2 = 1;
+	Integer n1 = 0;
+	Integer n2 = 1;
 
-for (Integer i = 0, i < 10, i += 1) {
-  print(n1);
-  Integer nth = n1 + n2;
-  n1 = n2;
-  n2 = nth;
+	for (Integer i = 0, i < 10, i += 1) {
+		printInteger(n1);
+		Integer nth = n1 + n2;
+		n1 = n2;
+		n2 = nth;
+
+		if (i != 9) {
+			print(", ");
+		}
+	}
+
+	newLine();
 }

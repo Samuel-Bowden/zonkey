@@ -3,29 +3,31 @@ title: "Entry Point"
 weight: 6
 ---
 
-```zonkey
+A start block is defined as so:
+```
 start {
-    print("Hello");
+  String name = "Sam";
+  sayHi(name);
+}
+
+function sayHi(String name) {
+  print("Hi" + name);
 }
 ```
 
-Program entry is its own separate structure named `start` unlike other programming languages which use a function or method commonly labeled main. This will allow new developers to easily understand where program execution starts.
+Functions which are called in the start block can be defined after where the start block is defined.
 
-```zonkey
-start(String? name) {
-	if name.absent()
-		print("Error: You must provide a name for me to greet you!");
+Having anything other than function and start declarations in the global scope will result in an error:
 
-	else
-		print("Hello " + name.value());
+```start
+start {
+  String name = "Sam";
+  sayHi(name);
 }
-```
 
-```output
-$ zonkey greet.zonk Sam
-Hello Sam
-$ zonkey greet.zonk
-Error: You must provide a name for me to greet you!
-```
+function sayHi(String name) {
+  print("Hi" + name);
+}
 
-Zonkey programs accept command line arguments and these can be accessed in `start` by declaring `String?` variables to accept them.
+print("Printing in the global scope!"); # Not allowed
+```

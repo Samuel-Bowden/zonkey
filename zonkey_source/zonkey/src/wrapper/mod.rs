@@ -1,14 +1,13 @@
-use interpreter::{status::InterpreterStatus, Interpreter};
-use rustyline::{error::ReadlineError, Editor};
+use interpreter::Interpreter;
 use std::{fs::read_to_string, io::Write, path::Path, process::ExitCode};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
-pub struct Shell {
+pub struct Wrapper {
     debug: bool,
     stderr: StandardStream,
 }
 
-impl Shell {
+impl Wrapper {
     pub fn new(debug: bool) -> Self {
         Self {
             debug,
@@ -16,41 +15,7 @@ impl Shell {
         }
     }
 
-    pub fn prompt(&mut self) -> ExitCode {
-        let mut prompt = match Editor::<()>::new() {
-            Ok(p) => p,
-            Err(e) => {
-                self.error(format!("Failed to setup prompt: {e}"));
-                return ExitCode::FAILURE;
-            }
-        };
-
-        let mut interpreter = Interpreter::new(self.debug);
-
-        loop {
-            match prompt.readline("> ") {
-                Ok(command) => {
-                    prompt.add_history_entry(command.as_str());
-
-                    match interpreter.run(&command) {
-                        Ok(InterpreterStatus::Alive) => continue,
-                        Ok(InterpreterStatus::Dead) => break,
-                        Err(err) => self.error(format!("{}", err)),
-                    }
-                }
-                Err(ReadlineError::Interrupted) => break,
-                Err(ReadlineError::Eof) => break,
-                Err(e) => {
-                    self.error(format!("Failed to readline from prompt: {e}"));
-                    return ExitCode::FAILURE;
-                }
-            }
-        }
-
-        ExitCode::SUCCESS
-    }
-
-    pub fn file(&mut self, file: String) -> ExitCode {
+    pub fn run(&mut self, file: String) -> ExitCode {
         let source = match read_to_string(Path::new(&file)) {
             Ok(s) => s,
             Err(e) => {

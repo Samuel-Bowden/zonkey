@@ -1,13 +1,13 @@
-mod shell;
+mod wrapper;
 
 use clap::Parser;
-use shell::Shell;
 use std::process::ExitCode;
+use wrapper::Wrapper;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    file: Option<String>,
+    file: String,
 
     /// Turn debugging information on (requires debug build - not available in release build)
     #[arg(short, long)]
@@ -17,11 +17,7 @@ struct Args {
 fn main() -> ExitCode {
     let args = Args::parse();
 
-    let mut shell = Shell::new(args.debug);
+    let mut wrapper = Wrapper::new(args.debug);
 
-    if let Some(f) = args.file {
-        shell.file(f)
-    } else {
-        shell.prompt()
-    }
+    wrapper.run(args.file)
 }

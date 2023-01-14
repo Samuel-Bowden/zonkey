@@ -1,82 +1,102 @@
 # Testing whether if, else and calculations are performed correctly.
 
-print("For a three digit number where all the digits are the same, that number divided by the sum of its digits should equal 37.");
-print("Lets test whether that holds in Zonkey lang 🧪");
+start {
+	printLine("For a three digit number where all the digits are the same, that number divided by the sum of its digits should equal 37.");
+	printLine("Lets test whether that holds in Zonkey lang 🧪");
 
-print("Numbers:");
-Integer one = 111;
-print(one);
+	print("Numbers: ");
+	Integer one = 111;
+	printInteger(one);
+	print(", ");
 
-Integer two = 222;
-print(two);
+	Integer two = 222;
+	printInteger(two);
+	print(", ");
 
-Integer three = 333;
-print(three);
+	Integer three = 333;
+	printInteger(three);
+	print(", ");
 
-Integer four = 444;
-print(four);
+	Integer four = 444;
+	printInteger(four);
+	print(", ");
 
-Integer five = 555;
-print(five);
+	Integer five = 555;
+	printInteger(five);
+	print(", ");
 
-Integer six = 666;
-print(six);
+	Integer six = 666;
+	printInteger(six);
+	print(", ");
 
-Integer seven = 777;
-print(seven);
+	Integer seven = 777;
+	printInteger(seven);
+	print(", ");
 
-Integer eight = 888;
-print(eight);
+	Integer eight = 888;
+	printInteger(eight);
+	print(", ");
 
-Integer nine = 999;
-print(nine);
+	Integer nine = 999;
+	printInteger(nine);
+	newLine();
 
-#------------------
+	#------------------
 
-print("Each number divided by the sum of their digits:");
-Integer sum_digits = 3;
+	print("Each number divided by the sum of their digits: ");
+	Integer sum_digits = 3;
 
-one /= sum_digits;
-sum_digits += 3;
-print(one);
+	one /= sum_digits;
+	sum_digits += 3;
+	printInteger(one);
+	print(", ");
 
-two /= sum_digits;
-sum_digits += 3;
-print(two);
+	two /= sum_digits;
+	sum_digits += 3;
+	printInteger(two);
+	print(", ");
 
-three /= sum_digits;
-sum_digits += 3;
-print(three);
+	three /= sum_digits;
+	sum_digits += 3;
+	printInteger(three);
+	print(", ");
 
-four /= sum_digits;
-sum_digits += 3;
-print(four);
+	four /= sum_digits;
+	sum_digits += 3;
+	printInteger(four);
+	print(", ");
 
-five /= sum_digits;
-sum_digits += 3;
-print(five);
+	five /= sum_digits;
+	sum_digits += 3;
+	printInteger(five);
+	print(", ");
 
-six /= sum_digits;
-sum_digits += 3;
-print(six);
+	six /= sum_digits;
+	sum_digits += 3;
+	printInteger(six);
+	print(", ");
 
-seven /= sum_digits;
-sum_digits += 3;
-print(seven);
+	seven /= sum_digits;
+	sum_digits += 3;
+	printInteger(seven);
+	print(", ");
 
-eight /= sum_digits;
-sum_digits += 3;
-print(eight);
+	eight /= sum_digits;
+	sum_digits += 3;
+	printInteger(eight);
+	print(", ");
 
-nine /= sum_digits;
-sum_digits += 3;
-print(nine);
+	nine /= sum_digits;
+	sum_digits += 3;
+	printInteger(nine);
+	newLine();
 
-# Sum of numbers should equal 333 as 37 * 9 = 333
-Integer sum_of_numbers = one + two + three + four + five + six + seven + eight + nine;
+	# Sum of numbers should equal 333 as 37 * 9 = 333
+	Integer sum_of_numbers = one + two + three + four + five + six + seven + eight + nine;
 
-if (sum_of_numbers == 333) {
-  print("It holds true!");
-} else {
-  print("That doesn't seem quite right?!");
+	if (sum_of_numbers == 333) {
+			printLine("It holds true!");
+	} else {
+			printLine("That doesn't seem quite right?!");
+	}
 }
