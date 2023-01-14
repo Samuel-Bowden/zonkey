@@ -13,19 +13,12 @@ This program is a CLI interface to the Zonkey interpreter. To get detailed help 
 zonkey --help
 ```
 
-This program has two modes, one for running source files and another for providing a prompt.
-
-The prompt can be accessed by just running:
-```sh
-$ zonkey
-```
-
 A Zonkey source file can be run by providing a path to that file as an argument:
 ```sh
 $ zonkey test.zonk
 ```
 
-Debug information can be seen in both modes by adding the following argument:
+For a debug build of the interpreter, debug information can be seen by adding the following argument.
 ```sh
 $ zonkey test.zonk -d
 ```
@@ -55,6 +48,8 @@ When the program is invocated like this, additional argumemnts can be passed wit
 $ cargo run -p zonkey -- test.zonk -d
 ```
 
+When invocating "cargo run" without the argument "-r", a debug build is created. It is important to compile as a debug build if you want access to the debug mode of the interpreter. Compiling with "-r" will create a release build without the debug mode.
+
 You can also install the executables to your system for easier use and faster performance. You can install the "zonkey" CLI interpreter by doing the following:
 ```sh
 $ cd zonkey
@@ -63,8 +58,10 @@ $ cargo install --path=. --force
 
 And then you can use it like a normal CLI utility:
 ```sh
-$ zonkey test.zonk -d
+$ zonkey test.zonk
 ```
+
+Executables installed this way will not have access to the debug mode as they will be compiled as a release build.
 
 ## Documentation
 
