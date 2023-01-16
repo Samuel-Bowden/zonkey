@@ -5,9 +5,9 @@ start {
 
 	loop {
 		Integer a = 2;
-		printLineInteger(a); # Should print 2
+		cli::println(a); # Should print 2
 		break;
 	}
 
-	printLineInteger(a); # Should print 1
+	cli::println(a); # Should print 1
 }

@@ -1,8 +1,9 @@
+use crate::token::Token;
 use std::fmt::Display;
 
 #[derive(Debug)]
 pub enum ParserErr {
-    ExpectedLiteral,
+    ExpectedLiteral(Option<Token>),
     UnterminatedStatement,
     ParserNotReachedEOF,
     PrintMissingLeftParen,
@@ -18,7 +19,7 @@ pub enum ParserErr {
     LeftValueNotVariable,
     ExpectedLeftBraceBeforeBlock,
     ExpectedRightBraceAfterBlock,
-    VariableDeclarationBadDataType,
+    VariableDeclarationBadValueType,
     ForMissingLeftParen,
     ForMissingRightParen,
     ForMissingCommaAfterInitialiserStatement,
@@ -31,12 +32,13 @@ pub enum ParserErr {
     FunctionDeclarationExpectedCommaOrRightParen,
     CallMissingArgument,
     CallExpectedCommaOrRightParen,
+    CallToUndeclaredFunction(String),
 }
 
 impl Display for ParserErr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::ExpectedLiteral => write!(f, "Expected literal"),
+            Self::ExpectedLiteral(found) => write!(f, "Expected literal, found {:?}", found),
             Self::UnterminatedStatement => write!(f, "Unterminated statement"),
             Self::ParserNotReachedEOF => write!(f, "Parser failed to process all source code"),
             Self::PrintMissingLeftParen => {
@@ -78,8 +80,11 @@ impl Display for ParserErr {
             Self::ExpectedRightBraceAfterBlock => {
                 write!(f, "Expected '}}' after block")
             }
-            Self::VariableDeclarationBadDataType => {
-                write!(f, "Variable declaration has a missing or invalid data type")
+            Self::VariableDeclarationBadValueType => {
+                write!(
+                    f,
+                    "Variable declaration has a missing or invalid value type"
+                )
             }
             Self::ForMissingLeftParen => {
                 write!(f, "For statement is missing '(` to wrap clauses")
@@ -122,6 +127,9 @@ impl Display for ParserErr {
             }
             Self::CallExpectedCommaOrRightParen => {
                 write!(f, "Expected ')' to finish list of arguments or ',' to add another argument for the call")
+            }
+            Self::CallToUndeclaredFunction(name) => {
+                write!(f, "Call to undeclared function {name}")
             }
         }
     }

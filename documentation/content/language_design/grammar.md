@@ -20,7 +20,7 @@ comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> call (("/" | "*") call)*;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER | call;
-call -> IDENTIFIER "(" equality ("," equality)* ")";
+call -> (IDENTIFIER "::")? IDENTIFIER "(" equality ("," equality)* ")";
 block -> "{" declaration* "}"
 if_statement -> "if" "(" equality ")" block ("else" block)?; 
 while_statement -> "while" "(" equality ")" block;

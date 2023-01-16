@@ -14,20 +14,16 @@ pub struct Lexer<'a> {
     current: usize,
     line: u64,
     graphemes: Vec<&'a str>,
-    #[cfg(debug_assertions)]
-    debug: bool,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str, _debug: bool) -> Self {
+    pub fn new(source: &'a str) -> Self {
         Self {
             tokens: VecDeque::new(),
             start: 0,
             current: 0,
             line: 1,
             graphemes: source.graphemes(true).collect(),
-            #[cfg(debug_assertions)]
-            debug: _debug,
         }
     }
 
@@ -37,13 +33,11 @@ impl<'a> Lexer<'a> {
             self.scan_token()?;
         }
 
-        lexer_debug!(self.debug, "Printing tokens");
+        lexer_debug!("Printing tokens");
 
         #[cfg(debug_assertions)]
-        if self.debug {
-            for (i, token) in self.tokens.iter().enumerate() {
-                println!("  {}: {:?}", i + 1, token);
-            }
+        for (i, token) in self.tokens.iter().enumerate() {
+            println!("  {}: {:?}", i + 1, token);
         }
 
         Ok(self)
@@ -127,6 +121,10 @@ impl<'a> Lexer<'a> {
                 };
                 self.add_token(token);
             }
+            ":" => match self.next_grapheme(":") {
+                true => self.add_token(Token::ColonColon),
+                false => panic!("Expected another colon"),
+            },
             // String literals
             "\"" => self.string()?,
             // Number literals - e.g. Integer or Float
@@ -294,7 +292,6 @@ impl<'a> Lexer<'a> {
             "Boolean" => self.add_token(Token::BooleanType),
             "false" => self.add_token(Token::Boolean(false)),
             "true" => self.add_token(Token::Boolean(true)),
-            "exit" => self.add_token(Token::Exit),
             _ => self.add_token(Token::Identifier(literal)),
         }
 

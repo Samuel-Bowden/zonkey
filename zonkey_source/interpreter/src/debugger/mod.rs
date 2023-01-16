@@ -1,47 +1,43 @@
-use std::io::Write;
-use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+#[cfg(debug_assertions)]
+use termcolor::Color;
 
 #[macro_export]
 macro_rules! interpreter_debug {
-    ($debug:expr, $message:literal) => {
+    ($message:expr) => {
         #[cfg(debug_assertions)]
-        if ($debug) {
-            crate::debugger::report("INTEPRETER", $message, termcolor::Color::Yellow);
-        }
+        crate::debugger::report("INTEPRETER", $message, termcolor::Color::Yellow);
     };
 }
 
 #[macro_export]
 macro_rules! lexer_debug {
-    ($debug:expr, $message:literal) => {
+    ($message:expr) => {
         #[cfg(debug_assertions)]
-        if ($debug) {
-            crate::debugger::report("LEXER", $message, termcolor::Color::Blue);
-        }
+        crate::debugger::report("LEXER", $message, termcolor::Color::Blue);
     };
 }
 
 #[macro_export]
 macro_rules! parser_debug {
-    ($debug:expr, $message:literal) => {
+    ($message:expr) => {
         #[cfg(debug_assertions)]
-        if ($debug) {
-            crate::debugger::report("PARSER", $message, termcolor::Color::Magenta);
-        }
+        crate::debugger::report("PARSER", $message, termcolor::Color::Magenta);
     };
 }
 
 #[macro_export]
 macro_rules! debug_information {
-    ($debug:expr, $message:literal) => {
+    ($message:literal) => {
         #[cfg(debug_assertions)]
-        if ($debug) {
-            println!("  {}", $message);
-        }
+        println!("  {}", $message);
     };
 }
 
+#[cfg(debug_assertions)]
 pub fn report(name: &str, message: &str, color: Color) {
+    use std::io::Write;
+    use termcolor::{WriteColor, ColorSpec, StandardStream};
+
     let mut stdout = StandardStream::stdout(termcolor::ColorChoice::Always);
 
     stdout

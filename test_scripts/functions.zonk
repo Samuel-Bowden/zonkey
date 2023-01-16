@@ -1,7 +1,9 @@
+# Not working yet on this branch - need to implement user functions again
+
 start {
 	preemptiveHappyBirthday("Sam", "22");
 }
 
 function preemptiveHappyBirthday(String first, String age) {
-	printLine("Happy birthday " + first + " for when you are " + age + " years old!");
+	cli::println("Happy birthday " + first + " for when you are " + age + " years old!");
 }

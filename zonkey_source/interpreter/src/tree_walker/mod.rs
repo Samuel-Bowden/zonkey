@@ -1,88 +1,127 @@
-use self::{
-    err::TreeWalkerErr,
-    status::TreeWalkerStatus,
-    value::{Value, ValueType},
-};
+use self::{err::TreeWalkerErr, status::TreeWalkerStatus};
 use crate::{
-    environment::Environment, expr::Expr, global::Global, literal::Literal, stmt::Stmt,
-    token::Token,
+    comparison::{BooleanComparision, NumericComparision, StringComparision},
+    environment::Environment,
+    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
+    native_function::{
+        cli_api::{prompt::prompt, CliFunctionNone, CliFunctionString},
+        NativeFunctionNone, NativeFunctionString,
+    },
+    operator::{NumericOperator, StringOperator},
+    stmt::Stmt,
 };
 
 pub mod err;
 pub mod status;
-pub mod value;
 
 pub struct TreeWalker<'a> {
     environment: &'a mut Environment,
-    global: &'a Global,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(environment: &'a mut Environment, global: &'a Global) -> Self {
+    pub fn new(environment: &'a mut Environment) -> Self {
         Self {
             environment,
-            global,
         }
     }
 
     pub fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         match statement {
-            Stmt::Expression(expr) => {
-                self.evaluate(expr)?;
+            Stmt::IntegerVariableDeclaration(expr) => {
+                self.environment.push_int(self.eval_int(expr));
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::Exit => Ok(TreeWalkerStatus::Exit),
-            Stmt::VariableDeclaration(data_type, name, expr) => {
-                self.variable_declaration(data_type, name, expr)
+            Stmt::IntegerVariableAssignment(id, expr, assignment_operator) => {
+                self.environment
+                    .assign_int(*id, self.eval_int(expr), assignment_operator);
+                Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::VariableAssignment(name, expr, operator) => {
-                self.variable_assignment(name, expr, operator)
+            Stmt::FloatVariableDeclaration(expr) => {
+                self.environment.push_float(self.eval_float(expr));
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::FloatVariableAssignment(id, expr, assignment_operator) => {
+                self.environment
+                    .assign_float(*id, self.eval_float(expr), assignment_operator);
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::StringVariableDeclaration(expr) => {
+                self.environment.push_string(self.eval_string(expr));
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::StringVariableAssignment(id, expr, assignment_operator) => {
+                self.environment
+                    .assign_string(*id, self.eval_string(expr), assignment_operator);
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::BooleanVariableDeclaration(expr) => {
+                self.environment.push_boolean(self.eval_boolean(expr));
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::BooleanVariableAssignment(id, expr, assignment_operator) => {
+                self.environment
+                    .assign_boolean(*id, self.eval_boolean(expr), assignment_operator);
+                Ok(TreeWalkerStatus::Ok)
             }
             Stmt::Block(statements) => {
-                self.environment.push();
+                self.environment.push_stack();
 
                 let mut return_value = Ok(TreeWalkerStatus::Ok);
 
                 for statement in statements {
-                    match self.interpret(&statement) {
-                        Ok(TreeWalkerStatus::Ok) => continue,
-                        Ok(TreeWalkerStatus::Exit) => {
-                            return_value = Ok(TreeWalkerStatus::Exit);
+                    match self.interpret(statement)? {
+                        TreeWalkerStatus::Ok => (),
+                        TreeWalkerStatus::Continue => {
+                            return_value = Ok(TreeWalkerStatus::Continue);
                             break;
-                        }
-                        Ok(TreeWalkerStatus::Break) => {
+                        },
+                        TreeWalkerStatus::Break => {
                             return_value = Ok(TreeWalkerStatus::Break);
                             break;
                         }
-                        Err(err) => return Err(err),
                     }
                 }
 
-                self.environment.pop();
+                self.environment.pop_stack();
 
                 return_value
             }
-            Stmt::If(condition, true_branch, false_branch) => match self.evaluate(condition)? {
-                Value::Boolean(true) => self.interpret(true_branch),
-                Value::Boolean(false) => {
-                    if let Some(branch) = false_branch {
-                        self.interpret(branch)
-                    } else {
-                        Ok(TreeWalkerStatus::Ok)
+            Stmt::If(condition, true_branch, false_branch) => {
+                if self.eval_boolean(condition) {
+                    self.interpret(&true_branch)
+                } else if let Some(false_branch) = false_branch {
+                    self.interpret(&false_branch)
+                } else {
+                    Ok(TreeWalkerStatus::Ok)
+                }
+            }
+            Stmt::Expression(expr) => {
+                match expr {
+                    Expr::Integer(expr) => {
+                        self.eval_int(expr);
+                    }
+                    Expr::Float(expr) => {
+                        self.eval_float(expr);
+                    }
+                    Expr::String(expr) => {
+                        self.eval_string(expr);
+                    }
+                    Expr::Boolean(expr) => {
+                        self.eval_boolean(expr);
+                    }
+                    Expr::None(expr) => {
+                        self.eval_none(expr);
                     }
                 }
-                _ => Err(TreeWalkerErr::IfConditionMustEvaluateToBoolean),
-            },
+
+                Ok(TreeWalkerStatus::Ok)
+            }
             Stmt::While(condition, block) => {
-                while match self.evaluate(condition)? {
-                    Value::Boolean(true) => true,
-                    Value::Boolean(false) => false,
-                    _ => return Err(TreeWalkerErr::IfConditionMustEvaluateToBoolean),
-                } {
+                while self.eval_boolean(condition) {
                     match self.interpret(block)? {
+                        TreeWalkerStatus::Ok => (),
+                        TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
-                        TreeWalkerStatus::Ok => continue,
-                        TreeWalkerStatus::Exit => return Ok(TreeWalkerStatus::Exit),
                     }
                 }
 
@@ -91,124 +130,155 @@ impl<'a> TreeWalker<'a> {
             Stmt::Loop(block) => {
                 loop {
                     match self.interpret(block)? {
+                        TreeWalkerStatus::Ok => (),
+                        TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
-                        TreeWalkerStatus::Ok => continue,
-                        TreeWalkerStatus::Exit => return Ok(TreeWalkerStatus::Exit),
                     }
                 }
 
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::Break => Ok(TreeWalkerStatus::Break),
-            Stmt::Continue => Ok(TreeWalkerStatus::Ok),
-            Stmt::FunctionDeclaration(_, _, _) => Err(TreeWalkerErr::NestedFunctionsNotAllowed),
-            Stmt::Start(_) => Err(TreeWalkerErr::StartNotInGlobalScope),
+            Stmt::Break => {
+                Ok(TreeWalkerStatus::Break)
+            }
+            Stmt::Continue => {
+                Ok(TreeWalkerStatus::Continue)
+            }
+            Stmt::FunctionDeclaration(..) => panic!("Cannot declare function outside of global scope"),
+            Stmt::Start(_) => panic!("Cannot declare start block outside of global scope"),
         }
     }
 
-    fn evaluate(&self, expression: &Expr) -> Result<Value, TreeWalkerErr> {
+    fn eval_int(&self, expression: &IntegerExpr) -> i64 {
         match expression {
-            Expr::Binary {
+            IntegerExpr::Binary {
                 left,
                 operator,
                 right,
             } => match operator {
-                Token::Minus => Ok((self.evaluate(&left)? - self.evaluate(&right)?)?),
-                Token::Plus => Ok((self.evaluate(&left)? + self.evaluate(&right)?)?),
-                Token::Slash => Ok((self.evaluate(&left)? / self.evaluate(&right)?)?),
-                Token::Star => Ok((self.evaluate(&left)? * self.evaluate(&right)?)?),
-                Token::EqualEqual => Ok(Value::Boolean(
-                    self.evaluate(&left)?.equal(&self.evaluate(&right)?)?,
-                )),
-                Token::BangEqual => Ok(Value::Boolean(
-                    !(self.evaluate(&left)?.equal(&self.evaluate(&right)?)?),
-                )),
-                Token::LessEqual => Ok(Value::Boolean(
-                    self.evaluate(&left)?.less_equal(&self.evaluate(&right)?)?,
-                )),
-                Token::Less => Ok(Value::Boolean(
-                    self.evaluate(&left)?.less(&self.evaluate(&right)?)?,
-                )),
-                Token::MoreEqual => Ok(Value::Boolean(
-                    self.evaluate(&left)?.more_equal(&self.evaluate(&right)?)?,
-                )),
-                Token::More => Ok(Value::Boolean(
-                    self.evaluate(&left)?.more(&self.evaluate(&right)?)?,
-                )),
-                _ => Err(TreeWalkerErr::UnsupportedOperator),
+                NumericOperator::Add => self.eval_int(left) + self.eval_int(right),
+                NumericOperator::Subtract => self.eval_int(left) - self.eval_int(right),
+                NumericOperator::Multiply => self.eval_int(left) * self.eval_int(right),
+                NumericOperator::Divide => self.eval_int(left) / self.eval_int(right),
             },
-            Expr::Literal(Literal::Integer(val)) => Ok(Value::Integer(*val)),
-            Expr::Literal(Literal::Float(val)) => Ok(Value::Float(*val)),
-            Expr::Literal(Literal::String(val)) => Ok(Value::String(val.clone())),
-            Expr::Literal(Literal::Boolean(val)) => Ok(Value::Boolean(*val)),
-            Expr::Variable(name) => match self.environment.get(&name) {
-                Some(value) => Ok(value.clone()),
-                None => Err(TreeWalkerErr::VariableNotDefined(name.clone())),
-            },
-            Expr::Call(name, arguments) => match self.global.get_function(name) {
-                Some(function) => {
-                    let mut argument_values = vec![];
-
-                    for argument in arguments {
-                        argument_values.push(self.evaluate(argument)?);
-                    }
-
-                    function.call(&argument_values, self.global)?;
-
-                    Ok(Value::Boolean(true))
-                }
-                None => Err(TreeWalkerErr::FunctionNotDefined(name.clone())),
-            },
+            IntegerExpr::Variable(id) => self.environment.get_int(*id),
+            IntegerExpr::Literal(val) => *val,
         }
     }
 
-    fn variable_declaration(
-        &mut self,
-        data_type: &ValueType,
-        name: &String,
-        expression: &Expr,
-    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        let value = self.evaluate(expression)?;
-
-        let value_data_type = value.get_value_type();
-
-        if *data_type != value_data_type {
-            return Err(TreeWalkerErr::VariableAssignmentIncompatibleTypes(
-                data_type.clone(),
-                value_data_type,
-            ));
+    fn eval_float(&self, expression: &FloatExpr) -> f64 {
+        match expression {
+            FloatExpr::Binary {
+                left,
+                operator,
+                right,
+            } => match operator {
+                NumericOperator::Add => self.eval_float(left) + self.eval_float(right),
+                NumericOperator::Subtract => self.eval_float(left) - self.eval_float(right),
+                NumericOperator::Multiply => self.eval_float(left) * self.eval_float(right),
+                NumericOperator::Divide => self.eval_float(left) / self.eval_float(right),
+            },
+            FloatExpr::Variable(id) => self.environment.get_float(*id),
+            FloatExpr::Literal(val) => *val,
         }
-
-        self.environment.insert(name.clone(), value);
-
-        Ok(TreeWalkerStatus::Ok)
     }
 
-    fn variable_assignment(
-        &mut self,
-        name: &String,
-        expression: &Expr,
-        operator: &Token,
-    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        let variable = match self.environment.get(&name) {
-            Some(var) => var,
-            None => return Err(TreeWalkerErr::VariableNotDefined(name.clone())),
-        };
-        let variable_type = variable.get_value_type();
-
-        let value = self.evaluate(expression)?;
-        let value_type = value.get_value_type();
-
-        if variable_type != value_type {
-            return Err(TreeWalkerErr::VariableAssignmentIncompatibleTypes(
-                variable_type,
-                value_type,
-            ));
+    fn eval_string(&self, expression: &StringExpr) -> String {
+        match expression {
+            StringExpr::Binary {
+                left,
+                operator,
+                right,
+            } => match operator {
+                StringOperator::Add => self.eval_string(left) + &self.eval_string(right),
+            },
+            StringExpr::Variable(id) => self.environment.get_string(*id),
+            StringExpr::Literal(val) => val.clone(),
+            StringExpr::NativeCall(call) => self.native_call_string(call),
         }
+    }
 
-        self.environment
-            .assign(name.clone(), value, operator.clone());
+    fn eval_boolean(&self, expression: &BooleanExpr) -> bool {
+        match expression {
+            BooleanExpr::IntegerBinary {
+                left,
+                comparator,
+                right,
+            } => match comparator {
+                NumericComparision::Equal => self.eval_int(left) == self.eval_int(right),
+                NumericComparision::Inequal => self.eval_int(left) != self.eval_int(right),
+                NumericComparision::MoreEqual => self.eval_int(left) >= self.eval_int(right),
+                NumericComparision::LessEqual => self.eval_int(left) <= self.eval_int(right),
+                NumericComparision::More => self.eval_int(left) > self.eval_int(right),
+                NumericComparision::Less => self.eval_int(left) < self.eval_int(right),
+            },
+            BooleanExpr::FloatBinary {
+                left,
+                comparator,
+                right,
+            } => match comparator {
+                NumericComparision::Equal => self.eval_float(left) == self.eval_float(right),
+                NumericComparision::Inequal => self.eval_float(left) != self.eval_float(right),
+                NumericComparision::MoreEqual => self.eval_float(left) <= self.eval_float(right),
+                NumericComparision::LessEqual => self.eval_float(left) >= self.eval_float(right),
+                NumericComparision::More => self.eval_float(left) < self.eval_float(right),
+                NumericComparision::Less => self.eval_float(left) > self.eval_float(right),
+            },
+            BooleanExpr::StringBinary {
+                left,
+                comparator,
+                right,
+            } => match comparator {
+                StringComparision::Equal => self.eval_string(left) == self.eval_string(right),
+                StringComparision::Inequal => self.eval_string(left) != self.eval_string(right),
+            },
+            BooleanExpr::BooleanBinary {
+                left,
+                comparator,
+                right,
+            } => match comparator {
+                BooleanComparision::Equal => self.eval_boolean(left) == self.eval_boolean(right),
+                BooleanComparision::Inequal => self.eval_boolean(left) != self.eval_boolean(right),
+            },
+            BooleanExpr::Variable(id) => self.environment.get_boolean(*id),
+            BooleanExpr::Literal(val) => *val,
+        }
+    }
 
-        Ok(TreeWalkerStatus::Ok)
+    fn eval_none(&self, expression: &NoneExpr) {
+        match expression {
+            NoneExpr::NativeCall(call) => self.native_call_none(call),
+        }
+    }
+
+    fn native_call_none(&self, call: &NativeFunctionNone) {
+        match call {
+            NativeFunctionNone::Cli(call) => self.cli_function_none(call),
+        }
+    }
+
+    fn native_call_string(&self, call: &NativeFunctionString) -> String {
+        match call {
+            NativeFunctionString::Cli(call) => self.cli_function_string(call),
+        }
+    }
+
+    fn cli_function_none(&self, call: &CliFunctionNone) {
+        match call {
+            CliFunctionNone::PrintLineInteger(expr) => println!("{}", self.eval_int(expr)),
+            CliFunctionNone::PrintLineFloat(expr) => println!("{}", self.eval_float(expr)),
+            CliFunctionNone::PrintLineString(expr) => println!("{}", self.eval_string(expr)),
+            CliFunctionNone::PrintLineBoolean(expr) => println!("{}", self.eval_boolean(expr)),
+            CliFunctionNone::PrintInteger(expr) => print!("{}", self.eval_int(expr)),
+            CliFunctionNone::PrintFloat(expr) => print!("{}", self.eval_float(expr)),
+            CliFunctionNone::PrintString(expr) => print!("{}", self.eval_string(expr)),
+            CliFunctionNone::PrintBoolean(expr) => print!("{}", self.eval_boolean(expr)),
+        }
+    }
+
+    fn cli_function_string(&self, call: &CliFunctionString) -> String {
+        match call {
+            CliFunctionString::Prompt(expr) => prompt(self.eval_string(expr)),
+        }
     }
 }

@@ -10,6 +10,9 @@ pub enum Token {
     SemiColon,
     QuestionMark,
 
+    // Double grapheme
+    ColonColon,
+
     // One or more grapheme tokens
     Bang,
     BangEqual,
@@ -46,7 +49,6 @@ pub enum Token {
     While,
     Break,
     Continue,
-    Exit,
     Return,
     IntegerType,
     FloatType,

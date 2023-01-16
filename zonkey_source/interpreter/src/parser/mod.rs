@@ -1,48 +1,73 @@
 use self::err::ParserErr;
 use crate::{
-    debug_information, expr::Expr, literal::Literal, parser_debug, stmt::Stmt, token::Token,
-    tree_walker::value::ValueType,
+    assignment_operator::{
+        BooleanAssignmentOperator, NumericAssignmentOperator, StringAssignmentOperator,
+    },
+    comparison::{BooleanComparision, NumericComparision, StringComparision},
+    debug_information,
+    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
+    native_function::{
+        cli_api::{CliFunctionNone, CliFunctionString},
+        NativeFunctionNone, NativeFunctionString,
+    },
+    operator::{NumericOperator, StringOperator},
+    parser_debug,
+    stmt::Stmt,
+    token::Token,
+    value_type::ValueType,
 };
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 pub mod err;
 
 pub struct Parser {
     tokens: VecDeque<Token>,
     pub statements: VecDeque<Stmt>,
-    #[cfg(debug_assertions)]
-    debug: bool,
+    value_stack: Vec<HashMap<String, (ValueType, usize)>>,
+    integer_next_id: usize,
+    float_next_id: usize,
+    string_next_id: usize,
+    boolean_next_id: usize,
+    integer_stack_sizes: Vec<usize>,
+    float_stack_sizes: Vec<usize>,
+    string_stack_sizes: Vec<usize>,
+    boolean_stack_sizes: Vec<usize>,
 }
 
 impl Parser {
-    pub fn new(tokens: VecDeque<Token>, _debug: bool) -> Self {
+    pub fn new(tokens: VecDeque<Token>) -> Self {
         Self {
             tokens,
             statements: VecDeque::new(),
-            #[cfg(debug_assertions)]
-            debug: _debug,
+            value_stack: vec![],
+            integer_next_id: 0,
+            float_next_id: 0,
+            string_next_id: 0,
+            boolean_next_id: 0,
+            integer_stack_sizes: vec![],
+            float_stack_sizes: vec![],
+            string_stack_sizes: vec![],
+            boolean_stack_sizes: vec![],
         }
     }
 
     pub fn run(mut self) -> Result<Self, ParserErr> {
-        parser_debug!(self.debug, "Production rule path:");
+        parser_debug!("Production rule path:");
 
         self.program()?;
 
-        parser_debug!(self.debug, "Printing statements");
+        parser_debug!("Printing statements");
 
         #[cfg(debug_assertions)]
-        if self.debug {
-            for (i, statement) in self.statements.iter().enumerate() {
-                println!("  {}: {:?}", i + 1, statement);
-            }
+        for (i, statement) in self.statements.iter().enumerate() {
+            println!("  {}: {:?}", i + 1, statement);
         }
 
         Ok(self)
     }
 
     fn program(&mut self) -> Result<(), ParserErr> {
-        debug_information!(self.debug, "program");
+        debug_information!("program");
 
         while self.tokens.front() != None {
             let declaration = self.declaration()?;
@@ -53,7 +78,7 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "declaration");
+        debug_information!("declaration");
 
         match self.tokens.front() {
             Some(
@@ -72,7 +97,7 @@ impl Parser {
     }
 
     fn statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "statement");
+        debug_information!("statement");
 
         match self.tokens.front() {
             Some(Token::LeftBrace) => self.block(),
@@ -97,13 +122,9 @@ impl Parser {
     }
 
     fn terminated_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "terminated_statement");
+        debug_information!("terminated_statement");
 
         let expression = match self.tokens.front() {
-            Some(Token::Exit) => {
-                self.tokens.pop_front();
-                self.exit_statement()?
-            }
             Some(Token::Break) => {
                 self.tokens.pop_front();
                 Stmt::Break
@@ -123,7 +144,7 @@ impl Parser {
     }
 
     fn start_declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "start_declaration");
+        debug_information!("start_declaration");
 
         let block = Box::new(self.block()?);
 
@@ -131,7 +152,7 @@ impl Parser {
     }
 
     fn function_declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "function_declaration");
+        debug_information!("function_declaration");
 
         let function_name = if let Some(Token::Identifier(identifier)) = self.tokens.pop_front() {
             identifier
@@ -179,7 +200,7 @@ impl Parser {
     }
 
     fn if_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "if_statement");
+        debug_information!("if_statement");
 
         match self.tokens.pop_front() {
             Some(Token::LeftParen) => (),
@@ -187,6 +208,12 @@ impl Parser {
         }
 
         let expression = self.equality()?;
+
+        let expression = if let Expr::Boolean(expr) = expression {
+            expr
+        } else {
+            panic!("If condition must evaluate to a boolean")
+        };
 
         match self.tokens.pop_front() {
             Some(Token::RightParen) => (),
@@ -208,7 +235,7 @@ impl Parser {
     }
 
     fn while_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "while_statement");
+        debug_information!("while_statement");
 
         match self.tokens.pop_front() {
             Some(Token::LeftParen) => (),
@@ -216,6 +243,12 @@ impl Parser {
         }
 
         let expression = self.equality()?;
+
+        let expression = if let Expr::Boolean(expr) = expression {
+            expr
+        } else {
+            panic!("While condition must evaluate to a boolean")
+        };
 
         match self.tokens.pop_front() {
             Some(Token::RightParen) => (),
@@ -228,7 +261,7 @@ impl Parser {
     }
 
     fn for_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "for_statement");
+        debug_information!("for_statement");
 
         match self.tokens.pop_front() {
             Some(Token::LeftParen) => (),
@@ -242,7 +275,11 @@ impl Parser {
             _ => return Err(ParserErr::ForMissingCommaAfterInitialiserStatement),
         }
 
-        let test_statement = self.equality()?;
+        let test_statement = if let Expr::Boolean(test_statement) = self.equality()? {
+            test_statement
+        } else {
+            panic!("If condition must evaluate to a boolean")
+        };
 
         match self.tokens.pop_front() {
             Some(Token::Comma) => (),
@@ -269,7 +306,7 @@ impl Parser {
     }
 
     fn loop_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "loop_statement");
+        debug_information!("loop_statement");
 
         let block = Box::new(self.block()?);
 
@@ -277,7 +314,7 @@ impl Parser {
     }
 
     fn block(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "block");
+        debug_information!("block");
 
         match self.tokens.pop_front() {
             Some(Token::LeftBrace) => (),
@@ -285,12 +322,31 @@ impl Parser {
         }
 
         let mut statements = vec![];
+        self.value_stack.push(HashMap::new());
+        self.integer_stack_sizes.push(0);
+        self.float_stack_sizes.push(0);
+        self.string_stack_sizes.push(0);
+        self.boolean_stack_sizes.push(0);
 
         loop {
             match self.tokens.front() {
                 Some(Token::RightBrace) => {
                     self.tokens.pop_front();
-                    return Ok(Stmt::Block(statements));
+                    self.value_stack.pop();
+
+                    let integer_stack_size = self.integer_stack_sizes.pop().unwrap();
+                    let float_stack_size = self.float_stack_sizes.pop().unwrap();
+                    let string_stack_size = self.string_stack_sizes.pop().unwrap();
+                    let boolean_stack_size = self.boolean_stack_sizes.pop().unwrap();
+
+                    self.integer_next_id -= integer_stack_size;
+                    self.float_next_id -= float_stack_size;
+                    self.string_next_id -= string_stack_size;
+                    self.boolean_next_id -= boolean_stack_size;
+
+                    return Ok(Stmt::Block(
+                        statements,
+                    ));
                 }
                 Some(_) => statements.push(self.declaration()?),
                 None => return Err(ParserErr::ExpectedRightBraceAfterBlock),
@@ -299,7 +355,7 @@ impl Parser {
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "expression_statement");
+        debug_information!("expression_statement");
 
         let expr = self.equality()?;
 
@@ -315,47 +371,86 @@ impl Parser {
 
                 let value = self.equality()?;
 
-                if let Expr::Variable(name) = expr {
-                    Ok(Stmt::VariableAssignment(
-                        name,
-                        value,
-                        assignment_operator.unwrap(),
-                    ))
-                } else {
-                    Err(ParserErr::LeftValueNotVariable)
+                match (expr, value) {
+                    (Expr::Integer(IntegerExpr::Variable(id)), Expr::Integer(val)) => {
+                        Ok(Stmt::IntegerVariableAssignment(
+                            id,
+                            val,
+                            match assignment_operator {
+                                Some(Token::Equal) => NumericAssignmentOperator::Equal,
+                                Some(Token::PlusEqual) => NumericAssignmentOperator::PlusEqual,
+                                Some(Token::MinusEqual) => NumericAssignmentOperator::MinusEqual,
+                                Some(Token::StarEqual) => NumericAssignmentOperator::StarEqual,
+                                Some(Token::SlashEqual) => NumericAssignmentOperator::SlashEqual,
+                                _ => panic!("Shouldn't happen"),
+                            },
+                        ))
+                    }
+                    (Expr::Float(FloatExpr::Variable(id)), Expr::Float(val)) => {
+                        Ok(Stmt::FloatVariableAssignment(
+                            id,
+                            val,
+                            match assignment_operator {
+                                Some(Token::Equal) => NumericAssignmentOperator::Equal,
+                                Some(Token::PlusEqual) => NumericAssignmentOperator::PlusEqual,
+                                Some(Token::MinusEqual) => NumericAssignmentOperator::MinusEqual,
+                                Some(Token::StarEqual) => NumericAssignmentOperator::StarEqual,
+                                Some(Token::SlashEqual) => NumericAssignmentOperator::SlashEqual,
+                                _ => panic!("Shouldn't happen"),
+                            },
+                        ))
+                    }
+                    (Expr::String(StringExpr::Variable(id)), Expr::String(val)) => {
+                        Ok(Stmt::StringVariableAssignment(
+                            id,
+                            val,
+                            match assignment_operator {
+                                Some(Token::Equal) => StringAssignmentOperator::Equal,
+                                Some(Token::PlusEqual) => StringAssignmentOperator::PlusEqual,
+                                Some(Token::MinusEqual) => panic!("Cannot use -= with strings"),
+                                Some(Token::StarEqual) => panic!("Cannot use *= with strings"),
+                                Some(Token::SlashEqual) => panic!("Cannot use /= with strings"),
+                                _ => panic!("Shouldn't happen"),
+                            },
+                        ))
+                    }
+                    (Expr::Boolean(BooleanExpr::Variable(id)), Expr::Boolean(val)) => {
+                        Ok(Stmt::BooleanVariableAssignment(
+                            id,
+                            val,
+                            match assignment_operator {
+                                Some(Token::Equal) => BooleanAssignmentOperator::Equal,
+                                Some(Token::PlusEqual) => panic!("Cannot use += with booleans"),
+                                Some(Token::MinusEqual) => panic!("Cannot use -= with booleans"),
+                                Some(Token::StarEqual) => panic!("Cannot use *= with booleans"),
+                                Some(Token::SlashEqual) => panic!("Cannot use /= with booleans"),
+                                _ => panic!("Shouldn't happen"),
+                            },
+                        ))
+                    }
+                    _ => panic!("Type error variable assignment"),
                 }
             }
             _ => Ok(Stmt::Expression(expr)),
         }
     }
 
-    fn exit_statement(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "exit_statement");
-
-        match self.tokens.pop_front() {
-            Some(Token::LeftParen) => (),
-            _ => return Err(ParserErr::ExitMissingLeftParen),
-        }
-        match self.tokens.pop_front() {
-            Some(Token::RightParen) => (),
-            _ => return Err(ParserErr::ExitMissingRightParen),
-        }
-
-        Ok(Stmt::Exit)
-    }
-
     fn variable_declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "variable_declaration");
+        debug_information!("variable_declaration");
 
-        let variable_data_type = match self.data_type() {
-            Ok(data_type) => data_type,
-            Err(_) => return Err(ParserErr::VariableDeclarationBadDataType),
+        let value_type = match self.data_type() {
+            Ok(value_type) => value_type,
+            Err(_) => return Err(ParserErr::VariableDeclarationBadValueType),
         };
 
         let name = match self.tokens.pop_front() {
             Some(Token::Identifier(name)) => name,
             _ => return Err(ParserErr::ExpectedVariableName),
         };
+
+        if let Some(_) = self.value_stack.last().unwrap().get(&name) {
+            panic!("Variable already declared");
+        }
 
         match self.tokens.pop_front() {
             Some(Token::Equal) => (),
@@ -364,11 +459,53 @@ impl Parser {
 
         let expr = self.equality()?;
 
-        Ok(Stmt::VariableDeclaration(variable_data_type, name, expr))
+        match (value_type, expr) {
+            (ValueType::Integer, Expr::Integer(val)) => {
+                let id = self.integer_next_id;
+                self.integer_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name.clone(), (ValueType::Integer, id));
+                *self.integer_stack_sizes.last_mut().unwrap() += 1;
+                Ok(Stmt::IntegerVariableDeclaration(val))
+            }
+            (ValueType::Float, Expr::Float(val)) => {
+                let id = self.float_next_id;
+                self.float_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name.clone(), (ValueType::Float, id));
+                *self.float_stack_sizes.last_mut().unwrap() += 1;
+                Ok(Stmt::FloatVariableDeclaration(val))
+            }
+            (ValueType::String, Expr::String(val)) => {
+                let id = self.string_next_id;
+                self.string_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name.clone(), (ValueType::String, id));
+                *self.string_stack_sizes.last_mut().unwrap() += 1;
+                Ok(Stmt::StringVariableDeclaration(val))
+            }
+            (ValueType::Boolean, Expr::Boolean(val)) => {
+                let id = self.boolean_next_id;
+                self.boolean_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name.clone(), (ValueType::Boolean, id));
+                *self.boolean_stack_sizes.last_mut().unwrap() += 1;
+                Ok(Stmt::BooleanVariableDeclaration(val))
+            }
+            _ => panic!("Type error variable declaration"),
+        }
     }
 
     fn terminated_variable_declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!(self.debug, "terminated_variable_declaration");
+        debug_information!("terminated_variable_declaration");
 
         let variable_declaration = self.variable_declaration()?;
 
@@ -380,20 +517,61 @@ impl Parser {
     }
 
     fn equality(&mut self) -> Result<Expr, ParserErr> {
-        debug_information!(self.debug, "equality");
+        debug_information!("equality");
 
         let mut left = self.comparision()?;
 
         loop {
             if let Some(Token::EqualEqual | Token::BangEqual) = self.tokens.front() {
-                let operator = self.tokens.pop_front();
-
+                let comparator = self.tokens.pop_front();
                 let right = self.comparision()?;
 
-                left = Expr::Binary {
-                    left: Box::new(left),
-                    operator: operator.unwrap(),
-                    right: Box::new(right),
+                match (left, right) {
+                    (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::IntegerBinary {
+                            left: Box::new(left_inside),
+                            comparator: match comparator {
+                                Some(Token::EqualEqual) => NumericComparision::Equal,
+                                Some(Token::BangEqual) => NumericComparision::Inequal,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::Float(left_inside), Expr::Float(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::FloatBinary {
+                            left: Box::new(left_inside),
+                            comparator: match comparator {
+                                Some(Token::EqualEqual) => NumericComparision::Equal,
+                                Some(Token::BangEqual) => NumericComparision::Inequal,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::String(left_inside), Expr::String(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::StringBinary {
+                            left: Box::new(left_inside),
+                            comparator: match comparator {
+                                Some(Token::EqualEqual) => StringComparision::Equal,
+                                Some(Token::BangEqual) => StringComparision::Inequal,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::Boolean(left_inside), Expr::Boolean(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::BooleanBinary {
+                            left: Box::new(left_inside),
+                            comparator: match comparator {
+                                Some(Token::EqualEqual) => BooleanComparision::Equal,
+                                Some(Token::BangEqual) => BooleanComparision::Inequal,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    _ => panic!("Type error comparision"),
                 }
             } else {
                 break;
@@ -404,7 +582,7 @@ impl Parser {
     }
 
     fn comparision(&mut self) -> Result<Expr, ParserErr> {
-        debug_information!(self.debug, "comparison");
+        debug_information!("comparison");
 
         let mut left = self.addsub()?;
 
@@ -412,14 +590,51 @@ impl Parser {
             if let Some(Token::MoreEqual | Token::LessEqual | Token::Less | Token::More) =
                 self.tokens.front()
             {
-                let operator = self.tokens.pop_front();
-
+                let comparator = self.tokens.pop_front();
                 let right = self.addsub()?;
 
-                left = Expr::Binary {
-                    left: Box::new(left),
-                    operator: operator.unwrap(),
-                    right: Box::new(right),
+                match (left, right) {
+                    (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::IntegerBinary {
+                            left: Box::new(left_inside),
+                            comparator: match comparator {
+                                Some(Token::MoreEqual) => NumericComparision::MoreEqual,
+                                Some(Token::LessEqual) => NumericComparision::LessEqual,
+                                Some(Token::More) => NumericComparision::More,
+                                Some(Token::Less) => NumericComparision::Less,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::Float(left_inside), Expr::Float(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::FloatBinary {
+                            left: Box::new(left_inside),
+                            comparator: match comparator {
+                                Some(Token::MoreEqual) => NumericComparision::MoreEqual,
+                                Some(Token::LessEqual) => NumericComparision::LessEqual,
+                                Some(Token::More) => NumericComparision::More,
+                                Some(Token::Less) => NumericComparision::Less,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::String(_), Expr::String(_)) => match comparator {
+                        Some(Token::MoreEqual) => panic!("Cannot use <= with strings"),
+                        Some(Token::LessEqual) => panic!("Cannot use >= with strings"),
+                        Some(Token::More) => panic!("Cannot use < with strings"),
+                        Some(Token::Less) => panic!("Cannot use > with strings"),
+                        _ => panic!("Unreachable"),
+                    },
+                    (Expr::Boolean(_), Expr::Boolean(_)) => match comparator {
+                        Some(Token::MoreEqual) => panic!("Cannot use <= with booleans"),
+                        Some(Token::LessEqual) => panic!("Cannot use >= with booleans"),
+                        Some(Token::More) => panic!("Cannot use < with booleans"),
+                        Some(Token::Less) => panic!("Cannot use > with booleans"),
+                        _ => panic!("Unreachable"),
+                    },
+                    _ => panic!("Type error comparision"),
                 }
             } else {
                 break;
@@ -430,7 +645,7 @@ impl Parser {
     }
 
     fn addsub(&mut self) -> Result<Expr, ParserErr> {
-        debug_information!(self.debug, "addsub");
+        debug_information!("addsub");
 
         let mut left = self.multdiv()?;
 
@@ -440,10 +655,44 @@ impl Parser {
 
                 let right = self.multdiv()?;
 
-                left = Expr::Binary {
-                    left: Box::new(left),
-                    operator: operator.unwrap(),
-                    right: Box::new(right),
+                match (left, right) {
+                    (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
+                        left = Expr::Integer(IntegerExpr::Binary {
+                            left: Box::new(left_inside),
+                            operator: match operator {
+                                Some(Token::Plus) => NumericOperator::Add,
+                                Some(Token::Minus) => NumericOperator::Subtract,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::Float(left_inside), Expr::Float(right_inside)) => {
+                        left = Expr::Float(FloatExpr::Binary {
+                            left: Box::new(left_inside),
+                            operator: match operator {
+                                Some(Token::Plus) => NumericOperator::Add,
+                                Some(Token::Minus) => NumericOperator::Subtract,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::String(left_inside), Expr::String(right_inside)) => {
+                        left = Expr::String(StringExpr::Binary {
+                            left: Box::new(left_inside),
+                            operator: match operator {
+                                Some(Token::Plus) => StringOperator::Add,
+                                Some(Token::Minus) => panic!("Cannot subtract strings"),
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::Boolean(_), Expr::Boolean(_)) => {
+                        panic!("Cannot do add or subtract booleans")
+                    }
+                    _ => panic!("Type error addsub"),
                 }
             } else {
                 break;
@@ -454,7 +703,7 @@ impl Parser {
     }
 
     fn multdiv(&mut self) -> Result<Expr, ParserErr> {
-        debug_information!(self.debug, "multdiv");
+        debug_information!("multdiv");
 
         let mut left = self.literal()?;
 
@@ -464,10 +713,36 @@ impl Parser {
 
                 let right = self.literal()?;
 
-                left = Expr::Binary {
-                    left: Box::new(left),
-                    operator: operator.unwrap(),
-                    right: Box::new(right),
+                match (left, right) {
+                    (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
+                        left = Expr::Integer(IntegerExpr::Binary {
+                            left: Box::new(left_inside),
+                            operator: match operator {
+                                Some(Token::Star) => NumericOperator::Multiply,
+                                Some(Token::Slash) => NumericOperator::Divide,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::Float(left_inside), Expr::Float(right_inside)) => {
+                        left = Expr::Float(FloatExpr::Binary {
+                            left: Box::new(left_inside),
+                            operator: match operator {
+                                Some(Token::Star) => NumericOperator::Multiply,
+                                Some(Token::Slash) => NumericOperator::Divide,
+                                _ => panic!("Unreachable"),
+                            },
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (Expr::String(_), Expr::String(_)) => {
+                        panic!("Cannot multiply or divide strings")
+                    }
+                    (Expr::Boolean(_), Expr::Boolean(_)) => {
+                        panic!("Cannot multiply or divide booleans")
+                    }
+                    _ => panic!("Type error multdiv"),
                 }
             } else {
                 break;
@@ -478,27 +753,54 @@ impl Parser {
     }
 
     fn literal(&mut self) -> Result<Expr, ParserErr> {
-        debug_information!(self.debug, "literal");
+        debug_information!("literal");
 
         match self.tokens.pop_front() {
-            Some(Token::Integer(val)) => Ok(Expr::Literal(Literal::Integer(val))),
-            Some(Token::Float(val)) => Ok(Expr::Literal(Literal::Float(val))),
-            Some(Token::String(val)) => Ok(Expr::Literal(Literal::String(val))),
-            Some(Token::Boolean(val)) => Ok(Expr::Literal(Literal::Boolean(val))),
+            Some(Token::Integer(val)) => Ok(Expr::Integer(IntegerExpr::Literal(val))),
+            Some(Token::Float(val)) => Ok(Expr::Float(FloatExpr::Literal(val))),
+            Some(Token::String(val)) => Ok(Expr::String(StringExpr::Literal(val))),
+            Some(Token::Boolean(val)) => Ok(Expr::Boolean(BooleanExpr::Literal(val))),
             Some(Token::Identifier(val)) => {
                 if let Some(Token::LeftParen) = self.tokens.front() {
                     self.tokens.pop_front();
-                    self.call(val)
+                    self.call(val, None)
+                } else if let Some(Token::ColonColon) = self.tokens.front() {
+                    self.tokens.pop_front();
+                    if let Some(Token::Identifier(name)) = self.tokens.pop_front() {
+                        self.tokens.pop_front();
+                        self.call(name, Some(val))
+                    } else {
+                        panic!("Expected an identifier for function within module")
+                    }
                 } else {
-                    Ok(Expr::Variable(val))
+                    for scope in self.value_stack.iter().rev() {
+                        if let Some((value_type, id)) = scope.get(&val) {
+                            match value_type {
+                                ValueType::Integer => {
+                                    return Ok(Expr::Integer(IntegerExpr::Variable(*id)))
+                                }
+                                ValueType::Float => {
+                                    return Ok(Expr::Float(FloatExpr::Variable(*id)))
+                                }
+                                ValueType::String => {
+                                    return Ok(Expr::String(StringExpr::Variable(*id)))
+                                }
+                                ValueType::Boolean => {
+                                    return Ok(Expr::Boolean(BooleanExpr::Variable(*id)))
+                                }
+                            }
+                        }
+                    }
+
+                    panic!("Variable not found");
                 }
             }
-            _ => return Err(ParserErr::ExpectedLiteral),
+            val => return Err(ParserErr::ExpectedLiteral(val)),
         }
     }
 
-    fn call(&mut self, name: String) -> Result<Expr, ParserErr> {
-        debug_information!(self.debug, "call");
+    fn call(&mut self, name: String, module: Option<String>) -> Result<Expr, ParserErr> {
+        debug_information!("call");
 
         let mut arguments = vec![];
 
@@ -519,7 +821,74 @@ impl Parser {
             },
         }
 
-        Ok(Expr::Call(name, arguments))
+        if let Some(module) = module {
+            match module.as_str() {
+                "cli" => match name.as_str() {
+                    "println" => {
+                        if arguments.len() != 1 {
+                            panic!("Incorrect amount of arguments for println");
+                        }
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
+                            match arguments.pop() {
+                                Some(Expr::Integer(arg)) => {
+                                    CliFunctionNone::PrintLineInteger(Box::new(arg))
+                                }
+                                Some(Expr::Float(arg)) => {
+                                    CliFunctionNone::PrintLineFloat(Box::new(arg))
+                                }
+                                Some(Expr::String(arg)) => {
+                                    CliFunctionNone::PrintLineString(Box::new(arg))
+                                }
+                                Some(Expr::Boolean(arg)) => {
+                                    CliFunctionNone::PrintLineBoolean(Box::new(arg))
+                                }
+                                _ => panic!("Invalid argument for println")
+                            }
+                        ))));
+                    }
+                    "print" => {
+                        if arguments.len() != 1 {
+                            panic!("Incorrect amount of arguments for print");
+                        }
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
+                            match arguments.pop() {
+                                Some(Expr::Integer(arg)) => {
+                                    CliFunctionNone::PrintInteger(Box::new(arg))
+                                }
+                                Some(Expr::Float(arg)) => {
+                                    CliFunctionNone::PrintFloat(Box::new(arg))
+                                }
+                                Some(Expr::String(arg)) => {
+                                    CliFunctionNone::PrintString(Box::new(arg))
+                                }
+                                Some(Expr::Boolean(arg)) => {
+                                    CliFunctionNone::PrintBoolean(Box::new(arg))
+                                }
+                                _ => panic!("Invalid argument for print")
+                            }
+                        ))));
+                    }
+                    "prompt" => {
+                        if arguments.len() != 1 {
+                            panic!("Incorrect amount of arguments for prompt");
+                        }
+                        if let Some(Expr::String(argument)) = arguments.pop() {
+                            return Ok(Expr::String(StringExpr::NativeCall(
+                                NativeFunctionString::Cli(CliFunctionString::Prompt(Box::new(
+                                    argument,
+                                ))),
+                            )));
+                        } else {
+                            panic!("Incorrect argument to println");
+                        }
+                    }
+                    _ => panic!("Function does not exist inside CLI API"),
+                },
+                module => panic!("Invalid module {module}"),
+            }
+        }
+
+        panic!("Not implemented Zonkey functions yet");
     }
 
     fn data_type(&mut self) -> Result<ValueType, ()> {

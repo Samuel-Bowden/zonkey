@@ -3,7 +3,7 @@
 start {
 	for (Integer i = 0, i <= 90, i += 10) {
 		for (Integer j = 0, j <= 9, j += 1) {
-			printLineInteger(i + j);
+			cli::println("Iteration");
 		}
 	}
 }

@@ -3,14 +3,12 @@ use std::{fs::read_to_string, io::Write, path::Path, process::ExitCode};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 pub struct Wrapper {
-    debug: bool,
     stderr: StandardStream,
 }
 
 impl Wrapper {
-    pub fn new(debug: bool) -> Self {
+    pub fn new() -> Self {
         Self {
-            debug,
             stderr: StandardStream::stderr(termcolor::ColorChoice::Always),
         }
     }
@@ -25,7 +23,7 @@ impl Wrapper {
             }
         };
 
-        match Interpreter::new(self.debug).run(&source) {
+        match Interpreter::new().run(&source) {
             Ok(_) => ExitCode::SUCCESS,
             Err(e) => {
                 self.error(format!("{e}"));

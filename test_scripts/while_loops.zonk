@@ -7,7 +7,7 @@ start {
 		Integer j = 0;
 
 		while (j <= 9) {
-			printLineInteger(i + j);
+			cli::println(i + j);
 			j += 1;
 		}
 
