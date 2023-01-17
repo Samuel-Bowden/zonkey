@@ -1,8 +1,8 @@
 # Should print from 0-99
 
 start {
-	for (Integer i = 0, i <= 90, i += 10) {
-		for (Integer j = 0, j <= 9, j += 1) {
+	for (let i = 0, i <= 90, i += 10) {
+		for (let j = 0, j <= 9, j += 1) {
 			cli::println("Iteration");
 		}
 	}

@@ -1,10 +1,10 @@
 # Test shadowing
 
 start {
-	Integer a = 1;
+	let a = 1;
 
 	loop {
-		Integer a = 2;
+		let a = 2;
 		cli::println(a); # Should print 2
 		break;
 	}

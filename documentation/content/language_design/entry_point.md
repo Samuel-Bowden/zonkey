@@ -6,12 +6,12 @@ weight: 6
 A start block is defined as so:
 ```
 start {
-  String name = "Sam";
+  let name = "Sam";
   sayHi(name);
 }
 
 function sayHi(String name) {
-  print("Hi" + name);
+  cli::println("Hi" + name);
 }
 ```
 
@@ -21,12 +21,12 @@ Having anything other than function and start declarations in the global scope w
 
 ```start
 start {
-  String name = "Sam";
+  let name = "Sam";
   sayHi(name);
 }
 
 function sayHi(String name) {
-  print("Hi" + name);
+  cli::println("Hi" + name);
 }
 
 print("Printing in the global scope!"); # Not allowed

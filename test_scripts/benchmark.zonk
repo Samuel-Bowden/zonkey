@@ -1,10 +1,10 @@
 # A computationally complex program to test the speed of Zonkey
 
 start {
-	for (Integer i = 0, i < 1000, i += 1) {
-		for (Integer j = 0, j < 10, j += 1) {
-			for (Integer k = 0, k < 10, k += 1) {
-				for (Integer l = 0, l < 10, l += 1) {
+	for (let i = 0, i < 1000, i += 1) {
+		for (let j = 0, j < 10, j += 1) {
+			for (let k = 0, k < 10, k += 1) {
+				for (let l = 0, l < 10, l += 1) {
 					cli::println(i + j + k + l);
 				}
 			}

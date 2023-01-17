@@ -13,7 +13,7 @@ statement -> terminated_statement | block | if_statement | while_statement | loo
 terminated_statement -> (expression_statement | exit_statement | "break" | "continue") ";";
 expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
 exit_statement -> exit "(" ")";
-variable_declaration = data_type IDENTIFIER "=" expression; 
+variable_declaration = "let" IDENTIFIER "=" expression; 
 terminated_variable_declaration = variable_declaration ";";
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;

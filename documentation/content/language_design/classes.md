@@ -11,11 +11,11 @@ class Dog {
     constructor(String name, Integer age) {
         self.name = name;
         self.age = age;
-        print("I've just been created");
+        cli::print("I've just been created");
     }
 
     destructor() {
-        print("I've just been destroyed");
+        cli::print("I've just been destroyed");
     }
 
     get_age() -> Integer {
@@ -36,10 +36,10 @@ class Dog {
 }
 
 start {
-    Dog jack = Dog("Jack", 7);
-    print(jack.get_age());
+    let jack = Dog("Jack", 7);
+    cli::print(jack.get_age());
     jack.set_age(10);
-    print(jack.get_age());
+    cli::print(jack.get_age());
 }
 ```
 

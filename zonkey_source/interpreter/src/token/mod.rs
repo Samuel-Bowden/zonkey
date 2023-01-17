@@ -54,4 +54,5 @@ pub enum Token {
     FloatType,
     StringType,
     BooleanType,
+    Let,
 }

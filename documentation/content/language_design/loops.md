@@ -7,7 +7,7 @@ weight: 9
 
 ```zonkey
 ...
-Boolean quit = false;
+let quit = false;
 
 loop {
 	# Some operations
@@ -25,8 +25,8 @@ loop {
 ### Normal
 
 ```zonkey
-for (Integer i = 0, i < 10, i+=1) {
-	print(i);
+for (let i = 0, i < 10, i+=1) {
+	cli::println(i);
 }
 ```
 
@@ -35,10 +35,10 @@ for (Integer i = 0, i < 10, i+=1) {
 A common need when programming is to iterate over elements of a set or a range. Zonkey will support iterators, and this is a special type of for loop to support iterating over elements of an iterator.
 
 ```zonkey
-Array<Integer> arr = [1, 2, 3];
+let arr = [1, 2, 3];
 
 for (i in arr) {
-	print(i);
+	cli::println(i);
 }
 ```
 
@@ -57,9 +57,9 @@ The value for each iteration that is used in the for loop, "i" in this case, wil
 ## While Loop
 
 ```zonkey
-Integer i = 10;	
+let i = 10;	
 
 while (i < 20) {
-	print(i);
+	cli::println(i);
 }
 ```

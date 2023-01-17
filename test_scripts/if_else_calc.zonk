@@ -5,46 +5,46 @@ start {
 	cli::println("Lets test whether that holds in Zonkey lang 🧪");
 
 	cli::print("Numbers: ");
-	Integer one = 111;
+	let one = 111;
 	cli::print(one);
 	cli::print(", ");
 
-	Integer two = 222;
+	let two = 222;
 	cli::print(two);
 	cli::print(", ");
 
-	Integer three = 333;
+	let three = 333;
 	cli::print(three);
 	cli::print(", ");
 
-	Integer four = 444;
+	let four = 444;
 	cli::print(four);
 	cli::print(", ");
 
-	Integer five = 555;
+	let five = 555;
 	cli::print(five);
 	cli::print(", ");
 
-	Integer six = 666;
+	let six = 666;
 	cli::print(six);
 	cli::print(", ");
 
-	Integer seven = 777;
+	let seven = 777;
 	cli::print(seven);
 	cli::print(", ");
 
-	Integer eight = 888;
+	let eight = 888;
 	cli::print(eight);
 	cli::print(", ");
 
-	Integer nine = 999;
+	let nine = 999;
 	cli::print(nine);
 	cli::println("");
 
 	#------------------
 
 	cli::print("Each number divided by the sum of their digits: ");
-	Integer sum_digits = 3;
+	let sum_digits = 3;
 
 	one /= sum_digits;
 	sum_digits += 3;
@@ -92,7 +92,7 @@ start {
 	cli::println("");
 
 	# Sum of numbers should equal 333 as 37 * 9 = 333
-	Integer sum_of_numbers = one + two + three + four + five + six + seven + eight + nine;
+	let sum_of_numbers = one + two + three + four + five + six + seven + eight + nine;
 
 	if (sum_of_numbers == 333) {
 			cli::println("It holds true!");

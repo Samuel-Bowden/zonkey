@@ -8,7 +8,7 @@ Comments in Zonkey are inspired by Python and are preceded by ‘#’.
 ```zonkey
 ...
 # Say hi in Japanese
-print("やあ");
+cli::println("やあ");
 ...
 ```
 

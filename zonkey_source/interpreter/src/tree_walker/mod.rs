@@ -63,7 +63,7 @@ impl<'a> TreeWalker<'a> {
                     .assign_boolean(*id, self.eval_boolean(expr), assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::Block(statements) => {
+            Stmt::Block(statements, block_start_points) => {
                 self.environment.push_stack();
 
                 let mut return_value = Ok(TreeWalkerStatus::Ok);
@@ -82,7 +82,7 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                self.environment.pop_stack();
+                self.environment.pop_stack(block_start_points);
 
                 return_value
             }

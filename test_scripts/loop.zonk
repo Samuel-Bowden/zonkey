@@ -1,7 +1,7 @@
 # Loop should count from 0-9, but skip 5
 
 start {
-	Integer count = 0;
+	let count = 0;
 
 	loop {
 	  	count += 1;
@@ -10,7 +10,8 @@ start {
 	    		break;
 	  	} else if (count == 5) {
 	    		continue;
-				cli::println("This should never be printed");
+				cli::println("This should never be printed nor should the variable be created");
+				let a = 5930;
 	  	} else {
 	    		cli::println(count);
 	  	}

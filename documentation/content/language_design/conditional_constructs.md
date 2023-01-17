@@ -9,16 +9,16 @@ The if-else syntax is very similar to what is found in other languages. Conditio
 
 ```zonkey
 ...
-Integer choice = 1;
+let choice = 1;
 
 if (choice == 1) {
-	print("First choice");
+	cli::println("First choice");
 }
 else if (choice == 2) {
-	print("Second choice");
+	cli::println("Second choice");
 }
 else {
-	print("Invalid choice");
+	cli::println("Invalid choice");
 }
 ...
 ```

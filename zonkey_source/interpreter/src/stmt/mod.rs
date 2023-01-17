@@ -17,7 +17,7 @@ pub enum Stmt {
     FloatVariableAssignment(usize, FloatExpr, NumericAssignmentOperator),
     StringVariableAssignment(usize, StringExpr, StringAssignmentOperator),
     BooleanVariableAssignment(usize, BooleanExpr, BooleanAssignmentOperator),
-    Block(Vec<Stmt>),
+    Block(Vec<Stmt>, (usize, usize, usize, usize)),
     If(BooleanExpr, Box<Stmt>, Option<Box<Stmt>>),
     While(BooleanExpr, Box<Stmt>),
     Loop(Box<Stmt>),

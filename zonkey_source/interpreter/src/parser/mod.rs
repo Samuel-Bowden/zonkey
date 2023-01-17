@@ -28,10 +28,6 @@ pub struct Parser {
     float_next_id: usize,
     string_next_id: usize,
     boolean_next_id: usize,
-    integer_stack_sizes: Vec<usize>,
-    float_stack_sizes: Vec<usize>,
-    string_stack_sizes: Vec<usize>,
-    boolean_stack_sizes: Vec<usize>,
 }
 
 impl Parser {
@@ -44,10 +40,6 @@ impl Parser {
             float_next_id: 0,
             string_next_id: 0,
             boolean_next_id: 0,
-            integer_stack_sizes: vec![],
-            float_stack_sizes: vec![],
-            string_stack_sizes: vec![],
-            boolean_stack_sizes: vec![],
         }
     }
 
@@ -81,9 +73,9 @@ impl Parser {
         debug_information!("declaration");
 
         match self.tokens.front() {
-            Some(
-                Token::IntegerType | Token::StringType | Token::BooleanType | Token::FloatType,
-            ) => self.terminated_variable_declaration(),
+            Some(Token::Let) => {
+                self.terminated_variable_declaration()
+            }
             Some(Token::Function) => {
                 self.tokens.pop_front();
                 self.function_declaration()
@@ -268,6 +260,12 @@ impl Parser {
             _ => return Err(ParserErr::ForMissingLeftParen),
         }
 
+        self.value_stack.push(HashMap::new());
+        let integer_point = self.integer_next_id;
+        let float_point = self.float_next_id;
+        let string_point = self.string_next_id;
+        let boolean_point = self.boolean_next_id;
+
         let initialiser_statement = self.variable_declaration()?;
 
         match self.tokens.pop_front() {
@@ -295,14 +293,25 @@ impl Parser {
 
         let mut block = self.block()?;
 
-        if let Stmt::Block(b) = &mut block {
+        if let Stmt::Block(b, _) = &mut block {
             b.push(update_statement);
         }
 
-        Ok(Stmt::Block(vec![
-            initialiser_statement,
-            Stmt::While(test_statement, Box::new(block)),
-        ]))
+        self.value_stack.pop();
+
+        self.integer_next_id = integer_point;
+        self.float_next_id = float_point;
+        self.string_next_id = string_point;
+        self.boolean_next_id = boolean_point;
+
+        Ok(Stmt::Block(
+            vec![
+                initialiser_statement,
+                Stmt::While(test_statement, Box::new(block)),
+            ],
+            (integer_point, float_point, string_point, boolean_point),
+        ))
+
     }
 
     fn loop_statement(&mut self) -> Result<Stmt, ParserErr> {
@@ -323,10 +332,11 @@ impl Parser {
 
         let mut statements = vec![];
         self.value_stack.push(HashMap::new());
-        self.integer_stack_sizes.push(0);
-        self.float_stack_sizes.push(0);
-        self.string_stack_sizes.push(0);
-        self.boolean_stack_sizes.push(0);
+
+        let integer_point = self.integer_next_id;
+        let float_point = self.float_next_id;
+        let string_point = self.string_next_id;
+        let boolean_point = self.boolean_next_id;
 
         loop {
             match self.tokens.front() {
@@ -334,18 +344,19 @@ impl Parser {
                     self.tokens.pop_front();
                     self.value_stack.pop();
 
-                    let integer_stack_size = self.integer_stack_sizes.pop().unwrap();
-                    let float_stack_size = self.float_stack_sizes.pop().unwrap();
-                    let string_stack_size = self.string_stack_sizes.pop().unwrap();
-                    let boolean_stack_size = self.boolean_stack_sizes.pop().unwrap();
-
-                    self.integer_next_id -= integer_stack_size;
-                    self.float_next_id -= float_stack_size;
-                    self.string_next_id -= string_stack_size;
-                    self.boolean_next_id -= boolean_stack_size;
+                    self.integer_next_id = integer_point;
+                    self.float_next_id = float_point;
+                    self.string_next_id = string_point;
+                    self.boolean_next_id = boolean_point;
 
                     return Ok(Stmt::Block(
                         statements,
+                        (
+                            integer_point,
+                            float_point,
+                            string_point,
+                            boolean_point,
+                        )
                     ));
                 }
                 Some(_) => statements.push(self.declaration()?),
@@ -438,14 +449,11 @@ impl Parser {
     fn variable_declaration(&mut self) -> Result<Stmt, ParserErr> {
         debug_information!("variable_declaration");
 
-        let value_type = match self.data_type() {
-            Ok(value_type) => value_type,
-            Err(_) => return Err(ParserErr::VariableDeclarationBadValueType),
-        };
+        self.tokens.pop_front();
 
         let name = match self.tokens.pop_front() {
             Some(Token::Identifier(name)) => name,
-            _ => return Err(ParserErr::ExpectedVariableName),
+            other => return Err(ParserErr::ExpectedVariableName(other)),
         };
 
         if let Some(_) = self.value_stack.last().unwrap().get(&name) {
@@ -459,48 +467,46 @@ impl Parser {
 
         let expr = self.equality()?;
 
-        match (value_type, expr) {
-            (ValueType::Integer, Expr::Integer(val)) => {
+        match expr {
+            Expr::Integer(val) => {
                 let id = self.integer_next_id;
                 self.integer_next_id += 1;
                 self.value_stack
                     .last_mut()
                     .unwrap()
                     .insert(name.clone(), (ValueType::Integer, id));
-                *self.integer_stack_sizes.last_mut().unwrap() += 1;
                 Ok(Stmt::IntegerVariableDeclaration(val))
             }
-            (ValueType::Float, Expr::Float(val)) => {
+            Expr::Float(val) => {
                 let id = self.float_next_id;
                 self.float_next_id += 1;
                 self.value_stack
                     .last_mut()
                     .unwrap()
                     .insert(name.clone(), (ValueType::Float, id));
-                *self.float_stack_sizes.last_mut().unwrap() += 1;
                 Ok(Stmt::FloatVariableDeclaration(val))
             }
-            (ValueType::String, Expr::String(val)) => {
+            Expr::String(val) => {
                 let id = self.string_next_id;
                 self.string_next_id += 1;
                 self.value_stack
                     .last_mut()
                     .unwrap()
                     .insert(name.clone(), (ValueType::String, id));
-                *self.string_stack_sizes.last_mut().unwrap() += 1;
                 Ok(Stmt::StringVariableDeclaration(val))
             }
-            (ValueType::Boolean, Expr::Boolean(val)) => {
+            Expr::Boolean(val) => {
                 let id = self.boolean_next_id;
                 self.boolean_next_id += 1;
                 self.value_stack
                     .last_mut()
                     .unwrap()
                     .insert(name.clone(), (ValueType::Boolean, id));
-                *self.boolean_stack_sizes.last_mut().unwrap() += 1;
                 Ok(Stmt::BooleanVariableDeclaration(val))
             }
-            _ => panic!("Type error variable declaration"),
+            Expr::None(_) => {
+                panic!("Cannot not assign the value None to variable");
+            }
         }
     }
 

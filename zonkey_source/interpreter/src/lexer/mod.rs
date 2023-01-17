@@ -292,6 +292,7 @@ impl<'a> Lexer<'a> {
             "Boolean" => self.add_token(Token::BooleanType),
             "false" => self.add_token(Token::Boolean(false)),
             "true" => self.add_token(Token::Boolean(true)),
+            "let" => self.add_token(Token::Let),
             _ => self.add_token(Token::Identifier(literal)),
         }
 

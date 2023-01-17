@@ -7,7 +7,7 @@ Typically, the languages that are taught to children in schools use dynamic typi
 
 Dynamic typing systems allow programs to be written more quickly, however, bugs involving types are often easier for the developer to write and harder for them to diagnose.
 
-Although Zonkey is interpreted, it will be ***manifest statically typed*** and programs will be passed through a type checker ahead of program execution. Although this will slow down program execution, it will make the language easier to use for developers.
+Although Zonkey is interpreted, it will be ***statically typed*** with type inference and programs will be passed through a type checker ahead of program execution. This will make the language easier to use for developers.
 
 The code examples below show the benefits of forcing static types in Zonkey. You may need to read sections beyond this page to understand the code that has been written.
 
@@ -21,10 +21,10 @@ function add_one(Integer val) -> Integer {
 }
 
 start {
-	Integer count = 5;
-	print("Initial count: " + count);
+	let count = 5;
+	cli::println("Initial count: " + count);
 	count = add_one(count);
-	print("Final count: " + count);
+	cli::println("Final count: " + count);
 }
 ```
 
@@ -43,10 +43,10 @@ function add_one(Integer val) -> Integer {
 }
 
 start {
-	String name = "Bob";
-	print("Initial count: " + count);
+	let name = "Bob";
+	cli::println("Initial count: " + count);
 	name = add_one(name);
-	print("Final count: " + count);
+	cli::println("Final count: " + count);
 }
 ```
 
@@ -64,9 +64,9 @@ function add_one(val) {
 
 start {
 	name = "Bob";
-	print("Initial count: " + count);
+	cli::println("Initial count: " + count);
 	name = add_one(name);
-	print("Final count: " + count);
+	cli::println("Final count: " + count);
 }
 ```
 
