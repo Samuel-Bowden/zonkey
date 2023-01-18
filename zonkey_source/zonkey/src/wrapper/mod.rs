@@ -1,4 +1,3 @@
-use interpreter::Interpreter;
 use std::{fs::read_to_string, io::Write, path::Path, process::ExitCode};
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
@@ -23,7 +22,7 @@ impl Wrapper {
             }
         };
 
-        match Interpreter::new().run(&source) {
+        match interpreter::run(&source) {
             Ok(_) => ExitCode::SUCCESS,
             Err(e) => {
                 self.error(format!("{e}"));

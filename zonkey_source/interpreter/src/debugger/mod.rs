@@ -36,7 +36,7 @@ macro_rules! debug_information {
 #[cfg(debug_assertions)]
 pub fn report(name: &str, message: &str, color: Color) {
     use std::io::Write;
-    use termcolor::{WriteColor, ColorSpec, StandardStream};
+    use termcolor::{ColorSpec, StandardStream, WriteColor};
 
     let mut stdout = StandardStream::stdout(termcolor::ColorChoice::Always);
 

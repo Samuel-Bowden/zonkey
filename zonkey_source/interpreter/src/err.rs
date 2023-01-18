@@ -1,6 +1,6 @@
 use super::lexer::err::LexerErr;
-use super::parser::err::ParserErr;
 use super::tree_walker::err::TreeWalkerErr;
+use crate::local_parser::err::ParserErr;
 use std::fmt::Display;
 
 #[derive(Debug)]

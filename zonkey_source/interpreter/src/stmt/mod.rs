@@ -3,7 +3,6 @@ use crate::{
         BooleanAssignmentOperator, NumericAssignmentOperator, StringAssignmentOperator,
     },
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, StringExpr},
-    value_type::ValueType,
 };
 
 #[derive(Debug)]
@@ -21,8 +20,7 @@ pub enum Stmt {
     If(BooleanExpr, Box<Stmt>, Option<Box<Stmt>>),
     While(BooleanExpr, Box<Stmt>),
     Loop(Box<Stmt>),
-    FunctionDeclaration(String, Vec<(ValueType, String)>, Box<Stmt>),
-    Start(Box<Stmt>),
     Break,
     Continue,
+    Return,
 }

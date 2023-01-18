@@ -1,4 +1,4 @@
-use crate::expr::{StringExpr, IntegerExpr, FloatExpr, BooleanExpr};
+use crate::expr::{BooleanExpr, FloatExpr, IntegerExpr, StringExpr};
 
 pub mod prompt;
 
@@ -8,6 +8,7 @@ pub enum CliFunctionNone {
     PrintLineFloat(Box<FloatExpr>),
     PrintLineString(Box<StringExpr>),
     PrintLineBoolean(Box<BooleanExpr>),
+    PrintLine,
     PrintInteger(Box<IntegerExpr>),
     PrintFloat(Box<FloatExpr>),
     PrintString(Box<StringExpr>),

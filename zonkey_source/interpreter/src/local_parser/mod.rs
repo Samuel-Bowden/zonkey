@@ -6,6 +6,7 @@ use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     debug_information,
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
+    function_declaration::FunctionDeclaration,
     native_function::{
         cli_api::{CliFunctionNone, CliFunctionString},
         NativeFunctionNone, NativeFunctionString,
@@ -20,30 +21,83 @@ use std::collections::{HashMap, VecDeque};
 
 pub mod err;
 
-pub struct Parser {
+pub struct LocalParser<'a> {
     tokens: VecDeque<Token>,
-    pub statements: VecDeque<Stmt>,
+    pub statements: Vec<Stmt>,
     value_stack: Vec<HashMap<String, (ValueType, usize)>>,
     integer_next_id: usize,
     float_next_id: usize,
     string_next_id: usize,
     boolean_next_id: usize,
+    function_declarations: &'a HashMap<String, FunctionDeclaration>,
+    return_expr: Option<Expr>,
 }
 
-impl Parser {
-    pub fn new(tokens: VecDeque<Token>) -> Self {
+impl<'a> LocalParser<'a> {
+    pub fn new(
+        tokens: VecDeque<Token>,
+        function_declarations: &'a HashMap<String, FunctionDeclaration>,
+    ) -> Self {
         Self {
             tokens,
-            statements: VecDeque::new(),
-            value_stack: vec![],
+            statements: vec![],
+            value_stack: vec![HashMap::new()],
             integer_next_id: 0,
             float_next_id: 0,
             string_next_id: 0,
             boolean_next_id: 0,
+            function_declarations,
+            return_expr: None,
         }
     }
 
-    pub fn run(mut self) -> Result<Self, ParserErr> {
+    pub fn new_function(
+        tokens: VecDeque<Token>,
+        function_declarations: &'a HashMap<String, FunctionDeclaration>,
+        function_declaration: &'a FunctionDeclaration,
+    ) -> Self {
+        let mut value_stack = vec![HashMap::new()];
+
+        let mut integer_next_id = 0;
+        let mut float_next_id = 0;
+        let mut string_next_id = 0;
+        let mut boolean_next_id = 0;
+
+        for parameter in &function_declaration.parameters {
+            match parameter.0 {
+                ValueType::Integer => {
+                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::Integer, integer_next_id));
+                    integer_next_id += 1;
+                }
+                ValueType::Float => {
+                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::Float, float_next_id));
+                    float_next_id += 1;
+                }
+                ValueType::String => {
+                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::String, string_next_id));
+                    string_next_id += 1;
+                }
+                ValueType::Boolean => {
+                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::Boolean, boolean_next_id));
+                    boolean_next_id += 1;
+                }
+            }
+        }
+
+        Self {
+            tokens,
+            statements: vec![],
+            value_stack,
+            integer_next_id,
+            float_next_id,
+            string_next_id,
+            boolean_next_id,
+            function_declarations,
+            return_expr: None,
+        }
+    }
+
+    pub fn run(mut self) -> Result<(Vec<Stmt>, Option<Expr>), ParserErr> {
         parser_debug!("Production rule path:");
 
         self.program()?;
@@ -55,7 +109,7 @@ impl Parser {
             println!("  {}: {:?}", i + 1, statement);
         }
 
-        Ok(self)
+        Ok((self.statements, self.return_expr))
     }
 
     fn program(&mut self) -> Result<(), ParserErr> {
@@ -63,7 +117,7 @@ impl Parser {
 
         while self.tokens.front() != None {
             let declaration = self.declaration()?;
-            self.statements.push_back(declaration);
+            self.statements.push(declaration);
         }
 
         Ok(())
@@ -73,17 +127,7 @@ impl Parser {
         debug_information!("declaration");
 
         match self.tokens.front() {
-            Some(Token::Let) => {
-                self.terminated_variable_declaration()
-            }
-            Some(Token::Function) => {
-                self.tokens.pop_front();
-                self.function_declaration()
-            }
-            Some(Token::Start) => {
-                self.tokens.pop_front();
-                self.start_declaration()
-            }
+            Some(Token::Let) => self.terminated_variable_declaration(),
             _ => self.statement(),
         }
     }
@@ -117,6 +161,10 @@ impl Parser {
         debug_information!("terminated_statement");
 
         let expression = match self.tokens.front() {
+            Some(Token::Return) => {
+                self.tokens.pop_front();
+                self.return_statement()?
+            }
             Some(Token::Break) => {
                 self.tokens.pop_front();
                 Stmt::Break
@@ -135,60 +183,15 @@ impl Parser {
         }
     }
 
-    fn start_declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!("start_declaration");
-
-        let block = Box::new(self.block()?);
-
-        Ok(Stmt::Start(block))
-    }
-
-    fn function_declaration(&mut self) -> Result<Stmt, ParserErr> {
-        debug_information!("function_declaration");
-
-        let function_name = if let Some(Token::Identifier(identifier)) = self.tokens.pop_front() {
-            identifier
-        } else {
-            return Err(ParserErr::FunctionDeclarationMissingName);
-        };
-
-        match self.tokens.pop_front() {
-            Some(Token::LeftParen) => (),
-            _ => return Err(ParserErr::FunctionDeclarationMissingLeftParen),
-        }
-
-        let mut parameters = vec![];
+    fn return_statement(&mut self) -> Result<Stmt, ParserErr> {
+        debug_information!("return_statement");
 
         match self.tokens.front() {
-            Some(Token::RightParen) => {
-                self.tokens.pop_front();
-            }
-            _ => loop {
-                let parameter_data_type = match self.data_type() {
-                    Ok(data_type) => data_type,
-                    Err(_) => return Err(ParserErr::FunctionDeclarationParameterBadDataType),
-                };
-
-                let parameter_name =
-                    if let Some(Token::Identifier(identifier)) = self.tokens.pop_front() {
-                        identifier
-                    } else {
-                        return Err(ParserErr::FunctionDeclarationParameterMissingName);
-                    };
-
-                parameters.push((parameter_data_type, parameter_name));
-
-                match self.tokens.pop_front() {
-                    Some(Token::Comma) => continue,
-                    Some(Token::RightParen) => break,
-                    _ => return Err(ParserErr::FunctionDeclarationExpectedCommaOrRightParen),
-                }
-            },
+            Some(Token::SemiColon) => (),
+            _ => self.return_expr = Some(self.equality()?),
         }
 
-        let block = Box::new(self.block()?);
-
-        Ok(Stmt::FunctionDeclaration(function_name, parameters, block))
+        Ok(Stmt::Return)
     }
 
     fn if_statement(&mut self) -> Result<Stmt, ParserErr> {
@@ -311,7 +314,6 @@ impl Parser {
             ],
             (integer_point, float_point, string_point, boolean_point),
         ))
-
     }
 
     fn loop_statement(&mut self) -> Result<Stmt, ParserErr> {
@@ -351,12 +353,7 @@ impl Parser {
 
                     return Ok(Stmt::Block(
                         statements,
-                        (
-                            integer_point,
-                            float_point,
-                            string_point,
-                            boolean_point,
-                        )
+                        (integer_point, float_point, string_point, boolean_point),
                     ));
                 }
                 Some(_) => statements.push(self.declaration()?),
@@ -798,7 +795,7 @@ impl Parser {
                         }
                     }
 
-                    panic!("Variable not found");
+                    panic!("Variable not found {val}");
                 }
             }
             val => return Err(ParserErr::ExpectedLiteral(val)),
@@ -831,8 +828,11 @@ impl Parser {
             match module.as_str() {
                 "cli" => match name.as_str() {
                     "println" => {
-                        if arguments.len() != 1 {
-                            panic!("Incorrect amount of arguments for println");
+                        if arguments.len() > 1 {
+                            panic!(
+                                "println expected 0 or 1 arguments but was given {}",
+                                arguments.len()
+                            );
                         }
                         return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
                             match arguments.pop() {
@@ -848,8 +848,9 @@ impl Parser {
                                 Some(Expr::Boolean(arg)) => {
                                     CliFunctionNone::PrintLineBoolean(Box::new(arg))
                                 }
-                                _ => panic!("Invalid argument for println")
-                            }
+                                None => CliFunctionNone::PrintLine,
+                                _ => panic!("Invalid argument for println"),
+                            },
                         ))));
                     }
                     "print" => {
@@ -870,8 +871,8 @@ impl Parser {
                                 Some(Expr::Boolean(arg)) => {
                                     CliFunctionNone::PrintBoolean(Box::new(arg))
                                 }
-                                _ => panic!("Invalid argument for print")
-                            }
+                                _ => panic!("Invalid argument for print"),
+                            },
                         ))));
                     }
                     "prompt" => {
@@ -894,16 +895,47 @@ impl Parser {
             }
         }
 
-        panic!("Not implemented Zonkey functions yet");
-    }
+        //Must be a zonkey function
+        if let Some(function) = self.function_declarations.get(&name) {
+            if arguments.len() != function.parameters.len() {
+                panic!(
+                    "println expected {} arguments but was given {}",
+                    function.parameters.len(),
+                    arguments.len()
+                );
+            }
 
-    fn data_type(&mut self) -> Result<ValueType, ()> {
-        match self.tokens.pop_front() {
-            Some(Token::IntegerType) => Ok(ValueType::Integer),
-            Some(Token::FloatType) => Ok(ValueType::Float),
-            Some(Token::BooleanType) => Ok(ValueType::Boolean),
-            Some(Token::StringType) => Ok(ValueType::String),
-            _ => Err(()),
+            // Check arguments evaluate to the same type as parameters
+            for i in 0..arguments.len() {
+                match (&arguments[i], &function.parameters[i].0) {
+                    (Expr::Integer(_), ValueType::Integer) => (),
+                    (Expr::Float(_), ValueType::Float) => (),
+                    (Expr::String(_), ValueType::String) => (),
+                    (Expr::Boolean(_), ValueType::Boolean) => (),
+                    _ => panic!(
+                        "Argument {} recieves an expression of the wrong type in call",
+                        function.parameters[i].1
+                    ),
+                }
+            }
+
+            match function.return_data_type {
+                Some(ValueType::Integer) => {
+                    return Ok(Expr::Integer(IntegerExpr::Call(function.id, arguments)))
+                }
+                Some(ValueType::Float) => {
+                    return Ok(Expr::Float(FloatExpr::Call(function.id, arguments)))
+                }
+                Some(ValueType::String) => {
+                    return Ok(Expr::String(StringExpr::Call(function.id, arguments)))
+                }
+                Some(ValueType::Boolean) => {
+                    return Ok(Expr::Boolean(BooleanExpr::Call(function.id, arguments)))
+                }
+                None => return Ok(Expr::None(NoneExpr::Call(function.id, arguments))),
+            }
         }
+
+        panic!("Zonkey function has not been declared");
     }
 }

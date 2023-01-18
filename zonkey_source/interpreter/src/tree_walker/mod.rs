@@ -3,6 +3,7 @@ use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     environment::Environment,
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
+    function::Function,
     native_function::{
         cli_api::{prompt::prompt, CliFunctionNone, CliFunctionString},
         NativeFunctionNone, NativeFunctionString,
@@ -15,13 +16,17 @@ pub mod err;
 pub mod status;
 
 pub struct TreeWalker<'a> {
-    environment: &'a mut Environment,
+    environment: Environment,
+    functions: &'a Vec<Function>,
+    return_expr: &'a Option<Expr>,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(environment: &'a mut Environment) -> Self {
+    pub fn new(functions: &'a Vec<Function>, return_expr: &'a Option<Expr>, environment: Environment) -> Self {
         Self {
             environment,
+            functions,
+            return_expr,
         }
     }
 
@@ -74,9 +79,29 @@ impl<'a> TreeWalker<'a> {
                         TreeWalkerStatus::Continue => {
                             return_value = Ok(TreeWalkerStatus::Continue);
                             break;
-                        },
+                        }
                         TreeWalkerStatus::Break => {
                             return_value = Ok(TreeWalkerStatus::Break);
+                            break;
+                        }
+                        TreeWalkerStatus::ReturnInt(v) => {
+                            return_value = Ok(TreeWalkerStatus::ReturnInt(v));
+                            break;
+                        }
+                        TreeWalkerStatus::ReturnFloat(v) => {
+                            return_value = Ok(TreeWalkerStatus::ReturnFloat(v));
+                            break;
+                        }
+                        TreeWalkerStatus::ReturnString(v) => {
+                            return_value = Ok(TreeWalkerStatus::ReturnString(v));
+                            break;
+                        }
+                        TreeWalkerStatus::ReturnBoolean(v) => {
+                            return_value = Ok(TreeWalkerStatus::ReturnBoolean(v));
+                            break;
+                        }
+                        TreeWalkerStatus::ReturnNone => {
+                            return_value = Ok(TreeWalkerStatus::ReturnNone);
                             break;
                         }
                     }
@@ -122,6 +147,19 @@ impl<'a> TreeWalker<'a> {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
+                        TreeWalkerStatus::ReturnInt(v) => {
+                            return Ok(TreeWalkerStatus::ReturnInt(v))
+                        }
+                        TreeWalkerStatus::ReturnFloat(v) => {
+                            return Ok(TreeWalkerStatus::ReturnFloat(v))
+                        }
+                        TreeWalkerStatus::ReturnString(v) => {
+                            return Ok(TreeWalkerStatus::ReturnString(v))
+                        }
+                        TreeWalkerStatus::ReturnBoolean(v) => {
+                            return Ok(TreeWalkerStatus::ReturnBoolean(v))
+                        }
+                        TreeWalkerStatus::ReturnNone => return Ok(TreeWalkerStatus::ReturnNone),
                     }
                 }
 
@@ -133,19 +171,41 @@ impl<'a> TreeWalker<'a> {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
+                        TreeWalkerStatus::ReturnInt(v) => {
+                            return Ok(TreeWalkerStatus::ReturnInt(v))
+                        }
+                        TreeWalkerStatus::ReturnFloat(v) => {
+                            return Ok(TreeWalkerStatus::ReturnFloat(v))
+                        }
+                        TreeWalkerStatus::ReturnString(v) => {
+                            return Ok(TreeWalkerStatus::ReturnString(v))
+                        }
+                        TreeWalkerStatus::ReturnBoolean(v) => {
+                            return Ok(TreeWalkerStatus::ReturnBoolean(v))
+                        }
+                        TreeWalkerStatus::ReturnNone => return Ok(TreeWalkerStatus::ReturnNone),
                     }
                 }
 
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::Break => {
-                Ok(TreeWalkerStatus::Break)
-            }
-            Stmt::Continue => {
-                Ok(TreeWalkerStatus::Continue)
-            }
-            Stmt::FunctionDeclaration(..) => panic!("Cannot declare function outside of global scope"),
-            Stmt::Start(_) => panic!("Cannot declare start block outside of global scope"),
+            Stmt::Break => Ok(TreeWalkerStatus::Break),
+            Stmt::Continue => Ok(TreeWalkerStatus::Continue),
+            Stmt::Return => match self.return_expr {
+                Some(Expr::Integer(expr)) => Ok(TreeWalkerStatus::ReturnInt(self.eval_int(expr))),
+                Some(Expr::Float(expr)) => Ok(TreeWalkerStatus::ReturnFloat(self.eval_float(expr))),
+                Some(Expr::String(expr)) => {
+                    Ok(TreeWalkerStatus::ReturnString(self.eval_string(expr)))
+                }
+                Some(Expr::Boolean(expr)) => {
+                    Ok(TreeWalkerStatus::ReturnBoolean(self.eval_boolean(expr)))
+                }
+                Some(Expr::None(expr)) => {
+                    self.eval_none(expr);
+                    Ok(TreeWalkerStatus::ReturnNone)
+                }
+                None => Ok(TreeWalkerStatus::ReturnNone),
+            },
         }
     }
 
@@ -163,6 +223,26 @@ impl<'a> TreeWalker<'a> {
             },
             IntegerExpr::Variable(id) => self.environment.get_int(*id),
             IntegerExpr::Literal(val) => *val,
+            IntegerExpr::Call(id, expressions) => {
+                let function = &self.functions[*id];
+
+                let mut environment = Environment::new();
+
+                for expression in expressions {
+                    match expression {
+                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)),
+                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)),
+                        Expr::String(expr) => environment.push_string(self.eval_string(expr)),
+                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)),
+                        Expr::None(_) => panic!("Cannot pass none to a function"),
+                    }
+                }
+
+                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                    Ok(TreeWalkerStatus::ReturnInt(v)) => v,
+                    _ => panic!("Function did not return the correct type"),
+                }
+            }
         }
     }
 
@@ -180,6 +260,26 @@ impl<'a> TreeWalker<'a> {
             },
             FloatExpr::Variable(id) => self.environment.get_float(*id),
             FloatExpr::Literal(val) => *val,
+            FloatExpr::Call(id, expressions) => {
+                let function = &self.functions[*id];
+
+                let mut environment = Environment::new();
+
+                for expression in expressions {
+                    match expression {
+                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)),
+                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)),
+                        Expr::String(expr) => environment.push_string(self.eval_string(expr)),
+                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)),
+                        Expr::None(_) => panic!("Cannot pass none to a function"),
+                    }
+                }
+
+                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                    Ok(TreeWalkerStatus::ReturnFloat(v)) => v,
+                    _ => panic!("Function did not return the correct type"),
+                }
+            }
         }
     }
 
@@ -195,6 +295,26 @@ impl<'a> TreeWalker<'a> {
             StringExpr::Variable(id) => self.environment.get_string(*id),
             StringExpr::Literal(val) => val.clone(),
             StringExpr::NativeCall(call) => self.native_call_string(call),
+            StringExpr::Call(id, expressions) => {
+                let function = &self.functions[*id];
+
+                let mut environment = Environment::new();
+
+                for expression in expressions {
+                    match expression {
+                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)),
+                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)),
+                        Expr::String(expr) => environment.push_string(self.eval_string(expr)),
+                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)),
+                        Expr::None(_) => panic!("Cannot pass none to a function"),
+                    }
+                }
+
+                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                    Ok(TreeWalkerStatus::ReturnString(v)) => v,
+                    _ => panic!("Function did not return the correct type"),
+                }
+            },
         }
     }
 
@@ -242,12 +362,52 @@ impl<'a> TreeWalker<'a> {
             },
             BooleanExpr::Variable(id) => self.environment.get_boolean(*id),
             BooleanExpr::Literal(val) => *val,
+            BooleanExpr::Call(id, expressions) => {
+                let function = &self.functions[*id];
+
+                let mut environment = Environment::new();
+
+                for expression in expressions {
+                    match expression {
+                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)),
+                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)),
+                        Expr::String(expr) => environment.push_string(self.eval_string(expr)),
+                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)),
+                        Expr::None(_) => panic!("Cannot pass none to a function"),
+                    }
+                }
+
+                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                    Ok(TreeWalkerStatus::ReturnBoolean(v)) => v,
+                    _ => panic!("Function did not return the correct type"),
+                }
+            },
         }
     }
 
     fn eval_none(&self, expression: &NoneExpr) {
         match expression {
             NoneExpr::NativeCall(call) => self.native_call_none(call),
+            NoneExpr::Call(id, expressions) => {
+                let function = &self.functions[*id];
+
+                let mut environment = Environment::new();
+
+                for expression in expressions {
+                    match expression {
+                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)),
+                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)),
+                        Expr::String(expr) => environment.push_string(self.eval_string(expr)),
+                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)),
+                        Expr::None(_) => panic!("Cannot pass none to a function"),
+                    }
+                }
+
+                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                    Ok(TreeWalkerStatus::ReturnNone) | Ok(TreeWalkerStatus::Ok) => (),
+                    _ => panic!("Function did not return the correct type"),
+                }
+            }
         }
     }
 
@@ -269,6 +429,7 @@ impl<'a> TreeWalker<'a> {
             CliFunctionNone::PrintLineFloat(expr) => println!("{}", self.eval_float(expr)),
             CliFunctionNone::PrintLineString(expr) => println!("{}", self.eval_string(expr)),
             CliFunctionNone::PrintLineBoolean(expr) => println!("{}", self.eval_boolean(expr)),
+            CliFunctionNone::PrintLine => println!(),
             CliFunctionNone::PrintInteger(expr) => print!("{}", self.eval_int(expr)),
             CliFunctionNone::PrintFloat(expr) => print!("{}", self.eval_float(expr)),
             CliFunctionNone::PrintString(expr) => print!("{}", self.eval_string(expr)),

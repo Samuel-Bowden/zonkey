@@ -22,6 +22,7 @@ pub enum IntegerExpr {
     },
     Literal(i64),
     Variable(usize),
+    Call(usize, Vec<Expr>),
 }
 
 #[derive(Debug)]
@@ -33,6 +34,7 @@ pub enum FloatExpr {
     },
     Literal(f64),
     Variable(usize),
+    Call(usize, Vec<Expr>),
 }
 
 #[derive(Debug)]
@@ -45,6 +47,7 @@ pub enum StringExpr {
     Literal(String),
     Variable(usize),
     NativeCall(NativeFunctionString),
+    Call(usize, Vec<Expr>),
 }
 
 #[derive(Debug)]
@@ -71,9 +74,11 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
+    Call(usize, Vec<Expr>),
 }
 
 #[derive(Debug)]
 pub enum NoneExpr {
     NativeCall(NativeFunctionNone),
+    Call(usize, Vec<Expr>),
 }

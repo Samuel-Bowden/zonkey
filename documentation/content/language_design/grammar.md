@@ -10,9 +10,8 @@ Grammar
 program -> declaration*;
 declaration -> function_declaration | start_declaration | terminated_variable_declaration | statement;
 statement -> terminated_statement | block | if_statement | while_statement | loop_statement | for_statement;
-terminated_statement -> (expression_statement | exit_statement | "break" | "continue") ";";
+terminated_statement -> (expression_statement | return_statement | "break" | "continue") ";";
 expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
-exit_statement -> exit "(" ")";
 variable_declaration = "let" IDENTIFIER "=" expression; 
 terminated_variable_declaration = variable_declaration ";";
 equality -> comparision (("==" | "!=") comparision)*;
@@ -26,8 +25,9 @@ if_statement -> "if" "(" equality ")" block ("else" block)?;
 while_statement -> "while" "(" equality ")" block;
 loop_statement -> "loop" block;
 for_statement -> "for" "(" variable_declaration "," equality "," expression_statement ")" block;
-function_declaration -> "function" IDENTIFIER "(" parameters? ")" block;
+function_declaration -> "function" IDENTIFIER "(" parameters? ")" ("->" data_type)? block;
 parameters -> data_type IDENTIFIER ("," data_type IDENTIFIER)*;
 data_type -> "Integer" | "String" | "Float" | "Boolean";
 start_declaration -> "start" block;
+return_statement -> "return" expression?;
 ```

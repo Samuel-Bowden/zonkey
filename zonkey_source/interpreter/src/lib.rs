@@ -1,88 +1,72 @@
 use std::collections::VecDeque;
 
-use crate::{global::Global, tree_walker::TreeWalker};
+use crate::{global_parser::GlobalParser, tree_walker::TreeWalker, environment::Environment};
 
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
-use crate::environment::Environment;
-use parser::Parser;
+use function::Function;
 use stmt::Stmt;
 
 mod assignment_operator;
 mod comparison;
+mod debugger;
 mod environment;
 mod err;
 mod expr;
 mod function;
-mod global;
+mod function_declaration;
+mod global_parser;
 mod lexer;
+mod local_parser;
 mod native_function;
 mod operator;
-mod parser;
 mod stmt;
 mod token;
 mod tree_walker;
 mod value_type;
-mod debugger;
 
-pub struct Interpreter {}
+pub fn run(source: &str) -> Result<(), InterpreterErr> {
+    interpreter_debug!("Debug build");
 
-impl Interpreter {
-    pub fn new() -> Self {
-        interpreter_debug!("Debug build");
+    let tokens = run_lexer(source)?;
 
-        Self {}
-    }
+    let (start, functions) = run_parser(tokens)?;
 
-    pub fn run(&mut self, source: &str) -> Result<(), InterpreterErr> {
-        let tokens = self.run_lexer(source)?;
+    run_tree_walker(start, functions)
+}
 
-        let statements = self.run_parser(tokens)?;
+fn run_lexer(source: &str) -> Result<VecDeque<Token>, InterpreterErr> {
+    interpreter_debug!("Starting lexer");
 
-        self.run_tree_walker(statements)
-    }
+    let lexer = Lexer::new(source).run();
 
-    fn run_lexer(&mut self, source: &str) -> Result<VecDeque<Token>, InterpreterErr> {
-        interpreter_debug!("Starting lexer");
-
-        let lexer = Lexer::new(source).run();
-
-        match lexer {
-            Ok(lexer) => {
-                interpreter_debug!("Lexer finished successfully");
-                Ok(lexer.tokens)
-            }
-            Err(e) => Err(InterpreterErr::LexerFailed(e)),
+    match lexer {
+        Ok(lexer) => {
+            interpreter_debug!("Lexer finished successfully");
+            Ok(lexer.tokens)
         }
+        Err(e) => Err(InterpreterErr::LexerFailed(e)),
     }
+}
 
-    fn run_parser(&mut self, tokens: VecDeque<Token>) -> Result<VecDeque<Stmt>, InterpreterErr> {
-        interpreter_debug!("Starting parser");
+fn run_parser(tokens: VecDeque<Token>) -> Result<(Stmt, Vec<Function>), InterpreterErr> {
+    interpreter_debug!("Starting parser");
 
-        let parser = Parser::new(tokens).run();
-
-        match parser {
-            Ok(parser) => {
-                interpreter_debug!("Parser completed successfully");
-                Ok(parser.statements)
-            }
-            Err(e) => Err(InterpreterErr::ParserFailed(e)),
+    match GlobalParser::new(tokens).run() {
+        Ok((start, functions)) => {
+            interpreter_debug!("Parser completed successfully");
+            Ok((start, functions))
         }
+        Err(e) => Err(InterpreterErr::ParserFailed(e)),
     }
+}
 
-    fn run_tree_walker(&mut self, statements: VecDeque<Stmt>) -> Result<(), InterpreterErr> {
-        interpreter_debug!("Starting tree walker");
+fn run_tree_walker(start: Stmt, functions: Vec<Function>) -> Result<(), InterpreterErr> {
+    interpreter_debug!("Starting tree walker");
 
-        let mut environment = Environment::new();
-        let mut global = Global::new();
+    let environment = Environment::new();
 
-        let start_block = match global.scan_global(statements) {
-            Ok(sb) => sb,
-            Err(e) => return Err(InterpreterErr::TreeWalkerFailed(e)),
-        };
-
-        match TreeWalker::new(&mut environment).interpret(&start_block) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
-        }
+    match TreeWalker::new(&functions, &None, environment).interpret(&start) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
     }
 }

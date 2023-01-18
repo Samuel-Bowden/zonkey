@@ -28,32 +28,28 @@ impl Environment {
             self.integer_stack
         )
         .as_str());
-        self.integer_stack
-            .truncate(block_start_points.0);
+        self.integer_stack.truncate(block_start_points.0);
 
         interpreter_debug!(format!(
             "Popping float stack at end of block: Before: {:?}",
             self.float_stack
         )
         .as_str());
-        self.float_stack
-            .truncate(block_start_points.1);
+        self.float_stack.truncate(block_start_points.1);
 
         interpreter_debug!(format!(
             "Popping string stack at end of block: Before: {:?}",
             self.string_stack
         )
         .as_str());
-        self.string_stack
-            .truncate(block_start_points.2);
+        self.string_stack.truncate(block_start_points.2);
 
         interpreter_debug!(format!(
             "Popping boolean stack at end of block: Before: {:?}",
             self.boolean_stack
         )
         .as_str());
-        self.boolean_stack
-            .truncate(block_start_points.3);
+        self.boolean_stack.truncate(block_start_points.3);
 
         interpreter_debug!(format!("Int stack after: {:?}", self.integer_stack).as_str());
         interpreter_debug!(format!("Float stack after: {:?}", self.float_stack).as_str());
