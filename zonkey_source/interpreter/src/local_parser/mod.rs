@@ -8,8 +8,8 @@ use crate::{
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function_declaration::FunctionDeclaration,
     native_function::{
-        cli_api::{CliFunctionNone, CliFunctionString},
-        NativeFunctionNone, NativeFunctionString,
+        cli_api::{CliFunctionNone, CliFunctionString, CliFunctionInteger},
+        NativeFunctionNone, NativeFunctionString, NativeFunctionInteger,
     },
     operator::{NumericOperator, StringOperator},
     parser_debug,
@@ -30,7 +30,7 @@ pub struct LocalParser<'a> {
     string_next_id: usize,
     boolean_next_id: usize,
     function_declarations: &'a HashMap<String, FunctionDeclaration>,
-    return_expr: Option<Expr>,
+    function_declaration: Option<&'a FunctionDeclaration>,
 }
 
 impl<'a> LocalParser<'a> {
@@ -47,7 +47,7 @@ impl<'a> LocalParser<'a> {
             string_next_id: 0,
             boolean_next_id: 0,
             function_declarations,
-            return_expr: None,
+            function_declaration: None,
         }
     }
 
@@ -66,19 +66,31 @@ impl<'a> LocalParser<'a> {
         for parameter in &function_declaration.parameters {
             match parameter.0 {
                 ValueType::Integer => {
-                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::Integer, integer_next_id));
+                    value_stack
+                        .last_mut()
+                        .unwrap()
+                        .insert(parameter.1.clone(), (ValueType::Integer, integer_next_id));
                     integer_next_id += 1;
                 }
                 ValueType::Float => {
-                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::Float, float_next_id));
+                    value_stack
+                        .last_mut()
+                        .unwrap()
+                        .insert(parameter.1.clone(), (ValueType::Float, float_next_id));
                     float_next_id += 1;
                 }
                 ValueType::String => {
-                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::String, string_next_id));
+                    value_stack
+                        .last_mut()
+                        .unwrap()
+                        .insert(parameter.1.clone(), (ValueType::String, string_next_id));
                     string_next_id += 1;
                 }
                 ValueType::Boolean => {
-                    value_stack.last_mut().unwrap().insert(parameter.1.clone(), (ValueType::Boolean, boolean_next_id));
+                    value_stack
+                        .last_mut()
+                        .unwrap()
+                        .insert(parameter.1.clone(), (ValueType::Boolean, boolean_next_id));
                     boolean_next_id += 1;
                 }
             }
@@ -93,11 +105,11 @@ impl<'a> LocalParser<'a> {
             string_next_id,
             boolean_next_id,
             function_declarations,
-            return_expr: None,
+            function_declaration: Some(function_declaration),
         }
     }
 
-    pub fn run(mut self) -> Result<(Vec<Stmt>, Option<Expr>), ParserErr> {
+    pub fn run(mut self) -> Result<Vec<Stmt>, ParserErr> {
         parser_debug!("Production rule path:");
 
         self.program()?;
@@ -109,7 +121,7 @@ impl<'a> LocalParser<'a> {
             println!("  {}: {:?}", i + 1, statement);
         }
 
-        Ok((self.statements, self.return_expr))
+        Ok(self.statements)
     }
 
     fn program(&mut self) -> Result<(), ParserErr> {
@@ -187,11 +199,26 @@ impl<'a> LocalParser<'a> {
         debug_information!("return_statement");
 
         match self.tokens.front() {
-            Some(Token::SemiColon) => (),
-            _ => self.return_expr = Some(self.equality()?),
+            Some(Token::SemiColon) => Ok(Stmt::Return(None)),
+            _ => Ok(Stmt::Return(Some(
+                    if let Some(function) = self.function_declaration {
+                        match (&function.return_data_type, self.equality()?) {
+                            (Some(ValueType::Integer), Expr::Integer(expr)) => Expr::Integer(expr),
+                            (Some(ValueType::Float), Expr::Float(expr)) => Expr::Float(expr),
+                            (Some(ValueType::String), Expr::String(expr)) => Expr::String(expr),
+                            (Some(ValueType::Boolean), Expr::Boolean(expr)) => Expr::Boolean(expr),
+                            (None, Expr::None(expr)) => Expr::None(expr),
+                            _ => panic!("Function return expression does not match data type of declaration")
+                        }
+                    } else {
+                        if let Expr::None(expr) = self.equality()? {
+                            Expr::None(expr)
+                        } else {
+                            panic!("Function return expression does not match data type of declaration")
+                        }
+                    }
+            ))),
         }
-
-        Ok(Stmt::Return)
     }
 
     fn if_statement(&mut self) -> Result<Stmt, ParserErr> {
@@ -886,7 +913,21 @@ impl<'a> LocalParser<'a> {
                                 ))),
                             )));
                         } else {
-                            panic!("Incorrect argument to println");
+                            panic!("Incorrect argument to prompt");
+                        }
+                    }
+                    "prompt_int" => {
+                        if arguments.len() != 1 {
+                            panic!("Incorrect amount of arguments for prompt");
+                        }
+                        if let Some(Expr::String(argument)) = arguments.pop() {
+                            return Ok(Expr::Integer(IntegerExpr::NativeCall(
+                                NativeFunctionInteger::Cli(CliFunctionInteger::Prompt(Box::new(
+                                    argument,
+                                ))),
+                            )));
+                        } else {
+                            panic!("Incorrect argument to prompt");
                         }
                     }
                     _ => panic!("Function does not exist inside CLI API"),

@@ -22,5 +22,5 @@ pub enum Stmt {
     Loop(Box<Stmt>),
     Break,
     Continue,
-    Return,
+    Return(Option<Expr>),
 }

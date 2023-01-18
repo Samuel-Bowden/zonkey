@@ -10,8 +10,6 @@ start {
 	    		break;
 	  	} else if (count == 5) {
 	    		continue;
-				cli::println("This should never be printed nor should the variable be created");
-				let a = 5930;
 	  	} else {
 	    		cli::println(count);
 	  	}

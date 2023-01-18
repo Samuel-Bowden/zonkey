@@ -5,8 +5,8 @@ use crate::{
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function::Function,
     native_function::{
-        cli_api::{prompt::prompt, CliFunctionNone, CliFunctionString},
-        NativeFunctionNone, NativeFunctionString,
+        cli_api::{prompt::{prompt, prompt_int}, CliFunctionNone, CliFunctionString, CliFunctionInteger},
+        NativeFunctionNone, NativeFunctionString, NativeFunctionInteger,
     },
     operator::{NumericOperator, StringOperator},
     stmt::Stmt,
@@ -18,15 +18,13 @@ pub mod status;
 pub struct TreeWalker<'a> {
     environment: Environment,
     functions: &'a Vec<Function>,
-    return_expr: &'a Option<Expr>,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(functions: &'a Vec<Function>, return_expr: &'a Option<Expr>, environment: Environment) -> Self {
+    pub fn new(functions: &'a Vec<Function>, environment: Environment) -> Self {
         Self {
             environment,
             functions,
-            return_expr,
         }
     }
 
@@ -191,7 +189,7 @@ impl<'a> TreeWalker<'a> {
             }
             Stmt::Break => Ok(TreeWalkerStatus::Break),
             Stmt::Continue => Ok(TreeWalkerStatus::Continue),
-            Stmt::Return => match self.return_expr {
+            Stmt::Return(expr) => match expr {
                 Some(Expr::Integer(expr)) => Ok(TreeWalkerStatus::ReturnInt(self.eval_int(expr))),
                 Some(Expr::Float(expr)) => Ok(TreeWalkerStatus::ReturnFloat(self.eval_float(expr))),
                 Some(Expr::String(expr)) => {
@@ -238,11 +236,12 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                match TreeWalker::new(self.functions, environment).interpret(&function.start) {
                     Ok(TreeWalkerStatus::ReturnInt(v)) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
             }
+            IntegerExpr::NativeCall(call) => self.native_call_integer(call),
         }
     }
 
@@ -275,7 +274,7 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                match TreeWalker::new(self.functions, environment).interpret(&function.start) {
                     Ok(TreeWalkerStatus::ReturnFloat(v)) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
@@ -310,11 +309,11 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                match TreeWalker::new(self.functions, environment).interpret(&function.start) {
                     Ok(TreeWalkerStatus::ReturnString(v)) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
-            },
+            }
         }
     }
 
@@ -377,11 +376,11 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                match TreeWalker::new(self.functions, environment).interpret(&function.start) {
                     Ok(TreeWalkerStatus::ReturnBoolean(v)) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
-            },
+            }
         }
     }
 
@@ -403,7 +402,7 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, &function.return_expr, environment).interpret(&function.start) {
+                match TreeWalker::new(self.functions, environment).interpret(&function.start) {
                     Ok(TreeWalkerStatus::ReturnNone) | Ok(TreeWalkerStatus::Ok) => (),
                     _ => panic!("Function did not return the correct type"),
                 }
@@ -414,6 +413,12 @@ impl<'a> TreeWalker<'a> {
     fn native_call_none(&self, call: &NativeFunctionNone) {
         match call {
             NativeFunctionNone::Cli(call) => self.cli_function_none(call),
+        }
+    }
+
+    fn native_call_integer(&self, call: &NativeFunctionInteger) -> i64 {
+        match call {
+            NativeFunctionInteger::Cli(call) => self.cli_function_integer(call),
         }
     }
 
@@ -434,6 +439,12 @@ impl<'a> TreeWalker<'a> {
             CliFunctionNone::PrintFloat(expr) => print!("{}", self.eval_float(expr)),
             CliFunctionNone::PrintString(expr) => print!("{}", self.eval_string(expr)),
             CliFunctionNone::PrintBoolean(expr) => print!("{}", self.eval_boolean(expr)),
+        }
+    }
+
+    fn cli_function_integer(&self, call: &CliFunctionInteger) -> i64 {
+        match call {
+            CliFunctionInteger::Prompt(expr) => prompt_int(self.eval_string(expr)),
         }
     }
 

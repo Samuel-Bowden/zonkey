@@ -19,3 +19,8 @@ pub enum CliFunctionNone {
 pub enum CliFunctionString {
     Prompt(Box<StringExpr>),
 }
+
+#[derive(Debug)]
+pub enum CliFunctionInteger {
+    Prompt(Box<StringExpr>),
+}

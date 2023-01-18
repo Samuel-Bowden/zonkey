@@ -1,0 +1,13 @@
+function factorial(Integer n) -> Integer {
+	if (n == 1) {
+		return 1;
+	} else {
+		return n * factorial(n - 1);
+	}
+}
+
+start {
+	let n = cli::prompt_int("Enter an integer to calculate the factorial of:");
+
+	cli::println(factorial(n));
+}

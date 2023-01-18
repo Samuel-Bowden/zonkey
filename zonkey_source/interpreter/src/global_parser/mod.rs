@@ -1,6 +1,5 @@
 use crate::{
     debug_information,
-    expr::Expr,
     function::Function,
     function_declaration::FunctionDeclaration,
     interpreter_debug,
@@ -63,26 +62,15 @@ impl GlobalParser {
         while let Some((unparsed_function, function_declaration)) =
             self.unparsed_functions.pop_front()
         {
-            let (statements, return_expr) = LocalParser::new_function(
+            let statements = LocalParser::new_function(
                 unparsed_function,
                 &self.function_declarations,
                 &function_declaration,
             )
             .run()?;
-            
-            match (&function_declaration.return_data_type, &return_expr) {
-                (Some(ValueType::Integer), Some(Expr::Integer(_))) => (),
-                (Some(ValueType::Float), Some(Expr::Float(_))) => (),
-                (Some(ValueType::String), Some(Expr::String(_))) => (),
-                (Some(ValueType::Boolean), Some(Expr::Boolean(_))) => (),
-                (None, Some(Expr::None(_))) => (),
-                (None, None) => (),
-                _ => panic!("Return expression of function returned a different data type to the return data type in function declaration")
-            }
 
             self.functions.push(Function {
                 start: Stmt::Block(statements, (0, 0, 0, 0)),
-                return_expr,
             });
         }
 
@@ -91,15 +79,11 @@ impl GlobalParser {
 
     fn load_start_block(&mut self) -> Result<Stmt, ParserErr> {
         Ok(Stmt::Block(
-            match LocalParser::new(
+            LocalParser::new(
                 std::mem::take(&mut self.unparsed_start),
                 &self.function_declarations,
             )
-            .run()?
-            {
-                (statements, Some(Expr::None(_)) | None) => statements,
-                _ => panic!("Return type of start block should be None"),
-            },
+            .run()?,
             (0, 0, 0, 0),
         ))
     }

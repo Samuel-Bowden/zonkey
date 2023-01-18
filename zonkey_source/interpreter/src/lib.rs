@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::{global_parser::GlobalParser, tree_walker::TreeWalker, environment::Environment};
+use crate::{environment::Environment, global_parser::GlobalParser, tree_walker::TreeWalker};
 
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
 use function::Function;
@@ -65,7 +65,7 @@ fn run_tree_walker(start: Stmt, functions: Vec<Function>) -> Result<(), Interpre
 
     let environment = Environment::new();
 
-    match TreeWalker::new(&functions, &None, environment).interpret(&start) {
+    match TreeWalker::new(&functions, environment).interpret(&start) {
         Ok(_) => Ok(()),
         Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
     }
