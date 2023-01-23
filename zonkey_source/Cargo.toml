@@ -7,8 +7,4 @@ members = [
 ]
 
 [profile.release]
-strip = true
-lto = true
-opt-level = 3
-panic = "abort"
-codegen-units = 1
+debug = true

@@ -1,3 +1,4 @@
+use rustc_hash::FxHashMap;
 use self::err::ParserErr;
 use crate::{
     assignment_operator::{
@@ -8,8 +9,8 @@ use crate::{
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function_declaration::FunctionDeclaration,
     native_function::{
-        cli_api::{CliFunctionNone, CliFunctionString, CliFunctionInteger},
-        NativeFunctionNone, NativeFunctionString, NativeFunctionInteger,
+        cli_api::{CliFunctionInteger, CliFunctionNone, CliFunctionString},
+        NativeFunctionInteger, NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
     parser_debug,
@@ -17,31 +18,31 @@ use crate::{
     token::Token,
     value_type::ValueType,
 };
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 pub mod err;
 
 pub struct LocalParser<'a> {
     tokens: VecDeque<Token>,
     pub statements: Vec<Stmt>,
-    value_stack: Vec<HashMap<String, (ValueType, usize)>>,
+    value_stack: Vec<FxHashMap<String, (ValueType, usize)>>,
     integer_next_id: usize,
     float_next_id: usize,
     string_next_id: usize,
     boolean_next_id: usize,
-    function_declarations: &'a HashMap<String, FunctionDeclaration>,
+    function_declarations: &'a FxHashMap<String, FunctionDeclaration>,
     function_declaration: Option<&'a FunctionDeclaration>,
 }
 
 impl<'a> LocalParser<'a> {
     pub fn new(
         tokens: VecDeque<Token>,
-        function_declarations: &'a HashMap<String, FunctionDeclaration>,
+        function_declarations: &'a FxHashMap<String, FunctionDeclaration>,
     ) -> Self {
         Self {
             tokens,
             statements: vec![],
-            value_stack: vec![HashMap::new()],
+            value_stack: vec![FxHashMap::default()],
             integer_next_id: 0,
             float_next_id: 0,
             string_next_id: 0,
@@ -53,10 +54,10 @@ impl<'a> LocalParser<'a> {
 
     pub fn new_function(
         tokens: VecDeque<Token>,
-        function_declarations: &'a HashMap<String, FunctionDeclaration>,
+        function_declarations: &'a FxHashMap<String, FunctionDeclaration>,
         function_declaration: &'a FunctionDeclaration,
     ) -> Self {
-        let mut value_stack = vec![HashMap::new()];
+        let mut value_stack = vec![FxHashMap::default()];
 
         let mut integer_next_id = 0;
         let mut float_next_id = 0;
@@ -200,7 +201,8 @@ impl<'a> LocalParser<'a> {
 
         match self.tokens.front() {
             Some(Token::SemiColon) => Ok(Stmt::Return(None)),
-            _ => Ok(Stmt::Return(Some(
+            _ => {
+                Ok(Stmt::Return(Some(
                     if let Some(function) = self.function_declaration {
                         match (&function.return_data_type, self.equality()?) {
                             (Some(ValueType::Integer), Expr::Integer(expr)) => Expr::Integer(expr),
@@ -216,8 +218,9 @@ impl<'a> LocalParser<'a> {
                         } else {
                             panic!("Function return expression does not match data type of declaration")
                         }
-                    }
-            ))),
+                    },
+                )))
+            }
         }
     }
 
@@ -290,7 +293,7 @@ impl<'a> LocalParser<'a> {
             _ => return Err(ParserErr::ForMissingLeftParen),
         }
 
-        self.value_stack.push(HashMap::new());
+        self.value_stack.push(FxHashMap::default());
         let integer_point = self.integer_next_id;
         let float_point = self.float_next_id;
         let string_point = self.string_next_id;
@@ -360,7 +363,7 @@ impl<'a> LocalParser<'a> {
         }
 
         let mut statements = vec![];
-        self.value_stack.push(HashMap::new());
+        self.value_stack.push(FxHashMap::default());
 
         let integer_point = self.integer_next_id;
         let float_point = self.float_next_id;

@@ -1,3 +1,4 @@
+use rustc_hash::FxHashMap;
 use crate::{
     debug_information,
     function::Function,
@@ -8,11 +9,11 @@ use crate::{
     token::Token,
     value_type::ValueType,
 };
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
 pub struct GlobalParser {
     tokens: VecDeque<Token>,
-    function_declarations: HashMap<String, FunctionDeclaration>,
+    function_declarations: FxHashMap<String, FunctionDeclaration>,
     unparsed_start: VecDeque<Token>,
     unparsed_functions: VecDeque<(VecDeque<Token>, FunctionDeclaration)>,
     functions: Vec<Function>,
@@ -24,7 +25,7 @@ impl GlobalParser {
     pub fn new(tokens: VecDeque<Token>) -> Self {
         Self {
             tokens,
-            function_declarations: HashMap::new(),
+            function_declarations: FxHashMap::default(),
             unparsed_start: VecDeque::new(),
             unparsed_functions: VecDeque::new(),
             functions: vec![],

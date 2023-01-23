@@ -1,4 +1,4 @@
-use self::cli_api::{CliFunctionNone, CliFunctionString, CliFunctionInteger};
+use self::cli_api::{CliFunctionInteger, CliFunctionNone, CliFunctionString};
 
 pub mod cli_api;
 

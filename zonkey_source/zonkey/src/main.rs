@@ -1,17 +1,13 @@
 mod wrapper;
 
-use clap::Parser;
-use std::process::ExitCode;
+use std::{process::ExitCode, env::args};
 use wrapper::Wrapper;
 
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    file: String,
-}
-
 fn main() -> ExitCode {
-    let args = Args::parse();
-
-    Wrapper::new().run(args.file)
+    if let Some(file) = args().skip(1).next() {
+        Wrapper::new().run(file)
+    } else {
+        eprintln!("Error: Missing source file argument\nUsage: zonkey <FILE_PATH>");
+        ExitCode::FAILURE
+    }
 }

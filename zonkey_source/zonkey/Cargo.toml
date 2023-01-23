@@ -6,6 +6,5 @@ description = "CLI Interpreter for the Zonkey programming language"
 authors = ["Sam Bowden"]
 
 [dependencies]
-clap = { version = "4.0.26", features = ["derive"] }
 interpreter = { path = "../interpreter" }
 termcolor = "1.1"

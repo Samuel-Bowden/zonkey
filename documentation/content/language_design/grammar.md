@@ -17,7 +17,7 @@ terminated_variable_declaration = variable_declaration ";";
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
-multdiv -> call (("/" | "*") call)*;
+multdiv -> literal (("/" | "*") literal)*;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER | call;
 call -> (IDENTIFIER "::")? IDENTIFIER "(" equality ("," equality)* ")";
 block -> "{" declaration* "}"

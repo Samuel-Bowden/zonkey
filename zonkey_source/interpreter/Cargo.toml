@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 unicode-segmentation = "1.10.0"
 termcolor = "1.1"
+numtoa = "0.2.4"
+ryu = "1.0"
+rustc-hash = "1.1"

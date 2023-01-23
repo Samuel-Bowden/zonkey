@@ -1,3 +1,7 @@
+use std::io::{stdout, StdoutLock, Write, BufWriter};
+
+use numtoa::NumToA;
+
 use self::{err::TreeWalkerErr, status::TreeWalkerStatus};
 use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
@@ -5,8 +9,11 @@ use crate::{
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function::Function,
     native_function::{
-        cli_api::{prompt::{prompt, prompt_int}, CliFunctionNone, CliFunctionString, CliFunctionInteger},
-        NativeFunctionNone, NativeFunctionString, NativeFunctionInteger,
+        cli_api::{
+            prompt::{prompt, prompt_int},
+            CliFunctionInteger, CliFunctionNone, CliFunctionString,
+        },
+        NativeFunctionInteger, NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
     stmt::Stmt,
@@ -18,6 +25,7 @@ pub mod status;
 pub struct TreeWalker<'a> {
     environment: Environment,
     functions: &'a Vec<Function>,
+    stdout: BufWriter<StdoutLock<'a>>,
 }
 
 impl<'a> TreeWalker<'a> {
@@ -25,6 +33,7 @@ impl<'a> TreeWalker<'a> {
         Self {
             environment,
             functions,
+            stdout: BufWriter::new(stdout().lock()),
         }
     }
 
@@ -338,10 +347,10 @@ impl<'a> TreeWalker<'a> {
             } => match comparator {
                 NumericComparision::Equal => self.eval_float(left) == self.eval_float(right),
                 NumericComparision::Inequal => self.eval_float(left) != self.eval_float(right),
-                NumericComparision::MoreEqual => self.eval_float(left) <= self.eval_float(right),
-                NumericComparision::LessEqual => self.eval_float(left) >= self.eval_float(right),
-                NumericComparision::More => self.eval_float(left) < self.eval_float(right),
-                NumericComparision::Less => self.eval_float(left) > self.eval_float(right),
+                NumericComparision::MoreEqual => self.eval_float(left) >= self.eval_float(right),
+                NumericComparision::LessEqual => self.eval_float(left) <= self.eval_float(right),
+                NumericComparision::More => self.eval_float(left) > self.eval_float(right),
+                NumericComparision::Less => self.eval_float(left) < self.eval_float(right),
             },
             BooleanExpr::StringBinary {
                 left,
@@ -384,7 +393,7 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn eval_none(&self, expression: &NoneExpr) {
+    fn eval_none(&mut self, expression: &NoneExpr) {
         match expression {
             NoneExpr::NativeCall(call) => self.native_call_none(call),
             NoneExpr::Call(id, expressions) => {
@@ -410,7 +419,7 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn native_call_none(&self, call: &NativeFunctionNone) {
+    fn native_call_none(&mut self, call: &NativeFunctionNone) {
         match call {
             NativeFunctionNone::Cli(call) => self.cli_function_none(call),
         }
@@ -428,17 +437,25 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn cli_function_none(&self, call: &CliFunctionNone) {
+    fn cli_function_none(&mut self, call: &CliFunctionNone) {
         match call {
-            CliFunctionNone::PrintLineInteger(expr) => println!("{}", self.eval_int(expr)),
-            CliFunctionNone::PrintLineFloat(expr) => println!("{}", self.eval_float(expr)),
-            CliFunctionNone::PrintLineString(expr) => println!("{}", self.eval_string(expr)),
-            CliFunctionNone::PrintLineBoolean(expr) => println!("{}", self.eval_boolean(expr)),
-            CliFunctionNone::PrintLine => println!(),
-            CliFunctionNone::PrintInteger(expr) => print!("{}", self.eval_int(expr)),
-            CliFunctionNone::PrintFloat(expr) => print!("{}", self.eval_float(expr)),
-            CliFunctionNone::PrintString(expr) => print!("{}", self.eval_string(expr)),
-            CliFunctionNone::PrintBoolean(expr) => print!("{}", self.eval_boolean(expr)),
+            CliFunctionNone::PrintLineInteger(expr) => {
+                let mut buffer = [0u8; 20];
+                self.stdout.write(self.eval_int(expr).numtoa(10, &mut buffer)).unwrap();
+                self.stdout.write(b"\n").unwrap();
+            }
+            CliFunctionNone::PrintLineFloat(expr) => {
+                let mut buffer = ryu::Buffer::new();
+                self.stdout.write(buffer.format(self.eval_float(expr)).as_bytes()).unwrap();
+                self.stdout.write(b"\n").unwrap();
+            }
+            CliFunctionNone::PrintLineString(expr) => writeln!(self.stdout, "{}", self.eval_string(expr)).unwrap(),
+            CliFunctionNone::PrintLineBoolean(expr) => writeln!(self.stdout, "{}", self.eval_boolean(expr)).unwrap(),
+            CliFunctionNone::PrintLine => writeln!(self.stdout).unwrap(),
+            CliFunctionNone::PrintInteger(expr) => write!(self.stdout, "{}", self.eval_int(expr)).unwrap(),
+            CliFunctionNone::PrintFloat(expr) => write!(self.stdout, "{}", self.eval_float(expr)).unwrap(),
+            CliFunctionNone::PrintString(expr) => write!(self.stdout, "{}", self.eval_string(expr)).unwrap(),
+            CliFunctionNone::PrintBoolean(expr) => write!(self.stdout, "{}", self.eval_boolean(expr)).unwrap(),
         }
     }
 

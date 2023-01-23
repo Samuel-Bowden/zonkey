@@ -1,6 +1,6 @@
 use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
-    native_function::{NativeFunctionNone, NativeFunctionString, NativeFunctionInteger},
+    native_function::{NativeFunctionInteger, NativeFunctionNone, NativeFunctionString},
     operator::{NumericOperator, StringOperator},
 };
 
