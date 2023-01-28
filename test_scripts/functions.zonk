@@ -1,28 +1,5 @@
-start {
-	preemptiveHappyBirthday("Sam", "22");
-
-	cli::println(energy(10, 20));
-
-	let a = 1;
-	let b = 2;
-
-	if (two_greater(a, b)) {
-		cli::println("a - b == 2");
-	} else {
-		cli::println("a - b != 2");
-	}
-
-	b -= 2;
-
-	if (two_greater(a, b)) {
-		cli::println("a - b == 2");
-	} else {
-		cli::println("a - b != 2");
-	}
-}
-
 function preemptiveHappyBirthday(String first, String age) {
-	cli::println("Happy birthday " + first + " for when you are " + age + " years old!");
+	cli:println("Happy birthday " + first + " for when you are " + age + " years old!");
 }
 
 function energy(Integer power, Integer time) -> Integer {
@@ -36,4 +13,28 @@ function two_greater(Integer a, Integer b) -> Boolean {
 	}
 
 	return false;
+}
+
+start {
+	preemptiveHappyBirthday("Sam", "22");
+
+	cli:println(energy(10, 20));
+
+	let a = 1;
+	let b = 2;
+
+	if (two_greater(a, b)) {
+		cli:println("a - b == 2");
+	} else {
+		cli:println("a - b != 2");
+	}
+
+	b -= 2;
+	a += 1;
+
+	if (two_greater(a, b)) {
+		cli:println("a - b == 2");
+	} else {
+		cli:println("a - b != 2");
+	}
 }

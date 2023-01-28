@@ -1,102 +1,102 @@
 # Testing whether if, else and calculations are performed correctly.
 
 start {
-	cli::println("For a three digit number where all the digits are the same, that number divided by the sum of its digits should equal 37.");
-	cli::println("Lets test whether that holds in Zonkey lang 🧪");
+	cli:println("For a three digit number where all the digits are the same, that number divided by the sum of its digits should equal 37.");
+	cli:println("Lets test whether that holds in Zonkey lang 🧪");
 
-	cli::print("Numbers: ");
+	cli:print("Numbers: ");
 	let one = 111;
-	cli::print(one);
-	cli::print(", ");
+	cli:print(one);
+	cli:print(", ");
 
 	let two = 222;
-	cli::print(two);
-	cli::print(", ");
+	cli:print(two);
+	cli:print(", ");
 
 	let three = 333;
-	cli::print(three);
-	cli::print(", ");
+	cli:print(three);
+	cli:print(", ");
 
 	let four = 444;
-	cli::print(four);
-	cli::print(", ");
+	cli:print(four);
+	cli:print(", ");
 
 	let five = 555;
-	cli::print(five);
-	cli::print(", ");
+	cli:print(five);
+	cli:print(", ");
 
 	let six = 666;
-	cli::print(six);
-	cli::print(", ");
+	cli:print(six);
+	cli:print(", ");
 
 	let seven = 777;
-	cli::print(seven);
-	cli::print(", ");
+	cli:print(seven);
+	cli:print(", ");
 
 	let eight = 888;
-	cli::print(eight);
-	cli::print(", ");
+	cli:print(eight);
+	cli:print(", ");
 
 	let nine = 999;
-	cli::print(nine);
-	cli::println("");
+	cli:print(nine);
+	cli:println("");
 
 	#------------------
 
-	cli::print("Each number divided by the sum of their digits: ");
+	cli:print("Each number divided by the sum of their digits: ");
 	let sum_digits = 3;
 
 	one /= sum_digits;
 	sum_digits += 3;
-	cli::print(one);
-	cli::print(", ");
+	cli:print(one);
+	cli:print(", ");
 
 	two /= sum_digits;
 	sum_digits += 3;
-	cli::print(two);
-	cli::print(", ");
+	cli:print(two);
+	cli:print(", ");
 
 	three /= sum_digits;
 	sum_digits += 3;
-	cli::print(three);
-	cli::print(", ");
+	cli:print(three);
+	cli:print(", ");
 
 	four /= sum_digits;
 	sum_digits += 3;
-	cli::print(four);
-	cli::print(", ");
+	cli:print(four);
+	cli:print(", ");
 
 	five /= sum_digits;
 	sum_digits += 3;
-	cli::print(five);
-	cli::print(", ");
+	cli:print(five);
+	cli:print(", ");
 
 	six /= sum_digits;
 	sum_digits += 3;
-	cli::print(six);
-	cli::print(", ");
+	cli:print(six);
+	cli:print(", ");
 
 	seven /= sum_digits;
 	sum_digits += 3;
-	cli::print(seven);
-	cli::print(", ");
+	cli:print(seven);
+	cli:print(", ");
 
 	eight /= sum_digits;
 	sum_digits += 3;
-	cli::print(eight);
-	cli::print(", ");
+	cli:print(eight);
+	cli:print(", ");
 
 	nine /= sum_digits;
 	sum_digits += 3;
-	cli::print(nine);
-	cli::println("");
+	cli:print(nine);
+	cli:println("");
 
 	# Sum of numbers should equal 333 as 37 * 9 = 333
 	let sum_of_numbers = one + two + three + four + five + six + seven + eight + nine;
 
 	if (sum_of_numbers == 333) {
-			cli::println("It holds true!");
+			cli:println("It holds true!");
 	} else {
-			cli::println("That doesn't seem quite right?!");
+			cli:println("That doesn't seem quite right?!");
 	}
 }

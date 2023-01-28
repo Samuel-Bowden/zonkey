@@ -11,7 +11,7 @@ start {
 	  	} else if (count == 5) {
 	    		continue;
 	  	} else {
-	    		cli::println(count);
+	    		cli:println(count);
 	  	}
 	}
 }

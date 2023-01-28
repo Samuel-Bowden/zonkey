@@ -29,4 +29,4 @@ The syntax for returning values follows the C-style, with the return label befor
 
 Functions are also called in a C-style, with arguments to the function separated by commas and surrounded by mandatory round brackets.
 
-Functions cannot be nested in Zonkey and must only be declared in the global scope.
+Functions cannot be nested in Zonkey and must only be declared in the global scope. A function must be declared before it is used.

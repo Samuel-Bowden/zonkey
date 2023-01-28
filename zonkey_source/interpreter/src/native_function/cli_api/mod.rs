@@ -1,7 +1,5 @@
 use crate::expr::{BooleanExpr, FloatExpr, IntegerExpr, StringExpr};
 
-pub mod prompt;
-
 #[derive(Debug)]
 pub enum CliFunctionNone {
     PrintLineInteger(Box<IntegerExpr>),

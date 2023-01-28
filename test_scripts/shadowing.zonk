@@ -5,9 +5,9 @@ start {
 
 	loop {
 		let a = 2;
-		cli::println(a); # Should print 2
+		cli:println(a); # Should print 2
 		break;
 	}
 
-	cli::println(a); # Should print 1
+	cli:println(a); # Should print 1
 }

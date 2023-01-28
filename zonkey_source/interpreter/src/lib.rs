@@ -1,40 +1,39 @@
-use std::collections::VecDeque;
-
-use crate::{environment::Environment, global_parser::GlobalParser, tree_walker::TreeWalker};
-
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
+use crate::{environment::Environment, parser::Parser, tree_walker::TreeWalker};
 use function::Function;
 use stmt::Stmt;
 
+mod start;
 mod assignment_operator;
 mod comparison;
 mod debugger;
 mod environment;
-mod err;
+pub mod err;
 mod expr;
 mod function;
 mod function_declaration;
-mod global_parser;
 mod lexer;
-mod local_parser;
 mod native_function;
 mod operator;
+mod parser;
 mod stmt;
-mod token;
+pub mod token;
 mod tree_walker;
 mod value_type;
 
-pub fn run(source: &str) -> Result<(), InterpreterErr> {
+pub fn run(source: &Vec<&str>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");
 
     let tokens = run_lexer(source)?;
 
     let (start, functions) = run_parser(tokens)?;
 
-    run_tree_walker(start, functions)
+    run_tree_walker(start, functions);
+
+    Ok(())
 }
 
-fn run_lexer(source: &str) -> Result<VecDeque<Token>, InterpreterErr> {
+fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
     interpreter_debug!("Starting lexer");
 
     let lexer = Lexer::new(source).run();
@@ -48,10 +47,10 @@ fn run_lexer(source: &str) -> Result<VecDeque<Token>, InterpreterErr> {
     }
 }
 
-fn run_parser(tokens: VecDeque<Token>) -> Result<(Stmt, Vec<Function>), InterpreterErr> {
+fn run_parser(tokens: Vec<Token>) -> Result<(Stmt, Vec<Function>), InterpreterErr> {
     interpreter_debug!("Starting parser");
 
-    match GlobalParser::new(tokens).run() {
+    match Parser::new(tokens).run() {
         Ok((start, functions)) => {
             interpreter_debug!("Parser completed successfully");
             Ok((start, functions))
@@ -60,13 +59,10 @@ fn run_parser(tokens: VecDeque<Token>) -> Result<(Stmt, Vec<Function>), Interpre
     }
 }
 
-fn run_tree_walker(start: Stmt, functions: Vec<Function>) -> Result<(), InterpreterErr> {
+fn run_tree_walker(start: Stmt, functions: Vec<Function>) {
     interpreter_debug!("Starting tree walker");
 
     let environment = Environment::new();
 
-    match TreeWalker::new(&functions, environment).interpret(&start) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
-    }
+    TreeWalker::new(&functions, environment).interpret(&start);
 }

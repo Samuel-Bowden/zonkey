@@ -1,29 +1,20 @@
-pub mod err;
-
-use std::collections::VecDeque;
-
-use crate::lexer_debug;
-
-use self::err::LexerErr;
-use super::token::Token;
-use unicode_segmentation::UnicodeSegmentation;
+use super::token::{Token, TokenType};
+use crate::{lexer_debug, err::lexer::LexerErr};
 
 pub struct Lexer<'a> {
-    pub tokens: VecDeque<Token>,
+    pub tokens: Vec<Token>,
     start: usize,
     current: usize,
-    line: u64,
-    graphemes: Vec<&'a str>,
+    graphemes: &'a Vec<&'a str>,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(source: &'a str) -> Self {
+    pub fn new(graphemes: &'a Vec<&'a str>) -> Self {
         Self {
-            tokens: VecDeque::new(),
+            tokens: vec![],
             start: 0,
             current: 0,
-            line: 1,
-            graphemes: source.graphemes(true).collect(),
+            graphemes,
         }
     }
 
@@ -49,82 +40,79 @@ impl<'a> Lexer<'a> {
 
         match grapheme {
             // Single grapheme
-            "(" => self.add_token(Token::LeftParen),
-            ")" => self.add_token(Token::RightParen),
-            "{" => self.add_token(Token::LeftBrace),
-            "}" => self.add_token(Token::RightBrace),
-            "," => self.add_token(Token::Comma),
-            "." => self.add_token(Token::Dot),
-            ";" => self.add_token(Token::SemiColon),
-            "?" => self.add_token(Token::QuestionMark),
+            "(" => self.add_token(TokenType::LeftParen),
+            ")" => self.add_token(TokenType::RightParen),
+            "{" => self.add_token(TokenType::LeftBrace),
+            "}" => self.add_token(TokenType::RightBrace),
+            "," => self.add_token(TokenType::Comma),
+            "." => self.add_token(TokenType::Dot),
+            ";" => self.add_token(TokenType::SemiColon),
+            ":" => self.add_token(TokenType::Colon),
+            "?" => self.add_token(TokenType::QuestionMark),
             // Single or double graphemes
             "!" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::BangEqual,
-                    false => Token::Bang,
+                    true => TokenType::BangEqual,
+                    false => TokenType::Bang,
                 };
                 self.add_token(token);
             }
             "=" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::EqualEqual,
-                    false => Token::Equal,
+                    true => TokenType::EqualEqual,
+                    false => TokenType::Equal,
                 };
                 self.add_token(token);
             }
             "<" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::LessEqual,
-                    false => Token::Less,
+                    true => TokenType::LessEqual,
+                    false => TokenType::Less,
                 };
                 self.add_token(token);
             }
             ">" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::MoreEqual,
-                    false => Token::More,
+                    true => TokenType::MoreEqual,
+                    false => TokenType::More,
                 };
                 self.add_token(token);
             }
             "+" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::PlusEqual,
-                    false => Token::Plus,
+                    true => TokenType::PlusEqual,
+                    false => TokenType::Plus,
                 };
                 self.add_token(token);
             }
             "-" => {
                 match self.next_grapheme("=") {
-                    true => self.add_token(Token::MinusEqual),
+                    true => self.add_token(TokenType::MinusEqual),
                     false => match self.next_grapheme(">") {
-                        true => self.add_token(Token::Arrow),
+                        true => self.add_token(TokenType::Arrow),
                         false => match self.next_grapheme_number() {
                             true => {
                                 self.number()?;
                             }
-                            false => self.add_token(Token::Minus),
+                            false => self.add_token(TokenType::Minus),
                         },
                     },
                 };
             }
             "*" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::StarEqual,
-                    false => Token::Star,
+                    true => TokenType::StarEqual,
+                    false => TokenType::Star,
                 };
                 self.add_token(token);
             }
             "/" => {
                 let token = match self.next_grapheme("=") {
-                    true => Token::SlashEqual,
-                    false => Token::Slash,
+                    true => TokenType::SlashEqual,
+                    false => TokenType::Slash,
                 };
                 self.add_token(token);
             }
-            ":" => match self.next_grapheme(":") {
-                true => self.add_token(Token::ColonColon),
-                false => panic!("Expected another colon"),
-            },
             // String literals
             "\"" => self.string()?,
             // Number literals - e.g. Integer or Float
@@ -144,13 +132,8 @@ impl<'a> Lexer<'a> {
             }
             // Whitespace and newlines
             " " | "\r" | "\t" => (),
-            "\n" => self.line += 1,
-            unexpected_grapheme => {
-                return Err(LexerErr::UnexpectedGrapheme(
-                    self.line,
-                    String::from(unexpected_grapheme),
-                ))
-            }
+            "\n" => (),
+            _ => return Err(LexerErr::UnexpectedGrapheme(self.current - 1)),
         }
 
         Ok(())
@@ -190,13 +173,13 @@ impl<'a> Lexer<'a> {
     fn string(&mut self) -> Result<(), LexerErr> {
         while !self.is_at_end() && self.graphemes[self.current] != "\"" {
             if self.graphemes[self.current] == "\n" {
-                return Err(LexerErr::UnterminatedString(self.line));
+                return Err(LexerErr::UnterminatedString(self.current - 1));
             }
             self.current += 1;
         }
 
         if self.is_at_end() {
-            return Err(LexerErr::UnterminatedString(self.line));
+            return Err(LexerErr::UnterminatedString(self.current - 1));
         }
 
         self.current += 1;
@@ -207,7 +190,7 @@ impl<'a> Lexer<'a> {
             literal.push_str(self.graphemes[i]);
         }
 
-        self.add_token(Token::String(literal));
+        self.add_token(TokenType::String(literal));
 
         Ok(())
     }
@@ -227,7 +210,7 @@ impl<'a> Lexer<'a> {
                         float = true;
                         self.current += 1;
                     } else {
-                        return Err(LexerErr::FloatMoreThanOneDecimalPoint);
+                        return Err(LexerErr::FloatMoreThanOneDecimalPoint(self.current));
                     }
                 }
                 _ => {
@@ -243,10 +226,10 @@ impl<'a> Lexer<'a> {
 
         if float {
             let val = literal.parse::<f64>().unwrap();
-            self.add_token(Token::Float(val));
+            self.add_token(TokenType::Float(val));
         } else {
             let val = literal.parse::<i64>().unwrap();
-            self.add_token(Token::Integer(val));
+            self.add_token(TokenType::Integer(val));
         }
 
         Ok(())
@@ -276,30 +259,34 @@ impl<'a> Lexer<'a> {
         }
 
         match literal.as_str() {
-            "function" => self.add_token(Token::Function),
-            "start" => self.add_token(Token::Start),
-            "loop" => self.add_token(Token::Loop),
-            "if" => self.add_token(Token::If),
-            "else" => self.add_token(Token::Else),
-            "for" => self.add_token(Token::For),
-            "while" => self.add_token(Token::While),
-            "break" => self.add_token(Token::Break),
-            "return" => self.add_token(Token::Return),
-            "continue" => self.add_token(Token::Continue),
-            "Integer" => self.add_token(Token::IntegerType),
-            "Float" => self.add_token(Token::FloatType),
-            "String" => self.add_token(Token::StringType),
-            "Boolean" => self.add_token(Token::BooleanType),
-            "false" => self.add_token(Token::Boolean(false)),
-            "true" => self.add_token(Token::Boolean(true)),
-            "let" => self.add_token(Token::Let),
-            _ => self.add_token(Token::Identifier(literal)),
+            "function" => self.add_token(TokenType::Function),
+            "start" => self.add_token(TokenType::Start),
+            "loop" => self.add_token(TokenType::Loop),
+            "if" => self.add_token(TokenType::If),
+            "else" => self.add_token(TokenType::Else),
+            "for" => self.add_token(TokenType::For),
+            "while" => self.add_token(TokenType::While),
+            "break" => self.add_token(TokenType::Break),
+            "return" => self.add_token(TokenType::Return),
+            "continue" => self.add_token(TokenType::Continue),
+            "Integer" => self.add_token(TokenType::IntegerType),
+            "Float" => self.add_token(TokenType::FloatType),
+            "String" => self.add_token(TokenType::StringType),
+            "Boolean" => self.add_token(TokenType::BooleanType),
+            "false" => self.add_token(TokenType::Boolean(false)),
+            "true" => self.add_token(TokenType::Boolean(true)),
+            "let" => self.add_token(TokenType::Let),
+            _ => self.add_token(TokenType::Identifier(literal)),
         }
 
         Ok(())
     }
 
-    fn add_token(&mut self, token: Token) {
-        self.tokens.push_back(token);
+    fn add_token(&mut self, token_type: TokenType) {
+        self.tokens.push(Token {
+            token_type,
+            start: self.start,
+            end: self.current,
+        });
     }
 }

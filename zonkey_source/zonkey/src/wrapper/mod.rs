@@ -1,47 +1,25 @@
-use std::{fs::read_to_string, io::Write, path::Path, process::ExitCode};
-use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+use std::{fs::read_to_string, path::Path, process::ExitCode};
+use unicode_segmentation::UnicodeSegmentation;
 
-pub struct Wrapper {
-    stderr: StandardStream,
-}
+mod err_handler;
 
-impl Wrapper {
-    pub fn new() -> Self {
-        Self {
-            stderr: StandardStream::stderr(termcolor::ColorChoice::Always),
+pub fn run(file: String) -> ExitCode {
+    let source = match read_to_string(Path::new(&file)) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Couldn't open file: {e}");
+            // Exit code for non-existent or unreadable file
+            return ExitCode::from(66);
         }
-    }
+    };
 
-    pub fn run(&mut self, file: String) -> ExitCode {
-        let source = match read_to_string(Path::new(&file)) {
-            Ok(s) => s,
-            Err(e) => {
-                self.error(format!("Couldn't open file: {e}"));
-                // Exit code for non-existent or unreadable file
-                return ExitCode::from(66);
-            }
-        };
+    let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
-        match interpreter::run(&source) {
-            Ok(_) => ExitCode::SUCCESS,
-            Err(e) => {
-                self.error(format!("{e}"));
-                ExitCode::FAILURE
-            }
+    match interpreter::run(&graphemes) {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            err_handler::run(e, &graphemes);
+            ExitCode::FAILURE
         }
-    }
-
-    fn error(&mut self, string: String) {
-        self.stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
-            .expect("Failed to change the color of stderr.");
-
-        write!(&mut self.stderr, "(ERROR)").expect("Failed to write `(ERROR)` to stderr.");
-
-        self.stderr
-            .reset()
-            .expect("Failed to reset color of stderr.");
-
-        writeln!(&mut self.stderr, " {string}").expect("Failed to write error message to stderr.")
     }
 }

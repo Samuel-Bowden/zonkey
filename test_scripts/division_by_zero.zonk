@@ -1,0 +1,7 @@
+start {
+	let b = 19 / 0;
+
+	cli:println("This shouldn't be printed");
+
+	cli:println(b);
+}

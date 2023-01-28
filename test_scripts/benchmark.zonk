@@ -5,7 +5,7 @@ start {
 		for (let j = 0, j < 10, j += 1) {
 			for (let k = 0, k < 10, k += 1) {
 				for (let l = 0, l < 10, l += 1) {
-					cli::println(i + j + k + l);
+					cli:println(i + j + k + l);
 				}
 			}
 		}

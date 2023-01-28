@@ -1,8 +1,4 @@
-use std::io::{stdout, StdoutLock, Write, BufWriter};
-
-use numtoa::NumToA;
-
-use self::{err::TreeWalkerErr, status::TreeWalkerStatus};
+use self::status::TreeWalkerStatus;
 use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     environment::Environment,
@@ -10,7 +6,6 @@ use crate::{
     function::Function,
     native_function::{
         cli_api::{
-            prompt::{prompt, prompt_int},
             CliFunctionInteger, CliFunctionNone, CliFunctionString,
         },
         NativeFunctionInteger, NativeFunctionNone, NativeFunctionString,
@@ -18,8 +13,10 @@ use crate::{
     operator::{NumericOperator, StringOperator},
     stmt::Stmt,
 };
+use numtoa::NumToA;
+use termcolor::{StandardStream, ColorSpec, Color, WriteColor};
+use std::io::{stdout, BufWriter, StdoutLock, Write};
 
-pub mod err;
 pub mod status;
 
 pub struct TreeWalker<'a> {
@@ -37,78 +34,86 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    pub fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+    pub fn interpret(&mut self, statement: &Stmt) -> TreeWalkerStatus {
         match statement {
             Stmt::IntegerVariableDeclaration(expr) => {
-                self.environment.push_int(self.eval_int(expr));
-                Ok(TreeWalkerStatus::Ok)
+                let int = self.eval_int(expr);
+                self.environment.push_int(int);
+                TreeWalkerStatus::Ok
             }
             Stmt::IntegerVariableAssignment(id, expr, assignment_operator) => {
+                let int = self.eval_int(expr);
                 self.environment
-                    .assign_int(*id, self.eval_int(expr), assignment_operator);
-                Ok(TreeWalkerStatus::Ok)
+                    .assign_int(*id, int, assignment_operator);
+                TreeWalkerStatus::Ok
             }
             Stmt::FloatVariableDeclaration(expr) => {
-                self.environment.push_float(self.eval_float(expr));
-                Ok(TreeWalkerStatus::Ok)
+                let float = self.eval_float(expr);
+                self.environment.push_float(float);
+                TreeWalkerStatus::Ok
             }
             Stmt::FloatVariableAssignment(id, expr, assignment_operator) => {
+                let float = self.eval_float(expr);
                 self.environment
-                    .assign_float(*id, self.eval_float(expr), assignment_operator);
-                Ok(TreeWalkerStatus::Ok)
+                    .assign_float(*id, float, assignment_operator);
+                TreeWalkerStatus::Ok
             }
             Stmt::StringVariableDeclaration(expr) => {
-                self.environment.push_string(self.eval_string(expr));
-                Ok(TreeWalkerStatus::Ok)
+                let string = self.eval_string(expr);
+                self.environment.push_string(string);
+                TreeWalkerStatus::Ok
             }
             Stmt::StringVariableAssignment(id, expr, assignment_operator) => {
+                let string = self.eval_string(expr);
                 self.environment
-                    .assign_string(*id, self.eval_string(expr), assignment_operator);
-                Ok(TreeWalkerStatus::Ok)
+                    .assign_string(*id, string, assignment_operator);
+                TreeWalkerStatus::Ok
             }
             Stmt::BooleanVariableDeclaration(expr) => {
-                self.environment.push_boolean(self.eval_boolean(expr));
-                Ok(TreeWalkerStatus::Ok)
+                let boolean = self.eval_boolean(expr);
+                self.environment.push_boolean(boolean);
+                TreeWalkerStatus::Ok
             }
             Stmt::BooleanVariableAssignment(id, expr, assignment_operator) => {
+                let boolean = self.eval_boolean(expr);
                 self.environment
-                    .assign_boolean(*id, self.eval_boolean(expr), assignment_operator);
-                Ok(TreeWalkerStatus::Ok)
+                    .assign_boolean(*id, boolean, assignment_operator);
+                TreeWalkerStatus::Ok
             }
             Stmt::Block(statements, block_start_points) => {
                 self.environment.push_stack();
 
-                let mut return_value = Ok(TreeWalkerStatus::Ok);
+                let mut return_value = TreeWalkerStatus::Ok;
 
                 for statement in statements {
-                    match self.interpret(statement)? {
+                    match self.interpret(statement) {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => {
-                            return_value = Ok(TreeWalkerStatus::Continue);
+                            return_value = TreeWalkerStatus::Continue;
                             break;
                         }
                         TreeWalkerStatus::Break => {
-                            return_value = Ok(TreeWalkerStatus::Break);
+                            return_value = TreeWalkerStatus::Break;
                             break;
                         }
                         TreeWalkerStatus::ReturnInt(v) => {
-                            return_value = Ok(TreeWalkerStatus::ReturnInt(v));
+                            return_value = TreeWalkerStatus::ReturnInt(v);
                             break;
                         }
                         TreeWalkerStatus::ReturnFloat(v) => {
-                            return_value = Ok(TreeWalkerStatus::ReturnFloat(v));
+                            return_value = TreeWalkerStatus::ReturnFloat(v);
                             break;
                         }
                         TreeWalkerStatus::ReturnString(v) => {
-                            return_value = Ok(TreeWalkerStatus::ReturnString(v));
+                            return_value = TreeWalkerStatus::ReturnString(v);
                             break;
                         }
                         TreeWalkerStatus::ReturnBoolean(v) => {
-                            return_value = Ok(TreeWalkerStatus::ReturnBoolean(v));
+                            return_value = TreeWalkerStatus::ReturnBoolean(v);
                             break;
                         }
                         TreeWalkerStatus::ReturnNone => {
-                            return_value = Ok(TreeWalkerStatus::ReturnNone);
+                            return_value = TreeWalkerStatus::ReturnNone;
                             break;
                         }
                     }
@@ -124,7 +129,7 @@ impl<'a> TreeWalker<'a> {
                 } else if let Some(false_branch) = false_branch {
                     self.interpret(&false_branch)
                 } else {
-                    Ok(TreeWalkerStatus::Ok)
+                    TreeWalkerStatus::Ok
                 }
             }
             Stmt::Expression(expr) => {
@@ -146,77 +151,77 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                Ok(TreeWalkerStatus::Ok)
+                TreeWalkerStatus::Ok
             }
             Stmt::While(condition, block) => {
                 while self.eval_boolean(condition) {
-                    match self.interpret(block)? {
+                    match self.interpret(block) {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
                         TreeWalkerStatus::ReturnInt(v) => {
-                            return Ok(TreeWalkerStatus::ReturnInt(v))
+                            return TreeWalkerStatus::ReturnInt(v)
                         }
                         TreeWalkerStatus::ReturnFloat(v) => {
-                            return Ok(TreeWalkerStatus::ReturnFloat(v))
+                            return TreeWalkerStatus::ReturnFloat(v)
                         }
                         TreeWalkerStatus::ReturnString(v) => {
-                            return Ok(TreeWalkerStatus::ReturnString(v))
+                            return TreeWalkerStatus::ReturnString(v)
                         }
                         TreeWalkerStatus::ReturnBoolean(v) => {
-                            return Ok(TreeWalkerStatus::ReturnBoolean(v))
+                            return TreeWalkerStatus::ReturnBoolean(v)
                         }
-                        TreeWalkerStatus::ReturnNone => return Ok(TreeWalkerStatus::ReturnNone),
+                        TreeWalkerStatus::ReturnNone => return TreeWalkerStatus::ReturnNone,
                     }
                 }
 
-                Ok(TreeWalkerStatus::Ok)
+                TreeWalkerStatus::Ok
             }
             Stmt::Loop(block) => {
                 loop {
-                    match self.interpret(block)? {
+                    match self.interpret(block) {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
                         TreeWalkerStatus::ReturnInt(v) => {
-                            return Ok(TreeWalkerStatus::ReturnInt(v))
+                            return TreeWalkerStatus::ReturnInt(v)
                         }
                         TreeWalkerStatus::ReturnFloat(v) => {
-                            return Ok(TreeWalkerStatus::ReturnFloat(v))
+                            return TreeWalkerStatus::ReturnFloat(v)
                         }
                         TreeWalkerStatus::ReturnString(v) => {
-                            return Ok(TreeWalkerStatus::ReturnString(v))
+                            return TreeWalkerStatus::ReturnString(v)
                         }
                         TreeWalkerStatus::ReturnBoolean(v) => {
-                            return Ok(TreeWalkerStatus::ReturnBoolean(v))
+                            return TreeWalkerStatus::ReturnBoolean(v)
                         }
-                        TreeWalkerStatus::ReturnNone => return Ok(TreeWalkerStatus::ReturnNone),
+                        TreeWalkerStatus::ReturnNone => return TreeWalkerStatus::ReturnNone,
                     }
                 }
 
-                Ok(TreeWalkerStatus::Ok)
+                TreeWalkerStatus::Ok
             }
-            Stmt::Break => Ok(TreeWalkerStatus::Break),
-            Stmt::Continue => Ok(TreeWalkerStatus::Continue),
+            Stmt::Break => TreeWalkerStatus::Break,
+            Stmt::Continue => TreeWalkerStatus::Continue,
             Stmt::Return(expr) => match expr {
-                Some(Expr::Integer(expr)) => Ok(TreeWalkerStatus::ReturnInt(self.eval_int(expr))),
-                Some(Expr::Float(expr)) => Ok(TreeWalkerStatus::ReturnFloat(self.eval_float(expr))),
+                Some(Expr::Integer(expr)) => TreeWalkerStatus::ReturnInt(self.eval_int(expr)),
+                Some(Expr::Float(expr)) => TreeWalkerStatus::ReturnFloat(self.eval_float(expr)),
                 Some(Expr::String(expr)) => {
-                    Ok(TreeWalkerStatus::ReturnString(self.eval_string(expr)))
+                    TreeWalkerStatus::ReturnString(self.eval_string(expr))
                 }
                 Some(Expr::Boolean(expr)) => {
-                    Ok(TreeWalkerStatus::ReturnBoolean(self.eval_boolean(expr)))
+                    TreeWalkerStatus::ReturnBoolean(self.eval_boolean(expr))
                 }
                 Some(Expr::None(expr)) => {
                     self.eval_none(expr);
-                    Ok(TreeWalkerStatus::ReturnNone)
+                    TreeWalkerStatus::ReturnNone
                 }
-                None => Ok(TreeWalkerStatus::ReturnNone),
+                None => TreeWalkerStatus::ReturnNone,
             },
         }
     }
 
-    fn eval_int(&self, expression: &IntegerExpr) -> i64 {
+    fn eval_int(&mut self, expression: &IntegerExpr) -> i64 {
         match expression {
             IntegerExpr::Binary {
                 left,
@@ -226,7 +231,26 @@ impl<'a> TreeWalker<'a> {
                 NumericOperator::Add => self.eval_int(left) + self.eval_int(right),
                 NumericOperator::Subtract => self.eval_int(left) - self.eval_int(right),
                 NumericOperator::Multiply => self.eval_int(left) * self.eval_int(right),
-                NumericOperator::Divide => self.eval_int(left) / self.eval_int(right),
+                NumericOperator::Divide => {
+                    let left = self.eval_int(left);
+                    let right = self.eval_int(right);
+                    
+                    if right == 0 {
+                        let mut stderr = StandardStream::stderr(termcolor::ColorChoice::Always);
+
+                        stderr
+                            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
+                            .unwrap();
+                        write!(stderr, "(FATAL RUNTIME ERROR) ").unwrap();
+                        stderr.reset().unwrap();
+
+                        writeln!(stderr, "Attempted to divide {left} by {right}. Aborting execution.").unwrap();
+
+                        std::process::exit(1);
+                    }
+
+                    left / right
+                },
             },
             IntegerExpr::Variable(id) => self.environment.get_int(*id),
             IntegerExpr::Literal(val) => *val,
@@ -246,7 +270,7 @@ impl<'a> TreeWalker<'a> {
                 }
 
                 match TreeWalker::new(self.functions, environment).interpret(&function.start) {
-                    Ok(TreeWalkerStatus::ReturnInt(v)) => v,
+                    TreeWalkerStatus::ReturnInt(v) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
             }
@@ -254,7 +278,7 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn eval_float(&self, expression: &FloatExpr) -> f64 {
+    fn eval_float(&mut self, expression: &FloatExpr) -> f64 {
         match expression {
             FloatExpr::Binary {
                 left,
@@ -284,14 +308,14 @@ impl<'a> TreeWalker<'a> {
                 }
 
                 match TreeWalker::new(self.functions, environment).interpret(&function.start) {
-                    Ok(TreeWalkerStatus::ReturnFloat(v)) => v,
+                    TreeWalkerStatus::ReturnFloat(v) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
             }
         }
     }
 
-    fn eval_string(&self, expression: &StringExpr) -> String {
+    fn eval_string(&mut self, expression: &StringExpr) -> String {
         match expression {
             StringExpr::Binary {
                 left,
@@ -319,14 +343,14 @@ impl<'a> TreeWalker<'a> {
                 }
 
                 match TreeWalker::new(self.functions, environment).interpret(&function.start) {
-                    Ok(TreeWalkerStatus::ReturnString(v)) => v,
+                    TreeWalkerStatus::ReturnString(v) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
             }
         }
     }
 
-    fn eval_boolean(&self, expression: &BooleanExpr) -> bool {
+    fn eval_boolean(&mut self, expression: &BooleanExpr) -> bool {
         match expression {
             BooleanExpr::IntegerBinary {
                 left,
@@ -386,7 +410,7 @@ impl<'a> TreeWalker<'a> {
                 }
 
                 match TreeWalker::new(self.functions, environment).interpret(&function.start) {
-                    Ok(TreeWalkerStatus::ReturnBoolean(v)) => v,
+                    TreeWalkerStatus::ReturnBoolean(v) => v,
                     _ => panic!("Function did not return the correct type"),
                 }
             }
@@ -412,7 +436,7 @@ impl<'a> TreeWalker<'a> {
                 }
 
                 match TreeWalker::new(self.functions, environment).interpret(&function.start) {
-                    Ok(TreeWalkerStatus::ReturnNone) | Ok(TreeWalkerStatus::Ok) => (),
+                    TreeWalkerStatus::ReturnNone | TreeWalkerStatus::Ok => (),
                     _ => panic!("Function did not return the correct type"),
                 }
             }
@@ -425,13 +449,13 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn native_call_integer(&self, call: &NativeFunctionInteger) -> i64 {
+    fn native_call_integer(&mut self, call: &NativeFunctionInteger) -> i64 {
         match call {
             NativeFunctionInteger::Cli(call) => self.cli_function_integer(call),
         }
     }
 
-    fn native_call_string(&self, call: &NativeFunctionString) -> String {
+    fn native_call_string(&mut self, call: &NativeFunctionString) -> String {
         match call {
             NativeFunctionString::Cli(call) => self.cli_function_string(call),
         }
@@ -441,33 +465,91 @@ impl<'a> TreeWalker<'a> {
         match call {
             CliFunctionNone::PrintLineInteger(expr) => {
                 let mut buffer = [0u8; 20];
-                self.stdout.write(self.eval_int(expr).numtoa(10, &mut buffer)).unwrap();
+                let int = self.eval_int(expr).numtoa(10, &mut buffer);
+                self.stdout
+                    .write(int)
+                    .unwrap();
                 self.stdout.write(b"\n").unwrap();
             }
             CliFunctionNone::PrintLineFloat(expr) => {
                 let mut buffer = ryu::Buffer::new();
-                self.stdout.write(buffer.format(self.eval_float(expr)).as_bytes()).unwrap();
+                let float = buffer.format(self.eval_float(expr)).as_bytes();
+                self.stdout
+                    .write(float)
+                    .unwrap();
                 self.stdout.write(b"\n").unwrap();
             }
-            CliFunctionNone::PrintLineString(expr) => writeln!(self.stdout, "{}", self.eval_string(expr)).unwrap(),
-            CliFunctionNone::PrintLineBoolean(expr) => writeln!(self.stdout, "{}", self.eval_boolean(expr)).unwrap(),
+            CliFunctionNone::PrintLineString(expr) => {
+                let string = self.eval_string(expr);
+                writeln!(self.stdout, "{}", string).unwrap()
+            }
+            CliFunctionNone::PrintLineBoolean(expr) => {
+                let boolean = self.eval_boolean(expr);
+                writeln!(self.stdout, "{}", boolean).unwrap()
+            }
             CliFunctionNone::PrintLine => writeln!(self.stdout).unwrap(),
-            CliFunctionNone::PrintInteger(expr) => write!(self.stdout, "{}", self.eval_int(expr)).unwrap(),
-            CliFunctionNone::PrintFloat(expr) => write!(self.stdout, "{}", self.eval_float(expr)).unwrap(),
-            CliFunctionNone::PrintString(expr) => write!(self.stdout, "{}", self.eval_string(expr)).unwrap(),
-            CliFunctionNone::PrintBoolean(expr) => write!(self.stdout, "{}", self.eval_boolean(expr)).unwrap(),
+            CliFunctionNone::PrintInteger(expr) => {
+                let mut buffer = [0u8; 20];
+                let int = self.eval_int(expr).numtoa(10, &mut buffer);
+                self.stdout
+                    .write(int)
+                    .unwrap();
+            }
+            CliFunctionNone::PrintFloat(expr) => {
+                let mut buffer = ryu::Buffer::new();
+                let float = buffer.format(self.eval_float(expr)).as_bytes();
+                self.stdout
+                    .write(float)
+                    .unwrap();
+            }
+            CliFunctionNone::PrintString(expr) => {
+                let string = self.eval_string(expr);
+                write!(self.stdout, "{}", string).unwrap()
+            }
+            CliFunctionNone::PrintBoolean(expr) => {
+                let boolean = self.eval_boolean(expr);
+                write!(self.stdout, "{}", boolean).unwrap()
+            }
         }
     }
 
-    fn cli_function_integer(&self, call: &CliFunctionInteger) -> i64 {
+    fn cli_function_integer(&mut self, call: &CliFunctionInteger) -> i64 {
         match call {
-            CliFunctionInteger::Prompt(expr) => prompt_int(self.eval_string(expr)),
+            CliFunctionInteger::Prompt(expr) => {
+                let prompt = self.eval_string(expr);
+                
+                self.stdout.flush().unwrap();
+
+                write!(self.stdout, "{prompt} ").unwrap();
+
+                self.stdout.flush().unwrap();
+
+                let mut input = String::new();
+
+                std::io::stdin().read_line(&mut input).unwrap();
+
+                input.trim().parse().unwrap()
+            }
         }
     }
 
-    fn cli_function_string(&self, call: &CliFunctionString) -> String {
+    fn cli_function_string(&mut self, call: &CliFunctionString) -> String {
         match call {
-            CliFunctionString::Prompt(expr) => prompt(self.eval_string(expr)),
+            CliFunctionString::Prompt(expr) => {
+                let prompt = self.eval_string(expr);
+                
+                self.stdout.flush().unwrap();
+
+                write!(self.stdout, "{prompt} ").unwrap();
+
+                self.stdout.flush().unwrap();
+
+                let mut input = String::new();
+
+                std::io::stdin().read_line(&mut input).unwrap();
+
+                input.trim().to_string()
+            },
         }
     }
 }

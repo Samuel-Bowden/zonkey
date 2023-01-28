@@ -3,7 +3,7 @@
 start {
 	for (let i = 0, i <= 90, i += 10) {
 		for (let j = 0, j <= 9, j += 1) {
-			cli::println("Iteration");
+			cli:println("Iteration");
 		}
 	}
 }

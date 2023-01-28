@@ -8,3 +8,4 @@ authors = ["Sam Bowden"]
 [dependencies]
 interpreter = { path = "../interpreter" }
 termcolor = "1.1"
+unicode-segmentation = "1.10.0"

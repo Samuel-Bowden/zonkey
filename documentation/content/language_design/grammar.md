@@ -7,8 +7,9 @@ This is the current grammar that I'm implementing in the parser, which is a subs
 
 Grammar
 ```grammar
-program -> declaration*;
-declaration -> function_declaration | start_declaration | terminated_variable_declaration | statement;
+program -> global_declaration*;
+global_declaration -> function_declaration | start_declaration;
+local_declaration -> terminated_variable_declaration | statement;
 statement -> terminated_statement | block | if_statement | while_statement | loop_statement | for_statement;
 terminated_statement -> (expression_statement | return_statement | "break" | "continue") ";";
 expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
@@ -20,7 +21,7 @@ addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER | call;
 call -> (IDENTIFIER "::")? IDENTIFIER "(" equality ("," equality)* ")";
-block -> "{" declaration* "}"
+block -> "{" local_declaration* "}"
 if_statement -> "if" "(" equality ")" block ("else" block)?; 
 while_statement -> "while" "(" equality ")" block;
 loop_statement -> "loop" block;
