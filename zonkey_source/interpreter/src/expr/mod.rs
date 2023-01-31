@@ -1,6 +1,6 @@
 use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
-    native_function::{NativeFunctionInteger, NativeFunctionNone, NativeFunctionString},
+    native_function::{NativeFunctionNone, NativeFunctionString},
     operator::{NumericOperator, StringOperator},
 };
 
@@ -23,7 +23,6 @@ pub enum IntegerExpr {
     Literal(i64),
     Variable(usize),
     Call(usize, Vec<Expr>),
-    NativeCall(NativeFunctionInteger),
 }
 
 #[derive(Debug)]

@@ -5,17 +5,15 @@ use crate::{
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function::Function,
     native_function::{
-        cli_api::{
-            CliFunctionInteger, CliFunctionNone, CliFunctionString,
-        },
-        NativeFunctionInteger, NativeFunctionNone, NativeFunctionString,
+        cli_api::{CliFunctionNone, CliFunctionString},
+        NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
     stmt::Stmt,
 };
 use numtoa::NumToA;
-use termcolor::{StandardStream, ColorSpec, Color, WriteColor};
 use std::io::{stdout, BufWriter, StdoutLock, Write};
+use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 pub mod status;
 
@@ -43,8 +41,7 @@ impl<'a> TreeWalker<'a> {
             }
             Stmt::IntegerVariableAssignment(id, expr, assignment_operator) => {
                 let int = self.eval_int(expr);
-                self.environment
-                    .assign_int(*id, int, assignment_operator);
+                self.environment.assign_int(*id, int, assignment_operator);
                 TreeWalkerStatus::Ok
             }
             Stmt::FloatVariableDeclaration(expr) => {
@@ -159,9 +156,7 @@ impl<'a> TreeWalker<'a> {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
-                        TreeWalkerStatus::ReturnInt(v) => {
-                            return TreeWalkerStatus::ReturnInt(v)
-                        }
+                        TreeWalkerStatus::ReturnInt(v) => return TreeWalkerStatus::ReturnInt(v),
                         TreeWalkerStatus::ReturnFloat(v) => {
                             return TreeWalkerStatus::ReturnFloat(v)
                         }
@@ -183,9 +178,7 @@ impl<'a> TreeWalker<'a> {
                         TreeWalkerStatus::Ok => (),
                         TreeWalkerStatus::Continue => (),
                         TreeWalkerStatus::Break => break,
-                        TreeWalkerStatus::ReturnInt(v) => {
-                            return TreeWalkerStatus::ReturnInt(v)
-                        }
+                        TreeWalkerStatus::ReturnInt(v) => return TreeWalkerStatus::ReturnInt(v),
                         TreeWalkerStatus::ReturnFloat(v) => {
                             return TreeWalkerStatus::ReturnFloat(v)
                         }
@@ -206,9 +199,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::Return(expr) => match expr {
                 Some(Expr::Integer(expr)) => TreeWalkerStatus::ReturnInt(self.eval_int(expr)),
                 Some(Expr::Float(expr)) => TreeWalkerStatus::ReturnFloat(self.eval_float(expr)),
-                Some(Expr::String(expr)) => {
-                    TreeWalkerStatus::ReturnString(self.eval_string(expr))
-                }
+                Some(Expr::String(expr)) => TreeWalkerStatus::ReturnString(self.eval_string(expr)),
                 Some(Expr::Boolean(expr)) => {
                     TreeWalkerStatus::ReturnBoolean(self.eval_boolean(expr))
                 }
@@ -234,7 +225,7 @@ impl<'a> TreeWalker<'a> {
                 NumericOperator::Divide => {
                     let left = self.eval_int(left);
                     let right = self.eval_int(right);
-                    
+
                     if right == 0 {
                         let mut stderr = StandardStream::stderr(termcolor::ColorChoice::Always);
 
@@ -244,13 +235,17 @@ impl<'a> TreeWalker<'a> {
                         write!(stderr, "(FATAL RUNTIME ERROR) ").unwrap();
                         stderr.reset().unwrap();
 
-                        writeln!(stderr, "Attempted to divide {left} by {right}. Aborting execution.").unwrap();
+                        writeln!(
+                            stderr,
+                            "Attempted to divide {left} by {right}. Aborting execution."
+                        )
+                        .unwrap();
 
                         std::process::exit(1);
                     }
 
                     left / right
-                },
+                }
             },
             IntegerExpr::Variable(id) => self.environment.get_int(*id),
             IntegerExpr::Literal(val) => *val,
@@ -274,7 +269,6 @@ impl<'a> TreeWalker<'a> {
                     _ => panic!("Function did not return the correct type"),
                 }
             }
-            IntegerExpr::NativeCall(call) => self.native_call_integer(call),
         }
     }
 
@@ -449,12 +443,6 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn native_call_integer(&mut self, call: &NativeFunctionInteger) -> i64 {
-        match call {
-            NativeFunctionInteger::Cli(call) => self.cli_function_integer(call),
-        }
-    }
-
     fn native_call_string(&mut self, call: &NativeFunctionString) -> String {
         match call {
             NativeFunctionString::Cli(call) => self.cli_function_string(call),
@@ -466,17 +454,13 @@ impl<'a> TreeWalker<'a> {
             CliFunctionNone::PrintLineInteger(expr) => {
                 let mut buffer = [0u8; 20];
                 let int = self.eval_int(expr).numtoa(10, &mut buffer);
-                self.stdout
-                    .write(int)
-                    .unwrap();
+                self.stdout.write(int).unwrap();
                 self.stdout.write(b"\n").unwrap();
             }
             CliFunctionNone::PrintLineFloat(expr) => {
                 let mut buffer = ryu::Buffer::new();
                 let float = buffer.format(self.eval_float(expr)).as_bytes();
-                self.stdout
-                    .write(float)
-                    .unwrap();
+                self.stdout.write(float).unwrap();
                 self.stdout.write(b"\n").unwrap();
             }
             CliFunctionNone::PrintLineString(expr) => {
@@ -491,16 +475,12 @@ impl<'a> TreeWalker<'a> {
             CliFunctionNone::PrintInteger(expr) => {
                 let mut buffer = [0u8; 20];
                 let int = self.eval_int(expr).numtoa(10, &mut buffer);
-                self.stdout
-                    .write(int)
-                    .unwrap();
+                self.stdout.write(int).unwrap();
             }
             CliFunctionNone::PrintFloat(expr) => {
                 let mut buffer = ryu::Buffer::new();
                 let float = buffer.format(self.eval_float(expr)).as_bytes();
-                self.stdout
-                    .write(float)
-                    .unwrap();
+                self.stdout.write(float).unwrap();
             }
             CliFunctionNone::PrintString(expr) => {
                 let string = self.eval_string(expr);
@@ -513,31 +493,11 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn cli_function_integer(&mut self, call: &CliFunctionInteger) -> i64 {
-        match call {
-            CliFunctionInteger::Prompt(expr) => {
-                let prompt = self.eval_string(expr);
-                
-                self.stdout.flush().unwrap();
-
-                write!(self.stdout, "{prompt} ").unwrap();
-
-                self.stdout.flush().unwrap();
-
-                let mut input = String::new();
-
-                std::io::stdin().read_line(&mut input).unwrap();
-
-                input.trim().parse().unwrap()
-            }
-        }
-    }
-
     fn cli_function_string(&mut self, call: &CliFunctionString) -> String {
         match call {
             CliFunctionString::Prompt(expr) => {
                 let prompt = self.eval_string(expr);
-                
+
                 self.stdout.flush().unwrap();
 
                 write!(self.stdout, "{prompt} ").unwrap();
@@ -549,7 +509,7 @@ impl<'a> TreeWalker<'a> {
                 std::io::stdin().read_line(&mut input).unwrap();
 
                 input.trim().to_string()
-            },
+            }
         }
     }
 }

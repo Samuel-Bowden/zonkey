@@ -3,7 +3,6 @@ use crate::{environment::Environment, parser::Parser, tree_walker::TreeWalker};
 use function::Function;
 use stmt::Stmt;
 
-mod start;
 mod assignment_operator;
 mod comparison;
 mod debugger;
@@ -16,10 +15,12 @@ mod lexer;
 mod native_function;
 mod operator;
 mod parser;
+pub mod return_type;
+mod start;
 mod stmt;
 pub mod token;
 mod tree_walker;
-mod value_type;
+pub mod value_type;
 
 pub fn run(source: &Vec<&str>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");

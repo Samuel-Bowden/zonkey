@@ -1,9 +1,9 @@
-use interpreter::err::InterpreterErr;
 use self::err_reporter::ErrReporter;
+use interpreter::err::InterpreterErr;
 
+mod err_reporter;
 mod lexer;
 mod parser;
-mod err_reporter;
 
 pub fn run(error: InterpreterErr, graphemes: &Vec<&str>) {
     let err_reporter = ErrReporter::new(graphemes);

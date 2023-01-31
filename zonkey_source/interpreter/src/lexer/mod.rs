@@ -1,5 +1,5 @@
 use super::token::{Token, TokenType};
-use crate::{lexer_debug, err::lexer::LexerErr};
+use crate::{err::lexer::LexerErr, lexer_debug};
 
 pub struct Lexer<'a> {
     pub tokens: Vec<Token>,

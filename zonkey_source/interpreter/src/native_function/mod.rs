@@ -1,4 +1,4 @@
-use self::cli_api::{CliFunctionInteger, CliFunctionNone, CliFunctionString};
+use self::cli_api::{CliFunctionNone, CliFunctionString};
 
 pub mod cli_api;
 
@@ -10,9 +10,4 @@ pub enum NativeFunctionNone {
 #[derive(Debug)]
 pub enum NativeFunctionString {
     Cli(CliFunctionString),
-}
-
-#[derive(Debug)]
-pub enum NativeFunctionInteger {
-    Cli(CliFunctionInteger),
 }

@@ -7,18 +7,21 @@ use crate::{
     },
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     debug_information,
+    err::parser::{ParserErr, ParserErrType},
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function::Function,
     function_declaration::FunctionDeclaration,
     native_function::{
-        cli_api::{CliFunctionInteger, CliFunctionNone, CliFunctionString},
-        NativeFunctionInteger, NativeFunctionNone, NativeFunctionString,
+        cli_api::{CliFunctionNone, CliFunctionString},
+        NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
     parser_debug,
+    return_type::ReturnType,
+    start::Start,
     stmt::Stmt,
     token::{Token, TokenType},
-    value_type::ValueType, start::Start, err::parser::{ParserErr, ParserErrType},
+    value_type::ValueType,
 };
 use rustc_hash::FxHashMap;
 
@@ -108,7 +111,7 @@ impl Parser {
         if let Some(s) = self.start {
             if !self.error.had_error() {
                 if let Some(stmt) = s.stmt {
-                    return Ok((stmt, self.functions))
+                    return Ok((stmt, self.functions));
                 }
             }
         } else {
@@ -127,13 +130,15 @@ impl Parser {
                 Err(ParserStatus::Unwind) => {
                     // Attempt to synchronise
                     loop {
-                        if let Some(TokenType::Start | TokenType::Function) | None = self.current_token_type() {
+                        if let Some(TokenType::Start | TokenType::Function) | None =
+                            self.current_token_type()
+                        {
                             break;
                         }
 
                         self.current += 1;
                     }
-                },
+                }
                 Err(ParserStatus::End) => break,
             };
         }
@@ -180,13 +185,14 @@ impl Parser {
         self.boolean_next_id = 0;
 
         if let Some(s) = &self.start {
-            self.error.add(ParserErrType::RedefinedStart(s.token.clone(), start_token));
+            self.error
+                .add(ParserErrType::RedefinedStart(s.token.clone(), start_token));
             return Err(ParserStatus::Unwind);
         }
 
         let mut start = Start {
             stmt: None,
-            token: start_token, 
+            token: start_token,
         };
 
         match block {
@@ -200,7 +206,6 @@ impl Parser {
                 Err(e)
             }
         }
-
     }
 
     fn function_declaration(&mut self) -> Result<(), ParserStatus> {
@@ -214,15 +219,14 @@ impl Parser {
             Some(Token {
                 token_type: TokenType::Identifier(name),
                 ..
-            }) => {
-                name.clone()
-            }
+            }) => name.clone(),
             t => {
-                self.error.add(ParserErrType::FunctionDeclarationExpectedName(
-                    function_token,
-                    t.cloned(),
-                ));
-                return Err(ParserStatus::Unwind)
+                self.error
+                    .add(ParserErrType::FunctionDeclarationExpectedName(
+                        function_token,
+                        t.cloned(),
+                    ));
+                return Err(ParserStatus::Unwind);
             }
         };
         self.current += 1;
@@ -232,14 +236,13 @@ impl Parser {
                 token_type: TokenType::LeftParen,
                 start,
                 ..
-            }) => {
-                *start
-            }
+            }) => *start,
             t => {
-                self.error.add(ParserErrType::FunctionDeclarationExpectedLeftParen(
-                    self.previous_token().unwrap().clone(),
-                    t.cloned(),
-                ));
+                self.error
+                    .add(ParserErrType::FunctionDeclarationExpectedLeftParen(
+                        self.previous_token().unwrap().clone(),
+                        t.cloned(),
+                    ));
                 return Err(ParserStatus::Unwind);
             }
         };
@@ -256,10 +259,11 @@ impl Parser {
                 let parameter_data_type = match self.data_type() {
                     Ok(data_type) => data_type,
                     Err(t) => {
-                        self.error.add(ParserErrType::FunctionDeclarationExpectedParameterType(
-                            self.previous_token().unwrap().clone(),
-                            t,
-                        ));
+                        self.error
+                            .add(ParserErrType::FunctionDeclarationExpectedParameterType(
+                                self.previous_token().unwrap().clone(),
+                                t,
+                            ));
                         return Err(ParserStatus::Unwind);
                     }
                 };
@@ -269,21 +273,20 @@ impl Parser {
                     Some(Token {
                         token_type: TokenType::Identifier(name),
                         ..
-                    }) => {
-                        name.clone()
-                    }
+                    }) => name.clone(),
                     t => {
-                        self.error.add(ParserErrType::FunctionDeclarationExpectedParameterName(
-                            function_token,
-                            t.cloned(),
-                        ));
-                        return Err(ParserStatus::Unwind)
+                        self.error
+                            .add(ParserErrType::FunctionDeclarationExpectedParameterName(
+                                function_token,
+                                t.cloned(),
+                            ));
+                        return Err(ParserStatus::Unwind);
                     }
                 };
                 self.current += 1;
 
                 parameters.push((parameter_data_type, parameter_name));
-                
+
                 match self.current_token() {
                     Some(Token {
                         token_type: TokenType::Comma,
@@ -300,11 +303,13 @@ impl Parser {
                         break;
                     }
                     t => {
-                        self.error.add(ParserErrType::FunctionDeclarationExpectedCommaOrRightParen(
-                            function_token,
-                            t.cloned(),
-                        ));
-                        return Err(ParserStatus::Unwind)
+                        self.error.add(
+                            ParserErrType::FunctionDeclarationExpectedCommaOrRightParen(
+                                function_token,
+                                t.cloned(),
+                            ),
+                        );
+                        return Err(ParserStatus::Unwind);
                     }
                 };
             },
@@ -314,21 +319,22 @@ impl Parser {
         let return_data_type = if let Some(TokenType::Arrow) = self.current_token_type() {
             self.current += 1;
 
-            match self.data_type() {
-                Ok(data_type) => {
+            match self.return_type() {
+                Ok(return_type) => {
                     self.current += 1;
-                    Some(data_type)
+                    return_type
                 }
                 Err(t) => {
-                    self.error.add(ParserErrType::FunctionDeclarationExpectedReturnType(
-                        self.previous_token().unwrap().clone(),
-                        t,
-                    ));
+                    self.error
+                        .add(ParserErrType::FunctionDeclarationExpectedReturnType(
+                            self.previous_token().unwrap().clone(),
+                            t,
+                        ));
                     return Err(ParserStatus::Unwind);
                 }
             }
         } else {
-            None
+            ReturnType::None
         };
 
         // Second stage - parse function body
@@ -337,19 +343,29 @@ impl Parser {
         for parameter in &parameters {
             match parameter.0 {
                 ValueType::Integer => {
-                    function_scope.insert(parameter.1.clone(), (ValueType::Integer, self.integer_next_id));
+                    function_scope.insert(
+                        parameter.1.clone(),
+                        (ValueType::Integer, self.integer_next_id),
+                    );
                     self.integer_next_id += 1;
                 }
                 ValueType::Float => {
-                    function_scope.insert(parameter.1.clone(), (ValueType::Float, self.float_next_id));
+                    function_scope
+                        .insert(parameter.1.clone(), (ValueType::Float, self.float_next_id));
                     self.float_next_id += 1;
                 }
                 ValueType::String => {
-                    function_scope.insert(parameter.1.clone(), (ValueType::String, self.string_next_id));
+                    function_scope.insert(
+                        parameter.1.clone(),
+                        (ValueType::String, self.string_next_id),
+                    );
                     self.string_next_id += 1;
                 }
                 ValueType::Boolean => {
-                    function_scope.insert(parameter.1.clone(), (ValueType::Boolean, self.boolean_next_id));
+                    function_scope.insert(
+                        parameter.1.clone(),
+                        (ValueType::Boolean, self.boolean_next_id),
+                    );
                     self.boolean_next_id += 1;
                 }
             }
@@ -362,7 +378,8 @@ impl Parser {
             return_data_type,
         };
 
-        self.function_declarations.insert(function_name, function_declaration.clone());
+        self.function_declarations
+            .insert(function_name, function_declaration.clone());
 
         self.current_function_declaration = Some(function_declaration);
 
@@ -379,9 +396,7 @@ impl Parser {
         self.current_function_declaration = None;
 
         // Finally add function
-        self.functions.push(Function {
-            start: block,
-        });
+        self.functions.push(Function { start: block });
 
         Ok(())
     }
@@ -424,10 +439,7 @@ impl Parser {
         debug_information!("terminated_statement");
 
         let statement = match self.current_token_type() {
-            Some(TokenType::Return) => {
-                self.current += 1;
-                self.return_statement()?
-            }
+            Some(TokenType::Return) => self.return_statement()?,
             Some(TokenType::Break) => {
                 self.current += 1;
                 Stmt::Break
@@ -459,30 +471,48 @@ impl Parser {
     fn return_statement(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("return_statement");
 
-        match self.current_token_type() {
-            Some(TokenType::SemiColon) => Ok(Stmt::Return(None)),
-            _ => {
-                let equality = self.equality()?;
-                Ok(Stmt::Return(Some(
-                    if let Some(function) = &self.current_function_declaration {
-                        match (&function.return_data_type, equality) {
-                            (Some(ValueType::Integer), Expr::Integer(expr)) => Expr::Integer(expr),
-                            (Some(ValueType::Float), Expr::Float(expr)) => Expr::Float(expr),
-                            (Some(ValueType::String), Expr::String(expr)) => Expr::String(expr),
-                            (Some(ValueType::Boolean), Expr::Boolean(expr)) => Expr::Boolean(expr),
-                            (None, Expr::None(expr)) => Expr::None(expr),
-                            _ => panic!("Function return expression does not match data type of declaration")
-                        }
-                    } else {
-                        if let Expr::None(expr) = self.equality()? {
-                            Expr::None(expr)
-                        } else {
-                            panic!("Function return expression does not match data type of declaration")
-                        }
-                    },
-                )))
+        let return_token_position = self.current;
+        self.current += 1;
+
+        let function_ret_type = if let Some(function) = &self.current_function_declaration {
+            function.return_data_type.clone()
+        } else {
+            self.error.add(ParserErrType::StartCannotReturn(
+                self.tokens[return_token_position].clone(),
+            ));
+            return Err(ParserStatus::Unwind);
+        };
+
+        let equality = match self.current_token_type() {
+            Some(TokenType::SemiColon) => None,
+            _ => Some(self.equality()?),
+        };
+
+        Ok(Stmt::Return(match (function_ret_type, equality) {
+            (ReturnType::Integer, Some(Expr::Integer(expr))) => Some(Expr::Integer(expr)),
+            (ReturnType::Float, Some(Expr::Float(expr))) => Some(Expr::Float(expr)),
+            (ReturnType::String, Some(Expr::String(expr))) => Some(Expr::String(expr)),
+            (ReturnType::Boolean, Some(Expr::Boolean(expr))) => Some(Expr::Boolean(expr)),
+            (ReturnType::None, Some(Expr::None(expr))) => Some(Expr::None(expr)),
+            (ReturnType::None, None) => None,
+            (ret_type, expr) => {
+                let expr_type = if let Some(expr) = expr {
+                    self.expr_type(&expr)
+                } else {
+                    ReturnType::None
+                };
+
+                self.error.add(
+                    ParserErrType::FunctionDeclarationInvalidReturnExpressionType(
+                        self.tokens[return_token_position].clone(),
+                        ret_type.clone(),
+                        expr_type,
+                    ),
+                );
+
+                return Err(ParserStatus::Unwind);
             }
-        }
+        }))
     }
 
     fn if_statement(&mut self) -> Result<Stmt, ParserStatus> {
@@ -493,9 +523,7 @@ impl Parser {
                 token_type: TokenType::LeftParen,
                 start,
                 ..
-            }) => {
-                *start
-            }
+            }) => *start,
             t => {
                 self.error.add(ParserErrType::IfExpectedLeftParen(
                     self.previous_token().unwrap().clone(),
@@ -504,7 +532,6 @@ impl Parser {
                 return Err(ParserStatus::End);
             }
         };
-
         self.current += 1;
 
         let expression = self.equality()?;
@@ -514,9 +541,7 @@ impl Parser {
                 token_type: TokenType::RightParen,
                 end,
                 ..
-            }) => {
-                *end
-            }
+            }) => *end,
             t => {
                 self.error.add(ParserErrType::IfExpectedRightParen(
                     self.previous_token().unwrap().clone(),
@@ -532,11 +557,8 @@ impl Parser {
             expr
         } else {
             self.error.add(ParserErrType::IfConditionNotBool(
-                Token {
-                    token_type: TokenType::None,
-                    start: left_paren + 1,
-                    end: right_paren - 1,
-                }
+                left_paren + 1,
+                right_paren - 1,
             ));
             // Place dummy expression to continue parsing rest for errors
             BooleanExpr::Literal(false)
@@ -564,9 +586,7 @@ impl Parser {
                 token_type: TokenType::LeftParen,
                 start,
                 ..
-            }) => {
-                *start
-            }
+            }) => *start,
             t => {
                 self.error.add(ParserErrType::WhileExpectedLeftParen(
                     self.previous_token().unwrap().clone(),
@@ -585,9 +605,7 @@ impl Parser {
                 token_type: TokenType::RightParen,
                 end,
                 ..
-            }) => {
-                *end
-            }
+            }) => *end,
             t => {
                 self.error.add(ParserErrType::WhileExpectedRightParen(
                     self.previous_token().unwrap().clone(),
@@ -603,11 +621,8 @@ impl Parser {
             expr
         } else {
             self.error.add(ParserErrType::WhileConditionNotBool(
-                Token {
-                    token_type: TokenType::None,
-                    start: left_paren,
-                    end: right_paren,
-                }
+                left_paren + 1,
+                right_paren - 1,
             ));
             // Place dummy expression to continue parsing rest for errors
             BooleanExpr::Literal(false)
@@ -650,9 +665,7 @@ impl Parser {
                 token_type: TokenType::Comma,
                 end,
                 ..
-            }) => {
-                *end
-            }
+            }) => *end,
             t => {
                 self.error.add(ParserErrType::ForExpectedComma1(
                     self.previous_token().unwrap().clone(),
@@ -670,9 +683,7 @@ impl Parser {
                 token_type: TokenType::Comma,
                 start,
                 ..
-            }) => {
-                *start
-            }
+            }) => *start,
             t => {
                 self.error.add(ParserErrType::ForExpectedComma2(
                     self.previous_token().unwrap().clone(),
@@ -687,11 +698,8 @@ impl Parser {
             expr
         } else {
             self.error.add(ParserErrType::ForConditionNotBool(
-                Token {
-                    token_type: TokenType::None,
-                    start: test_statement_start,
-                    end: test_statement_end,
-                }
+                test_statement_start,
+                test_statement_end,
             ));
             // Place dummy expression to continue parsing rest for errors
             BooleanExpr::Literal(false)
@@ -748,10 +756,20 @@ impl Parser {
     fn block(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("block");
 
-        match self.consume_token_type() {
-            Some(TokenType::LeftBrace) => (),
-            _ => panic!("Expected left brace before block"),
-        }
+        let open_brace_pos = match self.current_token() {
+            Some(Token {
+                token_type: TokenType::LeftBrace,
+                ..
+            }) => self.current,
+            t => {
+                self.error.add(ParserErrType::BlockExpectedLeftBrace(
+                    self.previous_token().unwrap().clone(),
+                    t.cloned(),
+                ));
+                return Err(ParserStatus::Unwind);
+            }
+        };
+        self.current += 1;
 
         let mut statements = vec![];
         self.value_stack.push(FxHashMap::default());
@@ -778,7 +796,14 @@ impl Parser {
                     ));
                 }
                 Some(_) => statements.push(self.local_declaration()?),
-                None => panic!("Expected right brace after block"),
+                None => {
+                    self.error.add(ParserErrType::BlockExpectedRightBrace(
+                        self.tokens[open_brace_pos].clone(),
+                        self.previous_token().unwrap().clone(),
+                    ));
+
+                    return Err(ParserStatus::End);
+                }
             }
         }
     }
@@ -796,7 +821,8 @@ impl Parser {
                 | TokenType::StarEqual
                 | TokenType::SlashEqual,
             ) => {
-                let assignment_operator = self.consume_token_type();
+                let assignment_operator = self.current;
+                self.current += 1;
 
                 let value = self.equality()?;
 
@@ -805,17 +831,13 @@ impl Parser {
                         Ok(Stmt::IntegerVariableAssignment(
                             id,
                             val,
-                            match assignment_operator {
-                                Some(TokenType::Equal) => NumericAssignmentOperator::Equal,
-                                Some(TokenType::PlusEqual) => NumericAssignmentOperator::PlusEqual,
-                                Some(TokenType::MinusEqual) => {
-                                    NumericAssignmentOperator::MinusEqual
-                                }
-                                Some(TokenType::StarEqual) => NumericAssignmentOperator::StarEqual,
-                                Some(TokenType::SlashEqual) => {
-                                    NumericAssignmentOperator::SlashEqual
-                                }
-                                _ => panic!("Shouldn't happen"),
+                            match self.tokens[assignment_operator].token_type {
+                                TokenType::Equal => NumericAssignmentOperator::Equal,
+                                TokenType::PlusEqual => NumericAssignmentOperator::PlusEqual,
+                                TokenType::MinusEqual => NumericAssignmentOperator::MinusEqual,
+                                TokenType::StarEqual => NumericAssignmentOperator::StarEqual,
+                                TokenType::SlashEqual => NumericAssignmentOperator::SlashEqual,
+                                _ => panic!("Unreachable"),
                             },
                         ))
                     }
@@ -823,17 +845,13 @@ impl Parser {
                         Ok(Stmt::FloatVariableAssignment(
                             id,
                             val,
-                            match assignment_operator {
-                                Some(TokenType::Equal) => NumericAssignmentOperator::Equal,
-                                Some(TokenType::PlusEqual) => NumericAssignmentOperator::PlusEqual,
-                                Some(TokenType::MinusEqual) => {
-                                    NumericAssignmentOperator::MinusEqual
-                                }
-                                Some(TokenType::StarEqual) => NumericAssignmentOperator::StarEqual,
-                                Some(TokenType::SlashEqual) => {
-                                    NumericAssignmentOperator::SlashEqual
-                                }
-                                _ => panic!("Shouldn't happen"),
+                            match self.tokens[assignment_operator].token_type {
+                                TokenType::Equal => NumericAssignmentOperator::Equal,
+                                TokenType::PlusEqual => NumericAssignmentOperator::PlusEqual,
+                                TokenType::MinusEqual => NumericAssignmentOperator::MinusEqual,
+                                TokenType::StarEqual => NumericAssignmentOperator::StarEqual,
+                                TokenType::SlashEqual => NumericAssignmentOperator::SlashEqual,
+                                _ => panic!("Unreachable"),
                             },
                         ))
                     }
@@ -841,13 +859,16 @@ impl Parser {
                         Ok(Stmt::StringVariableAssignment(
                             id,
                             val,
-                            match assignment_operator {
-                                Some(TokenType::Equal) => StringAssignmentOperator::Equal,
-                                Some(TokenType::PlusEqual) => StringAssignmentOperator::PlusEqual,
-                                Some(TokenType::MinusEqual) => panic!("Cannot use -= with strings"),
-                                Some(TokenType::StarEqual) => panic!("Cannot use *= with strings"),
-                                Some(TokenType::SlashEqual) => panic!("Cannot use /= with strings"),
-                                _ => panic!("Shouldn't happen"),
+                            match self.tokens[assignment_operator].token_type {
+                                TokenType::Equal => StringAssignmentOperator::Equal,
+                                TokenType::PlusEqual => StringAssignmentOperator::PlusEqual,
+                                _ => {
+                                    self.error.add(ParserErrType::InvalidAssignmentOperator(
+                                        self.tokens[assignment_operator].clone(),
+                                        ValueType::String,
+                                    ));
+                                    return Err(ParserStatus::Unwind);
+                                }
                             },
                         ))
                     }
@@ -855,21 +876,31 @@ impl Parser {
                         Ok(Stmt::BooleanVariableAssignment(
                             id,
                             val,
-                            match assignment_operator {
-                                Some(TokenType::Equal) => BooleanAssignmentOperator::Equal,
-                                Some(TokenType::PlusEqual) => panic!("Cannot use += with booleans"),
-                                Some(TokenType::MinusEqual) => {
-                                    panic!("Cannot use -= with booleans")
+                            match self.tokens[assignment_operator].token_type {
+                                TokenType::Equal => BooleanAssignmentOperator::Equal,
+                                _ => {
+                                    self.error.add(ParserErrType::InvalidAssignmentOperator(
+                                        self.tokens[assignment_operator].clone(),
+                                        ValueType::Boolean,
+                                    ));
+                                    return Err(ParserStatus::Unwind);
                                 }
-                                Some(TokenType::StarEqual) => panic!("Cannot use *= with booleans"),
-                                Some(TokenType::SlashEqual) => {
-                                    panic!("Cannot use /= with booleans")
-                                }
-                                _ => panic!("Shouldn't happen"),
                             },
                         ))
                     }
-                    _ => panic!("Type error variable assignment"),
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        self.error
+                            .add(ParserErrType::UnmatchingTypesAssignmentOperatator(
+                                self.tokens[assignment_operator].clone(),
+                                left,
+                                right,
+                            ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
                 }
             }
             _ => Ok(Stmt::Expression(expr)),
@@ -878,22 +909,48 @@ impl Parser {
 
     fn variable_declaration(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("variable_declaration");
-
         self.current += 1;
 
-        let name = match self.consume_token_type() {
-            Some(TokenType::Identifier(name)) => name,
-            other => panic!("Expected variable name, found {:?}", other),
+        let name = match self.current_token() {
+            Some(Token {
+                token_type: TokenType::Identifier(name),
+                ..
+            }) => name.clone(),
+            t => {
+                self.error
+                    .add(ParserErrType::VariableDeclarationExpectedName(
+                        self.previous_token().unwrap().clone(),
+                        t.cloned(),
+                    ));
+                return Err(ParserStatus::Unwind);
+            }
         };
+        self.current += 1;
 
         if let Some(_) = self.value_stack.last().unwrap().get(&name) {
-            panic!("Variable already declared");
+            self.error
+                .add(ParserErrType::VariableDeclarationAlreadyDeclared(
+                    self.previous_token().unwrap().clone(),
+                    name,
+                ));
+            return Err(ParserStatus::Unwind);
         }
 
-        match self.consume_token_type() {
-            Some(TokenType::Equal) => (),
-            _ => panic!("Expected variable equal"),
-        }
+        let equal_pos = match self.current_token() {
+            Some(Token {
+                token_type: TokenType::Equal,
+                ..
+            }) => self.current,
+            t => {
+                self.error
+                    .add(ParserErrType::VariableDeclarationExpectedEqual(
+                        self.previous_token().unwrap().clone(),
+                        t.cloned(),
+                    ));
+                return Err(ParserStatus::Unwind);
+            }
+        };
+        self.current += 1;
 
         let expr = self.equality()?;
 
@@ -935,7 +992,12 @@ impl Parser {
                 Ok(Stmt::BooleanVariableDeclaration(val))
             }
             Expr::None(_) => {
-                panic!("Cannot not assign the value None to variable");
+                self.error
+                    .add(ParserErrType::VariableDeclarationExprEvalNone(
+                        self.tokens[equal_pos].end,
+                        self.tokens[self.current].end,
+                    ));
+                Err(ParserStatus::Unwind)
             }
         }
     }
@@ -969,16 +1031,20 @@ impl Parser {
 
         loop {
             if let Some(TokenType::EqualEqual | TokenType::BangEqual) = self.current_token_type() {
-                let comparator = self.consume_token_type();
+                let comparator = self.current;
+                self.current += 1;
+
                 let right = self.comparision()?;
+
+                let comparator_type = &self.tokens[comparator].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
                         left = Expr::Boolean(BooleanExpr::IntegerBinary {
                             left: Box::new(left_inside),
-                            comparator: match comparator {
-                                Some(TokenType::EqualEqual) => NumericComparision::Equal,
-                                Some(TokenType::BangEqual) => NumericComparision::Inequal,
+                            comparator: match comparator_type {
+                                TokenType::EqualEqual => NumericComparision::Equal,
+                                TokenType::BangEqual => NumericComparision::Inequal,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -987,9 +1053,9 @@ impl Parser {
                     (Expr::Float(left_inside), Expr::Float(right_inside)) => {
                         left = Expr::Boolean(BooleanExpr::FloatBinary {
                             left: Box::new(left_inside),
-                            comparator: match comparator {
-                                Some(TokenType::EqualEqual) => NumericComparision::Equal,
-                                Some(TokenType::BangEqual) => NumericComparision::Inequal,
+                            comparator: match comparator_type {
+                                TokenType::EqualEqual => NumericComparision::Equal,
+                                TokenType::BangEqual => NumericComparision::Inequal,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -998,9 +1064,9 @@ impl Parser {
                     (Expr::String(left_inside), Expr::String(right_inside)) => {
                         left = Expr::Boolean(BooleanExpr::StringBinary {
                             left: Box::new(left_inside),
-                            comparator: match comparator {
-                                Some(TokenType::EqualEqual) => StringComparision::Equal,
-                                Some(TokenType::BangEqual) => StringComparision::Inequal,
+                            comparator: match comparator_type {
+                                TokenType::EqualEqual => StringComparision::Equal,
+                                TokenType::BangEqual => StringComparision::Inequal,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -1009,15 +1075,26 @@ impl Parser {
                     (Expr::Boolean(left_inside), Expr::Boolean(right_inside)) => {
                         left = Expr::Boolean(BooleanExpr::BooleanBinary {
                             left: Box::new(left_inside),
-                            comparator: match comparator {
-                                Some(TokenType::EqualEqual) => BooleanComparision::Equal,
-                                Some(TokenType::BangEqual) => BooleanComparision::Inequal,
+                            comparator: match comparator_type {
+                                TokenType::EqualEqual => BooleanComparision::Equal,
+                                TokenType::BangEqual => BooleanComparision::Inequal,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
                         })
                     }
-                    _ => panic!("Type error comparision"),
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        self.error.add(ParserErrType::ComparisionUnmatchingTypes(
+                            self.tokens[comparator].clone(),
+                            left,
+                            right,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
                 }
             } else {
                 break;
@@ -1037,18 +1114,22 @@ impl Parser {
                 TokenType::MoreEqual | TokenType::LessEqual | TokenType::Less | TokenType::More,
             ) = self.current_token_type()
             {
-                let comparator = self.consume_token_type();
+                let comparator = self.current;
+                self.current += 1;
+
                 let right = self.addsub()?;
+
+                let comparator_type = &self.tokens[comparator].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
                         left = Expr::Boolean(BooleanExpr::IntegerBinary {
                             left: Box::new(left_inside),
-                            comparator: match comparator {
-                                Some(TokenType::MoreEqual) => NumericComparision::MoreEqual,
-                                Some(TokenType::LessEqual) => NumericComparision::LessEqual,
-                                Some(TokenType::More) => NumericComparision::More,
-                                Some(TokenType::Less) => NumericComparision::Less,
+                            comparator: match comparator_type {
+                                TokenType::MoreEqual => NumericComparision::MoreEqual,
+                                TokenType::LessEqual => NumericComparision::LessEqual,
+                                TokenType::More => NumericComparision::More,
+                                TokenType::Less => NumericComparision::Less,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -1057,31 +1138,49 @@ impl Parser {
                     (Expr::Float(left_inside), Expr::Float(right_inside)) => {
                         left = Expr::Boolean(BooleanExpr::FloatBinary {
                             left: Box::new(left_inside),
-                            comparator: match comparator {
-                                Some(TokenType::MoreEqual) => NumericComparision::MoreEqual,
-                                Some(TokenType::LessEqual) => NumericComparision::LessEqual,
-                                Some(TokenType::More) => NumericComparision::More,
-                                Some(TokenType::Less) => NumericComparision::Less,
+                            comparator: match comparator_type {
+                                TokenType::MoreEqual => NumericComparision::MoreEqual,
+                                TokenType::LessEqual => NumericComparision::LessEqual,
+                                TokenType::More => NumericComparision::More,
+                                TokenType::Less => NumericComparision::Less,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
                         })
                     }
-                    (Expr::String(_), Expr::String(_)) => match comparator {
-                        Some(TokenType::MoreEqual) => panic!("Cannot use <= with strings"),
-                        Some(TokenType::LessEqual) => panic!("Cannot use >= with strings"),
-                        Some(TokenType::More) => panic!("Cannot use < with strings"),
-                        Some(TokenType::Less) => panic!("Cannot use > with strings"),
-                        _ => panic!("Unreachable"),
-                    },
-                    (Expr::Boolean(_), Expr::Boolean(_)) => match comparator {
-                        Some(TokenType::MoreEqual) => panic!("Cannot use <= with booleans"),
-                        Some(TokenType::LessEqual) => panic!("Cannot use >= with booleans"),
-                        Some(TokenType::More) => panic!("Cannot use < with booleans"),
-                        Some(TokenType::Less) => panic!("Cannot use > with booleans"),
-                        _ => panic!("Unreachable"),
-                    },
-                    _ => panic!("Type error comparision"),
+                    (Expr::String(_), Expr::String(_)) => {
+                        self.error.add(ParserErrType::ComparisionInvalidForType(
+                            self.tokens[comparator].clone(),
+                            ReturnType::String,
+                        ));
+                        return Err(ParserStatus::Unwind);
+                    }
+                    (Expr::Boolean(_), Expr::Boolean(_)) => {
+                        self.error.add(ParserErrType::ComparisionInvalidForType(
+                            self.tokens[comparator].clone(),
+                            ReturnType::Boolean,
+                        ));
+                        return Err(ParserStatus::Unwind);
+                    }
+                    (Expr::None(_), Expr::None(_)) => {
+                        self.error.add(ParserErrType::ComparisionInvalidForType(
+                            self.tokens[comparator].clone(),
+                            ReturnType::None,
+                        ));
+                        return Err(ParserStatus::Unwind);
+                    }
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        self.error.add(ParserErrType::ComparisionUnmatchingTypes(
+                            self.tokens[comparator].clone(),
+                            left,
+                            right,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
                 }
             } else {
                 break;
@@ -1098,17 +1197,20 @@ impl Parser {
 
         loop {
             if let Some(TokenType::Minus | TokenType::Plus) = self.current_token_type() {
-                let operator = self.consume_token_type();
+                let operator = self.current;
+                self.current += 1;
 
                 let right = self.multdiv()?;
+
+                let operator_type = &self.tokens[operator].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
                         left = Expr::Integer(IntegerExpr::Binary {
                             left: Box::new(left_inside),
-                            operator: match operator {
-                                Some(TokenType::Plus) => NumericOperator::Add,
-                                Some(TokenType::Minus) => NumericOperator::Subtract,
+                            operator: match operator_type {
+                                TokenType::Plus => NumericOperator::Add,
+                                TokenType::Minus => NumericOperator::Subtract,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -1117,9 +1219,9 @@ impl Parser {
                     (Expr::Float(left_inside), Expr::Float(right_inside)) => {
                         left = Expr::Float(FloatExpr::Binary {
                             left: Box::new(left_inside),
-                            operator: match operator {
-                                Some(TokenType::Plus) => NumericOperator::Add,
-                                Some(TokenType::Minus) => NumericOperator::Subtract,
+                            operator: match operator_type {
+                                TokenType::Plus => NumericOperator::Add,
+                                TokenType::Minus => NumericOperator::Subtract,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -1128,18 +1230,48 @@ impl Parser {
                     (Expr::String(left_inside), Expr::String(right_inside)) => {
                         left = Expr::String(StringExpr::Binary {
                             left: Box::new(left_inside),
-                            operator: match operator {
-                                Some(TokenType::Plus) => StringOperator::Add,
-                                Some(TokenType::Minus) => panic!("Cannot subtract strings"),
-                                _ => panic!("Unreachable"),
+                            operator: match operator_type {
+                                TokenType::Plus => StringOperator::Add,
+                                _ => {
+                                    self.error.add(ParserErrType::OperatorInvalidForType(
+                                        self.tokens[operator].clone(),
+                                        ReturnType::String,
+                                    ));
+
+                                    return Err(ParserStatus::Unwind);
+                                }
                             },
                             right: Box::new(right_inside),
                         })
                     }
                     (Expr::Boolean(_), Expr::Boolean(_)) => {
-                        panic!("Cannot do add or subtract booleans")
+                        self.error.add(ParserErrType::OperatorInvalidForType(
+                            self.tokens[operator].clone(),
+                            ReturnType::Boolean,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
                     }
-                    _ => panic!("Type error addsub"),
+                    (Expr::None(_), Expr::None(_)) => {
+                        self.error.add(ParserErrType::OperatorInvalidForType(
+                            self.tokens[operator].clone(),
+                            ReturnType::None,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        self.error.add(ParserErrType::OperatorUnmatchingTypes(
+                            self.tokens[operator].clone(),
+                            left,
+                            right,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
                 }
             } else {
                 break;
@@ -1156,17 +1288,20 @@ impl Parser {
 
         loop {
             if let Some(TokenType::Star | TokenType::Slash) = self.current_token_type() {
-                let operator = self.consume_token_type();
+                let operator = self.current;
+                self.current += 1;
 
                 let right = self.literal()?;
+
+                let operator_type = &self.tokens[operator].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
                         left = Expr::Integer(IntegerExpr::Binary {
                             left: Box::new(left_inside),
-                            operator: match operator {
-                                Some(TokenType::Star) => NumericOperator::Multiply,
-                                Some(TokenType::Slash) => NumericOperator::Divide,
+                            operator: match operator_type {
+                                TokenType::Star => NumericOperator::Multiply,
+                                TokenType::Slash => NumericOperator::Divide,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
@@ -1175,21 +1310,50 @@ impl Parser {
                     (Expr::Float(left_inside), Expr::Float(right_inside)) => {
                         left = Expr::Float(FloatExpr::Binary {
                             left: Box::new(left_inside),
-                            operator: match operator {
-                                Some(TokenType::Star) => NumericOperator::Multiply,
-                                Some(TokenType::Slash) => NumericOperator::Divide,
+                            operator: match operator_type {
+                                TokenType::Star => NumericOperator::Multiply,
+                                TokenType::Slash => NumericOperator::Divide,
                                 _ => panic!("Unreachable"),
                             },
                             right: Box::new(right_inside),
                         })
                     }
                     (Expr::String(_), Expr::String(_)) => {
-                        panic!("Cannot multiply or divide strings")
+                        self.error.add(ParserErrType::OperatorInvalidForType(
+                            self.tokens[operator].clone(),
+                            ReturnType::Boolean,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
                     }
                     (Expr::Boolean(_), Expr::Boolean(_)) => {
-                        panic!("Cannot multiply or divide booleans")
+                        self.error.add(ParserErrType::OperatorInvalidForType(
+                            self.tokens[operator].clone(),
+                            ReturnType::Boolean,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
                     }
-                    _ => panic!("Type error multdiv"),
+                    (Expr::None(_), Expr::None(_)) => {
+                        self.error.add(ParserErrType::OperatorInvalidForType(
+                            self.tokens[operator].clone(),
+                            ReturnType::None,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        self.error.add(ParserErrType::OperatorUnmatchingTypes(
+                            self.tokens[operator].clone(),
+                            left,
+                            right,
+                        ));
+
+                        return Err(ParserStatus::Unwind);
+                    }
                 }
             } else {
                 break;
@@ -1209,15 +1373,41 @@ impl Parser {
             Some(TokenType::Boolean(val)) => Ok(Expr::Boolean(BooleanExpr::Literal(val))),
             Some(TokenType::Identifier(val)) => {
                 if let Some(TokenType::LeftParen) = self.current_token_type() {
-                    self.current += 1;
-                    self.call(val.clone(), None)
+                    // Calling a function declared in this script
+                    self.call(val.clone(), None, self.current)
                 } else if let Some(TokenType::Colon) = self.current_token_type() {
+                    // Calling a function within a module
                     self.current += 1;
-                    if let Some(TokenType::Identifier(name)) = self.consume_token_type() {
-                        self.current += 1;
-                        self.call(name.clone(), Some(val.clone()))
-                    } else {
-                        panic!("Expected an identifier for function within module")
+
+                    match self.tokens.get(self.current) {
+                        Some(Token {
+                            token_type: TokenType::Identifier(name),
+                            ..
+                        }) => {
+                            self.current += 1;
+
+                            // Make sure the left paren is present
+                            match self.tokens.get(self.current) {
+                                Some(Token {
+                                    token_type: TokenType::LeftParen,
+                                    ..
+                                }) => self.call(name.clone(), Some(val.clone()), self.current - 1),
+                                t => {
+                                    self.error.add(ParserErrType::ModuleExpectedLeftParen(
+                                        self.previous_token().unwrap().clone(),
+                                        t.cloned(),
+                                    ));
+                                    Err(ParserStatus::Unwind)
+                                }
+                            }
+                        }
+                        t => {
+                            self.error.add(ParserErrType::ModuleExpectedIdentifier(
+                                self.previous_token().unwrap().clone(),
+                                t.cloned(),
+                            ));
+                            Err(ParserStatus::Unwind)
+                        }
                     }
                 } else {
                     for scope in self.value_stack.iter().rev() {
@@ -1239,15 +1429,31 @@ impl Parser {
                         }
                     }
 
-                    panic!("Variable not found {val}");
+                    self.error.add(ParserErrType::VariableNotFound(
+                        self.tokens[self.current - 1].clone(),
+                        val,
+                    ));
+                    Err(ParserStatus::Unwind)
                 }
             }
-            val => panic!("Expected literal, found {:?}", val),
+            _ => {
+                self.error.add(ParserErrType::ExpectedLiteralVariableCall(
+                    self.tokens[self.current - 2].clone(),
+                    self.tokens.get(self.current - 1).cloned(),
+                ));
+                Err(ParserStatus::Unwind)
+            }
         }
     }
 
-    fn call(&mut self, name: String, module: Option<String>) -> Result<Expr, ParserStatus> {
+    fn call(
+        &mut self,
+        name: String,
+        module: Option<String>,
+        token_pos: usize,
+    ) -> Result<Expr, ParserStatus> {
         debug_information!("call");
+        self.current += 1;
 
         let mut arguments = vec![];
 
@@ -1260,11 +1466,29 @@ impl Parser {
 
                 arguments.push(argument);
 
-                match self.consume_token_type() {
-                    Some(TokenType::Comma) => continue,
-                    Some(TokenType::RightParen) => break,
-                    _ => panic!("Call expected comma or right paren"),
-                }
+                match self.current_token() {
+                    Some(Token {
+                        token_type: TokenType::Comma,
+                        ..
+                    }) => {
+                        self.current += 1;
+                        continue;
+                    }
+                    Some(Token {
+                        token_type: TokenType::RightParen,
+                        ..
+                    }) => {
+                        self.current += 1;
+                        break;
+                    }
+                    t => {
+                        self.error.add(ParserErrType::CallExpectedCommaOrRightParen(
+                            self.tokens[self.current - 1].clone(),
+                            t.cloned(),
+                        ));
+                        return Err(ParserStatus::Unwind);
+                    }
+                };
             },
         }
 
@@ -1272,11 +1496,14 @@ impl Parser {
             match module.as_str() {
                 "cli" => match name.as_str() {
                     "println" => {
-                        if arguments.len() > 1 {
-                            panic!(
-                                "println expected 0 or 1 arguments but was given {}",
-                                arguments.len()
-                            );
+                        if arguments.len() != 1 {
+                            self.error.add(ParserErrType::CallIncorrectArgumentsNum(
+                                self.tokens[token_pos].clone(),
+                                arguments.len(),
+                                1,
+                                "println".to_string(),
+                            ));
+                            return Err(ParserStatus::Unwind);
                         }
                         return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
                             match arguments.pop() {
@@ -1293,13 +1520,27 @@ impl Parser {
                                     CliFunctionNone::PrintLineBoolean(Box::new(arg))
                                 }
                                 None => CliFunctionNone::PrintLine,
-                                _ => panic!("Invalid argument for println"),
+                                _ => {
+                                    self.error.add(ParserErrType::CallArgumentIncorrectType(
+                                        self.tokens[token_pos].clone(),
+                                        1,
+                                        ReturnType::None,
+                                        "println".to_string(),
+                                    ));
+                                    return Err(ParserStatus::Unwind);
+                                }
                             },
                         ))));
                     }
                     "print" => {
                         if arguments.len() != 1 {
-                            panic!("Incorrect amount of arguments for print");
+                            self.error.add(ParserErrType::CallIncorrectArgumentsNum(
+                                self.tokens[token_pos].clone(),
+                                arguments.len(),
+                                1,
+                                "print".to_string(),
+                            ));
+                            return Err(ParserStatus::Unwind);
                         }
                         return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
                             match arguments.pop() {
@@ -1315,52 +1556,76 @@ impl Parser {
                                 Some(Expr::Boolean(arg)) => {
                                     CliFunctionNone::PrintBoolean(Box::new(arg))
                                 }
-                                _ => panic!("Invalid argument for print"),
+                                _ => {
+                                    self.error.add(ParserErrType::CallArgumentIncorrectType(
+                                        self.tokens[token_pos].clone(),
+                                        1,
+                                        ReturnType::None,
+                                        "println".to_string(),
+                                    ));
+                                    return Err(ParserStatus::Unwind);
+                                }
                             },
                         ))));
                     }
                     "prompt" => {
                         if arguments.len() != 1 {
-                            panic!("Incorrect amount of arguments for prompt");
+                            self.error.add(ParserErrType::CallIncorrectArgumentsNum(
+                                self.tokens[token_pos].clone(),
+                                arguments.len(),
+                                1,
+                                "prompt".to_string(),
+                            ));
+                            return Err(ParserStatus::Unwind);
                         }
-                        if let Some(Expr::String(argument)) = arguments.pop() {
-                            return Ok(Expr::String(StringExpr::NativeCall(
-                                NativeFunctionString::Cli(CliFunctionString::Prompt(Box::new(
-                                    argument,
-                                ))),
-                            )));
-                        } else {
-                            panic!("Incorrect argument to prompt");
+                        match arguments.pop() {
+                            Some(Expr::String(argument)) => {
+                                return Ok(Expr::String(StringExpr::NativeCall(
+                                    NativeFunctionString::Cli(CliFunctionString::Prompt(Box::new(
+                                        argument,
+                                    ))),
+                                )));
+                            }
+                            _ => {
+                                self.error.add(ParserErrType::CallArgumentIncorrectType(
+                                    self.tokens[token_pos].clone(),
+                                    1,
+                                    ReturnType::None,
+                                    "prompt".to_string(),
+                                ));
+                                return Err(ParserStatus::Unwind);
+                            }
                         }
                     }
-                    "prompt_int" => {
-                        if arguments.len() != 1 {
-                            panic!("Incorrect amount of arguments for prompt");
-                        }
-                        if let Some(Expr::String(argument)) = arguments.pop() {
-                            return Ok(Expr::Integer(IntegerExpr::NativeCall(
-                                NativeFunctionInteger::Cli(CliFunctionInteger::Prompt(Box::new(
-                                    argument,
-                                ))),
-                            )));
-                        } else {
-                            panic!("Incorrect argument to prompt");
-                        }
+                    name => {
+                        self.error.add(ParserErrType::CallModuleFunctionNotFound(
+                            self.tokens[token_pos].clone(),
+                            name.to_string(),
+                            module,
+                        ));
+                        return Err(ParserStatus::Unwind);
                     }
-                    _ => panic!("Function does not exist inside CLI API"),
                 },
-                module => panic!("Invalid module {module}"),
+                module => {
+                    self.error.add(ParserErrType::CallModuleNotFound(
+                        self.tokens[token_pos - 2].clone(),
+                        module.to_string(),
+                    ));
+                    return Err(ParserStatus::Unwind);
+                }
             }
         }
 
         //Must be a zonkey function
         if let Some(function) = self.function_declarations.get(&name) {
             if arguments.len() != function.parameters.len() {
-                panic!(
-                    "println expected {} arguments but was given {}",
+                self.error.add(ParserErrType::CallIncorrectArgumentsNum(
+                    self.tokens[token_pos - 1].clone(),
+                    arguments.len(),
                     function.parameters.len(),
-                    arguments.len()
-                );
+                    name,
+                ));
+                return Err(ParserStatus::Unwind);
             }
 
             // Check arguments evaluate to the same type as parameters
@@ -1370,42 +1635,94 @@ impl Parser {
                     (Expr::Float(_), ValueType::Float) => (),
                     (Expr::String(_), ValueType::String) => (),
                     (Expr::Boolean(_), ValueType::Boolean) => (),
-                    _ => panic!(
-                        "Argument {} recieves an expression of the wrong type in call",
-                        function.parameters[i].1
-                    ),
+                    (expr, _) => {
+                        let expr_type = self.expr_type(expr);
+
+                        self.error.add(ParserErrType::CallArgumentIncorrectType(
+                            self.tokens[token_pos - 1].clone(),
+                            i,
+                            expr_type,
+                            name.clone(),
+                        ));
+                    }
                 }
             }
 
             match function.return_data_type {
-                Some(ValueType::Integer) => {
+                ReturnType::Integer => {
                     return Ok(Expr::Integer(IntegerExpr::Call(function.id, arguments)))
                 }
-                Some(ValueType::Float) => {
+                ReturnType::Float => {
                     return Ok(Expr::Float(FloatExpr::Call(function.id, arguments)))
                 }
-                Some(ValueType::String) => {
+                ReturnType::String => {
                     return Ok(Expr::String(StringExpr::Call(function.id, arguments)))
                 }
-                Some(ValueType::Boolean) => {
+                ReturnType::Boolean => {
                     return Ok(Expr::Boolean(BooleanExpr::Call(function.id, arguments)))
                 }
-                None => return Ok(Expr::None(NoneExpr::Call(function.id, arguments))),
+                ReturnType::None => return Ok(Expr::None(NoneExpr::Call(function.id, arguments))),
             }
         }
 
-        panic!("Zonkey function has not been declared");
+        self.error.add(ParserErrType::CallFunctionNotFound(
+            self.tokens[token_pos - 1].clone(),
+            name.clone(),
+        ));
+        Err(ParserStatus::Unwind)
     }
 
     fn data_type(&mut self) -> Result<ValueType, Option<Token>> {
         match self.current_token() {
-            Some(Token { token_type: TokenType::IntegerType, .. }) => Ok(ValueType::Integer),
-            Some(Token { token_type: TokenType::FloatType, .. }) => Ok(ValueType::Float),
-            Some(Token { token_type: TokenType::StringType, .. }) => Ok(ValueType::String),
-            Some(Token { token_type: TokenType::BooleanType, .. }) => Ok(ValueType::Boolean),
-            t => {
-                Err(t.cloned())
-            }
+            Some(Token {
+                token_type: TokenType::IntegerType,
+                ..
+            }) => Ok(ValueType::Integer),
+            Some(Token {
+                token_type: TokenType::FloatType,
+                ..
+            }) => Ok(ValueType::Float),
+            Some(Token {
+                token_type: TokenType::StringType,
+                ..
+            }) => Ok(ValueType::String),
+            Some(Token {
+                token_type: TokenType::BooleanType,
+                ..
+            }) => Ok(ValueType::Boolean),
+            t => Err(t.cloned()),
+        }
+    }
+
+    fn return_type(&mut self) -> Result<ReturnType, Option<Token>> {
+        match self.current_token() {
+            Some(Token {
+                token_type: TokenType::IntegerType,
+                ..
+            }) => Ok(ReturnType::Integer),
+            Some(Token {
+                token_type: TokenType::FloatType,
+                ..
+            }) => Ok(ReturnType::Float),
+            Some(Token {
+                token_type: TokenType::StringType,
+                ..
+            }) => Ok(ReturnType::String),
+            Some(Token {
+                token_type: TokenType::BooleanType,
+                ..
+            }) => Ok(ReturnType::Boolean),
+            t => Err(t.cloned()),
+        }
+    }
+
+    fn expr_type(&self, expr: &Expr) -> ReturnType {
+        match expr {
+            Expr::Integer(_) => ReturnType::Integer,
+            Expr::Float(_) => ReturnType::Float,
+            Expr::String(_) => ReturnType::String,
+            Expr::Boolean(_) => ReturnType::Boolean,
+            Expr::None(_) => ReturnType::None,
         }
     }
 }

@@ -10,6 +10,4 @@ start {
 	if (num_plus_one(a)) {
 		cli:println("Successful");
 	}
-
-	&
 }

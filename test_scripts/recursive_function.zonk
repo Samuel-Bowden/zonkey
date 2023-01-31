@@ -7,7 +7,7 @@ function factorial(Integer n) -> Integer {
 }
 
 start {
-	let n = cli:prompt_int("Enter an integer to calculate the factorial of:");
+	let n = 5;
 
 	cli:println(factorial(n));
 }

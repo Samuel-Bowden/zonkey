@@ -1,5 +1,5 @@
-use std::io::Write;
 use interpreter::token::Token;
+use std::io::Write;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
 pub struct ErrReporter<'a> {
@@ -43,8 +43,12 @@ impl<'a> ErrReporter<'a> {
         self.graphemes[position]
     }
 
-    pub fn report_line(&mut self, token: Token) {
-        let (line_num, line_start) = self.find_line(token.start);
+    pub fn report_token(&mut self, token: Token) {
+        self.report_section(token.start, token.end);
+    }
+
+    pub fn report_section(&mut self, start: usize, end: usize) {
+        let (line_num, line_start) = self.find_line(start);
 
         self.stderr
             .set_color(ColorSpec::new().set_fg(Some(Color::Magenta)))
@@ -60,7 +64,7 @@ impl<'a> ErrReporter<'a> {
             match grapheme {
                 Some(&"\n") | None => break,
                 Some(t) => {
-                    if current >= token.start && current < token.end {
+                    if current >= start && current < end {
                         self.stderr
                             .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
                             .unwrap();
@@ -102,7 +106,7 @@ impl<'a> ErrReporter<'a> {
                 token.token_type
             )
             .unwrap();
-            self.report_line(token);
+            self.report_token(token);
         } else {
             writeln!(
                 &mut self.stderr,
@@ -112,16 +116,12 @@ impl<'a> ErrReporter<'a> {
         }
     }
 
-    pub fn give_tip(&mut self, tip: String) {
+    pub fn give_tip(&mut self, tip: &str) {
         self.stderr
             .set_color(ColorSpec::new().set_fg(Some(Color::Green)))
             .unwrap();
 
-        write!(
-            &mut self.stderr,
-            "        Tip: ",
-        )
-        .unwrap();
+        write!(&mut self.stderr, "        Tip: ",).unwrap();
 
         self.stderr.reset().unwrap();
 
