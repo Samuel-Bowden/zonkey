@@ -508,6 +508,32 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
             }
+
+            // Grouping errors
+            ParserErrType::GroupingExpectedRightParen(before, after) => {
+                err_reporter.writeln(
+                    format!(
+                        "Expected ')' after '{}' to end grouping of expression started with '('.",
+                        before.token_type,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+            //
+            
+            // Unary operator errors
+            ParserErrType::UnaryOperatorInvalidForType(token, expr_type) => {
+                err_reporter.writeln(
+                    format!(
+                        "Cannot perform unary operation '{}' on type {:?}.",
+                        token.token_type, expr_type,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(token);
+            }
         }
         err_reporter.newln();
     }

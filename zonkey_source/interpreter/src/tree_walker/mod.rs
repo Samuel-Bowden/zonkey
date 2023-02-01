@@ -9,7 +9,7 @@ use crate::{
         NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
-    stmt::Stmt,
+    stmt::Stmt, unary_operator::{NumericUnaryOperator, BooleanUnaryOperator},
 };
 use numtoa::NumToA;
 use std::io::{stdout, BufWriter, StdoutLock, Write};
@@ -247,6 +247,13 @@ impl<'a> TreeWalker<'a> {
                     left / right
                 }
             },
+            IntegerExpr::Unary(unary_operator, expr) => {
+                match unary_operator {
+                    NumericUnaryOperator::Minus => {
+                        -self.eval_int(expr)
+                    }
+                }
+            }
             IntegerExpr::Variable(id) => self.environment.get_int(*id),
             IntegerExpr::Literal(val) => *val,
             IntegerExpr::Call(id, expressions) => {
@@ -284,6 +291,13 @@ impl<'a> TreeWalker<'a> {
                 NumericOperator::Multiply => self.eval_float(left) * self.eval_float(right),
                 NumericOperator::Divide => self.eval_float(left) / self.eval_float(right),
             },
+            FloatExpr::Unary(unary_operator, expr) => {
+                match unary_operator {
+                    NumericUnaryOperator::Minus => {
+                        -self.eval_float(expr)
+                    }
+                }
+            }
             FloatExpr::Variable(id) => self.environment.get_float(*id),
             FloatExpr::Literal(val) => *val,
             FloatExpr::Call(id, expressions) => {
@@ -406,6 +420,11 @@ impl<'a> TreeWalker<'a> {
                 match TreeWalker::new(self.functions, environment).interpret(&function.start) {
                     TreeWalkerStatus::ReturnBoolean(v) => v,
                     _ => panic!("Function did not return the correct type"),
+                }
+            }
+            BooleanExpr::Unary(unary_operator, expr) => {
+                match unary_operator {
+                    BooleanUnaryOperator::Bang => !self.eval_boolean(expr),
                 }
             }
         }

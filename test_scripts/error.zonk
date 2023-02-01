@@ -1,9 +1,0 @@
-function sayHello(String foo, String bar, Integer count) -> Integer {
-	return 1;
-}
-
-start {
-	let one = 1;
-
-	gui:sayGoodbye("World", 1, "Hello");
-}

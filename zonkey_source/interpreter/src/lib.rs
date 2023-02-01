@@ -21,6 +21,7 @@ mod stmt;
 pub mod token;
 mod tree_walker;
 pub mod value_type;
+mod unary_operator;
 
 pub fn run(source: &Vec<&str>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");

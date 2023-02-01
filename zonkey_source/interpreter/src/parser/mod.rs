@@ -21,7 +21,7 @@ use crate::{
     start::Start,
     stmt::Stmt,
     token::{Token, TokenType},
-    value_type::ValueType,
+    value_type::ValueType, unary_operator::{NumericUnaryOperator, BooleanUnaryOperator},
 };
 use rustc_hash::FxHashMap;
 
@@ -1284,14 +1284,14 @@ impl Parser {
     fn multdiv(&mut self) -> Result<Expr, ParserStatus> {
         debug_information!("multdiv");
 
-        let mut left = self.literal()?;
+        let mut left = self.unary()?;
 
         loop {
             if let Some(TokenType::Star | TokenType::Slash) = self.current_token_type() {
                 let operator = self.current;
                 self.current += 1;
 
-                let right = self.literal()?;
+                let right = self.unary()?;
 
                 let operator_type = &self.tokens[operator].token_type;
 
@@ -1363,6 +1363,50 @@ impl Parser {
         Ok(left)
     }
 
+    fn unary(&mut self) -> Result<Expr, ParserStatus> {
+        if let Some(TokenType::Minus | TokenType::Bang) = self.current_token_type() {
+            let operator_pos = self.current;
+            self.current += 1;
+
+            let unary_expr = self.unary()?;
+
+            let operator_type = &self.tokens[operator_pos].token_type;
+
+            match (operator_type, unary_expr) {
+                (TokenType::Minus, Expr::Integer(expr)) => Ok(Expr::Integer(
+                    IntegerExpr::Unary(
+                        NumericUnaryOperator::Minus,
+                        Box::new(expr),
+                    )
+                )),
+                (TokenType::Minus, Expr::Float(expr)) => Ok(Expr::Float(
+                    FloatExpr::Unary(
+                        NumericUnaryOperator::Minus,
+                        Box::new(expr),
+                    )
+                )),
+                (TokenType::Bang, Expr::Boolean(expr)) => Ok(Expr::Boolean(
+                    BooleanExpr::Unary(
+                        BooleanUnaryOperator::Bang,
+                        Box::new(expr),
+                    )
+                )),
+                (_, expr) => {
+                    let expr_type = self.expr_type(&expr);
+
+                    self.error.add(ParserErrType::UnaryOperatorInvalidForType(
+                        self.tokens[operator_pos].clone(),
+                        expr_type,
+                    ));
+
+                    Err(ParserStatus::Unwind)
+                }
+            }
+        } else {
+            self.literal()
+        }
+    }
+
     fn literal(&mut self) -> Result<Expr, ParserStatus> {
         debug_information!("literal");
 
@@ -1371,6 +1415,28 @@ impl Parser {
             Some(TokenType::Float(val)) => Ok(Expr::Float(FloatExpr::Literal(val))),
             Some(TokenType::String(val)) => Ok(Expr::String(StringExpr::Literal(val))),
             Some(TokenType::Boolean(val)) => Ok(Expr::Boolean(BooleanExpr::Literal(val))),
+            Some(TokenType::LeftParen) => {
+                let left_paren_pos = self.current - 1;
+                
+                let expression = self.equality()?;
+
+                match self.current_token() {
+                    Some(Token {
+                        token_type: TokenType::RightParen,
+                        ..
+                    }) => {
+                        self.current += 1;
+                        Ok(expression)
+                    }
+                    t => {
+                        self.error.add(ParserErrType::GroupingExpectedRightParen(
+                            self.tokens[left_paren_pos].clone(),
+                            t.cloned(),
+                        ));
+                        return Err(ParserStatus::End);
+                    }
+                }
+            }
             Some(TokenType::Identifier(val)) => {
                 if let Some(TokenType::LeftParen) = self.current_token_type() {
                     // Calling a function declared in this script

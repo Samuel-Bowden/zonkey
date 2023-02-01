@@ -19,7 +19,8 @@ equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
-literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER | call;
+unary -> ("-" | "!") unary | literal;
+literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER | call | "(" equality ")";
 call -> (IDENTIFIER "::")? IDENTIFIER "(" equality ("," equality)* ")";
 block -> "{" local_declaration* "}"
 if_statement -> "if" "(" equality ")" block ("else" block)?; 

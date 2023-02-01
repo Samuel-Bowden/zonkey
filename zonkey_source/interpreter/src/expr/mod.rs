@@ -1,7 +1,7 @@
 use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     native_function::{NativeFunctionNone, NativeFunctionString},
-    operator::{NumericOperator, StringOperator},
+    operator::{NumericOperator, StringOperator}, unary_operator::{NumericUnaryOperator, BooleanUnaryOperator},
 };
 
 #[derive(Debug)]
@@ -22,6 +22,7 @@ pub enum IntegerExpr {
     },
     Literal(i64),
     Variable(usize),
+    Unary(NumericUnaryOperator, Box<IntegerExpr>),
     Call(usize, Vec<Expr>),
 }
 
@@ -34,6 +35,7 @@ pub enum FloatExpr {
     },
     Literal(f64),
     Variable(usize),
+    Unary(NumericUnaryOperator, Box<FloatExpr>),
     Call(usize, Vec<Expr>),
 }
 
@@ -74,6 +76,7 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
+    Unary(BooleanUnaryOperator, Box<BooleanExpr>),
     Call(usize, Vec<Expr>),
 }
 

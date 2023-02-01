@@ -93,4 +93,10 @@ pub enum ParserErrType {
     // Module errors
     ModuleExpectedIdentifier(Token, Option<Token>),
     ModuleExpectedLeftParen(Token, Option<Token>),
+
+    // Grouping errors
+    GroupingExpectedRightParen(Token, Option<Token>),
+
+    // Unary operator errors
+    UnaryOperatorInvalidForType(Token, ReturnType),
 }
