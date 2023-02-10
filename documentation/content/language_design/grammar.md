@@ -1,11 +1,10 @@
 ---
 title: "Grammar"
-weight: 16
+weight: 1
 ---
 
 This is the current grammar that I'm implementing in the parser, which is a subset of the language. It uses the notation defined in Crafting Interpreters.
 
-Grammar
 ```grammar
 program -> global_declaration*;
 global_declaration -> function_declaration | start_declaration;
@@ -15,6 +14,8 @@ terminated_statement -> (expression_statement | return_statement | "break" | "co
 expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
 variable_declaration = "let" IDENTIFIER "=" expression; 
 terminated_variable_declaration = variable_declaration ";";
+expression -> cast;
+cast -> data_type? equality;
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;

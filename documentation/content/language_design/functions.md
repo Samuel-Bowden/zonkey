@@ -1,6 +1,6 @@
 ---
 title: "Functions"
-weight: 5
+weight: 7
 ---
 
 ```zonkey
@@ -12,7 +12,7 @@ start() {
 	let power = 30.0;
 	let time = 60.0;
 
-	cli::println(energy(power, time));
+	cli:println(energy(power, time));
 }
 ```
 

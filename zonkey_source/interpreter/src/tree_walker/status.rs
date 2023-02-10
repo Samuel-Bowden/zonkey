@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum TreeWalkerStatus {
     Ok,
     Continue,

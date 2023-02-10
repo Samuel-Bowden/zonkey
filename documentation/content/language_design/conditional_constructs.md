@@ -1,6 +1,6 @@
 ---
 title: "Conditional Constructs"
-weight: 8
+weight: 9
 ---
 
 ## If-else statements
@@ -12,13 +12,13 @@ The if-else syntax is very similar to what is found in other languages. Conditio
 let choice = 1;
 
 if (choice == 1) {
-	cli::println("First choice");
+	cli:println("First choice");
 }
 else if (choice == 2) {
-	cli::println("Second choice");
+	cli:println("Second choice");
 }
 else {
-	cli::println("Invalid choice");
+	cli:println("Invalid choice");
 }
 ...
 ```

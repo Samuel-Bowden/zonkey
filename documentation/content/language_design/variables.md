@@ -1,16 +1,18 @@
 ---
 title: "Variables"
-weight: 3
+weight: 2
 ---
 
 Variables are initialised with "let" and an identifier. Variables must be initialised by the programmer.
 
-Types are inferred.
+Types are inferred. Available types are explained in the next section.
 
 ```zonkey
-let a = 5;
-let b = 0;
-cli::println("Sum: " + (a+b));
+start {
+	let a = 5;
+	let b = 0;
+	cli:println("Sum: " + (String a+b));
+}
 ```
 
 ```output
@@ -21,14 +23,19 @@ Sum: 5
 If a programmer does not initialise a variable, the program will refuse to execute.
 
 ```zonkey
-let a = 5;
-let b;
-cli::println("Sum: " + (a+b));
+start {
+	let a = 5;
+	let b;
+}
 ```
 
 ```output
 $ zonkey incorrect-variables.zonk
-Error on line 2: b has not been initialised with a value
+(ERROR) Expected '=' after 'b' to assign a value to the declared variable.
+	3 | 	let b;
+        But the next token was ';'.
+	3 | 	let b;
+        Tip: All variables must be assigned a value when they are declared.
 ```
 
 Variables can be assigned with following syntax:

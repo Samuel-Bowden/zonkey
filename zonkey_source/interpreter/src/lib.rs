@@ -20,8 +20,8 @@ mod start;
 mod stmt;
 pub mod token;
 mod tree_walker;
-pub mod value_type;
 mod unary_operator;
+pub mod value_type;
 
 pub fn run(source: &Vec<&str>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");
@@ -30,7 +30,7 @@ pub fn run(source: &Vec<&str>) -> Result<(), InterpreterErr> {
 
     let (start, functions) = run_parser(tokens)?;
 
-    run_tree_walker(start, functions);
+    run_tree_walker(start, functions)?;
 
     Ok(())
 }
@@ -61,10 +61,13 @@ fn run_parser(tokens: Vec<Token>) -> Result<(Stmt, Vec<Function>), InterpreterEr
     }
 }
 
-fn run_tree_walker(start: Stmt, functions: Vec<Function>) {
+fn run_tree_walker(start: Stmt, functions: Vec<Function>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Starting tree walker");
 
     let environment = Environment::new();
 
-    TreeWalker::new(&functions, environment).interpret(&start);
+    match TreeWalker::new(&functions, environment).interpret(&start) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
+    }
 }

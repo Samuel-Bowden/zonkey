@@ -1,6 +1,6 @@
 ---
 title: "Comments"
-weight: 4
+weight: 5
 ---
 
 Comments in Zonkey are inspired by Python and are preceded by ‘#’.
@@ -8,7 +8,7 @@ Comments in Zonkey are inspired by Python and are preceded by ‘#’.
 ```zonkey
 ...
 # Say hi in Japanese
-cli::println("やあ");
+cli:println("やあ");
 ...
 ```
 

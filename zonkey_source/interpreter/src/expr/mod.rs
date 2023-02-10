@@ -1,7 +1,8 @@
 use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     native_function::{NativeFunctionNone, NativeFunctionString},
-    operator::{NumericOperator, StringOperator}, unary_operator::{NumericUnaryOperator, BooleanUnaryOperator},
+    operator::{NumericOperator, StringOperator},
+    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
 };
 
 #[derive(Debug)]
@@ -22,6 +23,9 @@ pub enum IntegerExpr {
     },
     Literal(i64),
     Variable(usize),
+    FloatCast(Box<FloatExpr>),
+    BooleanCast(Box<BooleanExpr>),
+    StringCast(Box<StringExpr>),
     Unary(NumericUnaryOperator, Box<IntegerExpr>),
     Call(usize, Vec<Expr>),
 }
@@ -35,6 +39,9 @@ pub enum FloatExpr {
     },
     Literal(f64),
     Variable(usize),
+    IntegerCast(Box<IntegerExpr>),
+    BooleanCast(Box<BooleanExpr>),
+    StringCast(Box<StringExpr>),
     Unary(NumericUnaryOperator, Box<FloatExpr>),
     Call(usize, Vec<Expr>),
 }
@@ -48,6 +55,9 @@ pub enum StringExpr {
     },
     Literal(String),
     Variable(usize),
+    IntegerCast(Box<IntegerExpr>),
+    FloatCast(Box<FloatExpr>),
+    BooleanCast(Box<BooleanExpr>),
     NativeCall(NativeFunctionString),
     Call(usize, Vec<Expr>),
 }
@@ -76,6 +86,9 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
+    IntegerCast(Box<IntegerExpr>),
+    FloatCast(Box<FloatExpr>),
+    StringCast(Box<StringExpr>),
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
     Call(usize, Vec<Expr>),
 }

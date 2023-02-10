@@ -99,4 +99,8 @@ pub enum ParserErrType {
 
     // Unary operator errors
     UnaryOperatorInvalidForType(Token, ReturnType),
+
+    // Casting errors
+    CastNotPossible(Token, ReturnType, ReturnType),
+    CastPointless(Token, ReturnType),
 }

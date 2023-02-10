@@ -1,6 +1,6 @@
 ---
 title: "Arrays"
-weight: 14
+weight: 12
 ---
 
 ```zonkey

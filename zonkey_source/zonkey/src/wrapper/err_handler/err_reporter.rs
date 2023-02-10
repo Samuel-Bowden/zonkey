@@ -31,6 +31,14 @@ impl<'a> ErrReporter<'a> {
         self.stderr.reset().unwrap();
     }
 
+    pub fn uncaught_exception_prefix(&mut self) {
+        self.stderr
+            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
+            .unwrap();
+        write!(&mut self.stderr, "(UNCAUGHT EXCEPTION) ").unwrap();
+        self.stderr.reset().unwrap();
+    }
+
     pub fn writeln(&mut self, line: &str) {
         writeln!(&mut self.stderr, "{line}").unwrap();
     }

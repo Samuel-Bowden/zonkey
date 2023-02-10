@@ -21,7 +21,8 @@ use crate::{
     start::Start,
     stmt::Stmt,
     token::{Token, TokenType},
-    value_type::ValueType, unary_operator::{NumericUnaryOperator, BooleanUnaryOperator},
+    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
+    value_type::ValueType,
 };
 use rustc_hash::FxHashMap;
 
@@ -62,40 +63,12 @@ impl Parser {
         self.current >= self.tokens.len()
     }
 
-    fn current_token(&self) -> Option<&Token> {
-        let token = if let Some(t) = self.tokens.get(self.current) {
-            Some(t)
-        } else {
-            None
-        };
-        token
-    }
-
     fn current_token_type(&self) -> Option<&TokenType> {
         if let Some(t) = self.tokens.get(self.current) {
             Some(&t.token_type)
         } else {
             None
         }
-    }
-
-    fn consume_token_type(&mut self) -> Option<TokenType> {
-        self.current += 1;
-        let token = if let Some(t) = self.tokens.get(self.current - 1) {
-            Some(t.token_type.clone())
-        } else {
-            None
-        };
-        token
-    }
-
-    fn previous_token(&self) -> Option<&Token> {
-        let token = if let Some(t) = self.tokens.get(self.current - 1) {
-            Some(t)
-        } else {
-            None
-        };
-        token
     }
 
     pub fn run(mut self) -> Result<(Stmt, Vec<Function>), ParserErr> {
@@ -127,19 +100,16 @@ impl Parser {
         while !self.is_at_end() {
             match self.global_declaration() {
                 Ok(()) => (),
-                Err(ParserStatus::Unwind) => {
-                    // Attempt to synchronise
-                    loop {
-                        if let Some(TokenType::Start | TokenType::Function) | None =
-                            self.current_token_type()
-                        {
-                            break;
-                        }
-
-                        self.current += 1;
+                // Synchronise on both end and unwind errors in global scope
+                Err(_) => loop {
+                    if let Some(TokenType::Start | TokenType::Function) | None =
+                        self.current_token_type()
+                    {
+                        break;
                     }
-                }
-                Err(ParserStatus::End) => break,
+
+                    self.current += 1;
+                },
             };
         }
     }
@@ -147,7 +117,7 @@ impl Parser {
     fn global_declaration(&mut self) -> Result<(), ParserStatus> {
         debug_information!("global_declaration");
 
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::Start,
                 ..
@@ -169,7 +139,7 @@ impl Parser {
     fn start_declaration(&mut self) -> Result<(), ParserStatus> {
         debug_information!("start_declaration");
 
-        let start_token = self.current_token().unwrap().clone();
+        let start_token = self.tokens[self.current].clone();
         self.current += 1;
 
         // Add start value scope
@@ -212,10 +182,10 @@ impl Parser {
         debug_information!("function_declaration");
 
         // First stage - parse function
-        let function_token = self.current_token().unwrap().clone();
+        let function_token_pos = self.current;
         self.current += 1;
 
-        let function_name = match self.current_token() {
+        let function_name = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::Identifier(name),
                 ..
@@ -223,7 +193,7 @@ impl Parser {
             t => {
                 self.error
                     .add(ParserErrType::FunctionDeclarationExpectedName(
-                        function_token,
+                        self.tokens[function_token_pos].clone(),
                         t.cloned(),
                     ));
                 return Err(ParserStatus::Unwind);
@@ -231,7 +201,7 @@ impl Parser {
         };
         self.current += 1;
 
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::LeftParen,
                 start,
@@ -240,7 +210,7 @@ impl Parser {
             t => {
                 self.error
                     .add(ParserErrType::FunctionDeclarationExpectedLeftParen(
-                        self.previous_token().unwrap().clone(),
+                        self.tokens[self.current - 1].clone(),
                         t.cloned(),
                     ));
                 return Err(ParserStatus::Unwind);
@@ -261,7 +231,7 @@ impl Parser {
                     Err(t) => {
                         self.error
                             .add(ParserErrType::FunctionDeclarationExpectedParameterType(
-                                self.previous_token().unwrap().clone(),
+                                self.tokens[self.current - 1].clone(),
                                 t,
                             ));
                         return Err(ParserStatus::Unwind);
@@ -269,7 +239,7 @@ impl Parser {
                 };
                 self.current += 1;
 
-                let parameter_name = match self.current_token() {
+                let parameter_name = match self.tokens.get(self.current) {
                     Some(Token {
                         token_type: TokenType::Identifier(name),
                         ..
@@ -277,7 +247,7 @@ impl Parser {
                     t => {
                         self.error
                             .add(ParserErrType::FunctionDeclarationExpectedParameterName(
-                                function_token,
+                                self.tokens[function_token_pos].clone(),
                                 t.cloned(),
                             ));
                         return Err(ParserStatus::Unwind);
@@ -287,7 +257,7 @@ impl Parser {
 
                 parameters.push((parameter_data_type, parameter_name));
 
-                match self.current_token() {
+                match self.tokens.get(self.current) {
                     Some(Token {
                         token_type: TokenType::Comma,
                         ..
@@ -305,7 +275,7 @@ impl Parser {
                     t => {
                         self.error.add(
                             ParserErrType::FunctionDeclarationExpectedCommaOrRightParen(
-                                function_token,
+                                self.tokens[function_token_pos].clone(),
                                 t.cloned(),
                             ),
                         );
@@ -327,7 +297,7 @@ impl Parser {
                 Err(t) => {
                     self.error
                         .add(ParserErrType::FunctionDeclarationExpectedReturnType(
-                            self.previous_token().unwrap().clone(),
+                            self.tokens[self.current - 1].clone(),
                             t,
                         ));
                     return Err(ParserStatus::Unwind);
@@ -451,7 +421,7 @@ impl Parser {
             _ => self.expression_statement()?,
         };
 
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::SemiColon,
                 ..
@@ -460,7 +430,7 @@ impl Parser {
                 return Ok(statement);
             }
             t => self.error.add(ParserErrType::UnterminatedStatement(
-                self.previous_token().unwrap().clone(),
+                self.tokens[self.current - 1].clone(),
                 t.cloned(),
             )),
         }
@@ -483,12 +453,12 @@ impl Parser {
             return Err(ParserStatus::Unwind);
         };
 
-        let equality = match self.current_token_type() {
+        let expression = match self.current_token_type() {
             Some(TokenType::SemiColon) => None,
-            _ => Some(self.equality()?),
+            _ => Some(self.expression()?),
         };
 
-        Ok(Stmt::Return(match (function_ret_type, equality) {
+        Ok(Stmt::Return(match (function_ret_type, expression) {
             (ReturnType::Integer, Some(Expr::Integer(expr))) => Some(Expr::Integer(expr)),
             (ReturnType::Float, Some(Expr::Float(expr))) => Some(Expr::Float(expr)),
             (ReturnType::String, Some(Expr::String(expr))) => Some(Expr::String(expr)),
@@ -518,7 +488,7 @@ impl Parser {
     fn if_statement(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("if_statement");
 
-        let left_paren = match self.current_token() {
+        let left_paren = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::LeftParen,
                 start,
@@ -526,17 +496,17 @@ impl Parser {
             }) => *start,
             t => {
                 self.error.add(ParserErrType::IfExpectedLeftParen(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
-                return Err(ParserStatus::End);
+                return Err(ParserStatus::Unwind);
             }
         };
         self.current += 1;
 
-        let expression = self.equality()?;
+        let expression = self.expression()?;
 
-        let right_paren = match self.current_token() {
+        let right_paren = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::RightParen,
                 end,
@@ -544,10 +514,10 @@ impl Parser {
             }) => *end,
             t => {
                 self.error.add(ParserErrType::IfExpectedRightParen(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
-                return Err(ParserStatus::End);
+                return Err(ParserStatus::Unwind);
             }
         };
 
@@ -581,7 +551,7 @@ impl Parser {
     fn while_statement(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("while_statement");
 
-        let left_paren = match self.current_token() {
+        let left_paren = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::LeftParen,
                 start,
@@ -589,18 +559,18 @@ impl Parser {
             }) => *start,
             t => {
                 self.error.add(ParserErrType::WhileExpectedLeftParen(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
-                return Err(ParserStatus::End);
+                return Err(ParserStatus::Unwind);
             }
         };
 
         self.current += 1;
 
-        let expression = self.equality()?;
+        let expression = self.expression()?;
 
-        let right_paren = match self.current_token() {
+        let right_paren = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::RightParen,
                 end,
@@ -608,10 +578,10 @@ impl Parser {
             }) => *end,
             t => {
                 self.error.add(ParserErrType::WhileExpectedRightParen(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
-                return Err(ParserStatus::End);
+                return Err(ParserStatus::Unwind);
             }
         };
 
@@ -636,7 +606,7 @@ impl Parser {
     fn for_statement(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("for_statement");
 
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::LeftParen,
                 ..
@@ -645,10 +615,10 @@ impl Parser {
             }
             t => {
                 self.error.add(ParserErrType::ForExpectedLeftParen(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
-                return Err(ParserStatus::End);
+                return Err(ParserStatus::Unwind);
             }
         };
 
@@ -658,9 +628,14 @@ impl Parser {
         let string_point = self.string_next_id;
         let boolean_point = self.boolean_next_id;
 
-        let initialiser_statement = self.variable_declaration()?;
+        // Abort parsing when there are errors parsing the parameters, as a block has been
+        // added and it will be very difficult to synchronise.
+        let initialiser_statement = match self.variable_declaration() {
+            Ok(is) => is,
+            Err(_) => return Err(ParserStatus::End),
+        };
 
-        let test_statement_start = match self.current_token() {
+        let test_statement_start = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::Comma,
                 end,
@@ -668,7 +643,7 @@ impl Parser {
             }) => *end,
             t => {
                 self.error.add(ParserErrType::ForExpectedComma1(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
                 return Err(ParserStatus::End);
@@ -676,9 +651,12 @@ impl Parser {
         };
         self.current += 1;
 
-        let test_statement = self.equality()?;
+        let test_statement = match self.expression() {
+            Ok(ts) => ts,
+            Err(_) => return Err(ParserStatus::End),
+        };
 
-        let test_statement_end = match self.current_token() {
+        let test_statement_end = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::Comma,
                 start,
@@ -686,7 +664,7 @@ impl Parser {
             }) => *start,
             t => {
                 self.error.add(ParserErrType::ForExpectedComma2(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
                 return Err(ParserStatus::End);
@@ -705,9 +683,12 @@ impl Parser {
             BooleanExpr::Literal(false)
         };
 
-        let update_statement = self.expression_statement()?;
+        let update_statement = match self.expression_statement() {
+            Ok(us) => us,
+            Err(_) => return Err(ParserStatus::End),
+        };
 
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::RightParen,
                 ..
@@ -716,7 +697,7 @@ impl Parser {
             }
             t => {
                 self.error.add(ParserErrType::ForExpectedRightParen(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
                 return Err(ParserStatus::End);
@@ -756,14 +737,14 @@ impl Parser {
     fn block(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("block");
 
-        let open_brace_pos = match self.current_token() {
+        let open_brace_pos = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::LeftBrace,
                 ..
             }) => self.current,
             t => {
                 self.error.add(ParserErrType::BlockExpectedLeftBrace(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     t.cloned(),
                 ));
                 return Err(ParserStatus::Unwind);
@@ -795,11 +776,59 @@ impl Parser {
                         (integer_point, float_point, string_point, boolean_point),
                     ));
                 }
-                Some(_) => statements.push(self.local_declaration()?),
+                Some(_) => {
+                    match self.local_declaration() {
+                        Ok(s) => statements.push(s),
+                        Err(ParserStatus::Unwind) => {
+                            // Best effort to synchronise on the end or start of statements
+                            let mut braces_seen = 0;
+
+                            loop {
+                                match self.current_token_type() {
+                                    // Statement end
+                                    Some(TokenType::SemiColon) => {
+                                        if braces_seen == 0 {
+                                            self.current += 1;
+                                            break;
+                                        }
+                                    }
+                                    // Statement start
+                                    Some(
+                                        TokenType::Let
+                                        | TokenType::Identifier(_)
+                                        | TokenType::If
+                                        | TokenType::For
+                                        | TokenType::Return
+                                        | TokenType::Loop
+                                        | TokenType::While,
+                                    ) => {
+                                        if braces_seen == 0 {
+                                            break;
+                                        }
+                                    }
+                                    Some(TokenType::RightBrace) => {
+                                        if braces_seen == 0 {
+                                            break;
+                                        } else {
+                                            braces_seen -= 1;
+                                        }
+                                    }
+                                    Some(TokenType::LeftBrace) => {
+                                        braces_seen += 1;
+                                    }
+                                    _ => (),
+                                }
+
+                                self.current += 1;
+                            }
+                        }
+                        Err(ParserStatus::End) => return Err(ParserStatus::End),
+                    }
+                }
                 None => {
                     self.error.add(ParserErrType::BlockExpectedRightBrace(
                         self.tokens[open_brace_pos].clone(),
-                        self.previous_token().unwrap().clone(),
+                        self.tokens[self.current - 1].clone(),
                     ));
 
                     return Err(ParserStatus::End);
@@ -811,7 +840,7 @@ impl Parser {
     fn expression_statement(&mut self) -> Result<Stmt, ParserStatus> {
         debug_information!("expression_statement");
 
-        let expr = self.equality()?;
+        let expr = self.expression()?;
 
         match self.current_token_type() {
             Some(
@@ -824,7 +853,7 @@ impl Parser {
                 let assignment_operator = self.current;
                 self.current += 1;
 
-                let value = self.equality()?;
+                let value = self.expression()?;
 
                 match (expr, value) {
                     (Expr::Integer(IntegerExpr::Variable(id)), Expr::Integer(val)) => {
@@ -911,7 +940,7 @@ impl Parser {
         debug_information!("variable_declaration");
         self.current += 1;
 
-        let name = match self.current_token() {
+        let name = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::Identifier(name),
                 ..
@@ -919,7 +948,7 @@ impl Parser {
             t => {
                 self.error
                     .add(ParserErrType::VariableDeclarationExpectedName(
-                        self.previous_token().unwrap().clone(),
+                        self.tokens[self.current - 1].clone(),
                         t.cloned(),
                     ));
                 return Err(ParserStatus::Unwind);
@@ -930,13 +959,13 @@ impl Parser {
         if let Some(_) = self.value_stack.last().unwrap().get(&name) {
             self.error
                 .add(ParserErrType::VariableDeclarationAlreadyDeclared(
-                    self.previous_token().unwrap().clone(),
+                    self.tokens[self.current - 1].clone(),
                     name,
                 ));
             return Err(ParserStatus::Unwind);
         }
 
-        let equal_pos = match self.current_token() {
+        let equal_pos = match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::Equal,
                 ..
@@ -944,7 +973,7 @@ impl Parser {
             t => {
                 self.error
                     .add(ParserErrType::VariableDeclarationExpectedEqual(
-                        self.previous_token().unwrap().clone(),
+                        self.tokens[self.current - 1].clone(),
                         t.cloned(),
                     ));
                 return Err(ParserStatus::Unwind);
@@ -952,7 +981,7 @@ impl Parser {
         };
         self.current += 1;
 
-        let expr = self.equality()?;
+        let expr = self.expression()?;
 
         match expr {
             Expr::Integer(val) => {
@@ -1007,7 +1036,7 @@ impl Parser {
 
         let variable_declaration = self.variable_declaration()?;
 
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::SemiColon,
                 ..
@@ -1016,12 +1045,153 @@ impl Parser {
                 return Ok(variable_declaration);
             }
             t => self.error.add(ParserErrType::UnterminatedStatement(
-                self.previous_token().unwrap().clone(),
+                self.tokens[self.current - 1].clone(),
                 t.cloned(),
             )),
         }
 
-        Err(ParserStatus::End)
+        Err(ParserStatus::Unwind)
+    }
+
+    fn expression(&mut self) -> Result<Expr, ParserStatus> {
+        debug_information!("expression");
+        self.cast()
+    }
+
+    fn cast(&mut self) -> Result<Expr, ParserStatus> {
+        debug_information!("cast");
+
+        match self.current_token_type() {
+            Some(TokenType::IntegerType) => {
+                let integer_type_pos = self.current;
+                self.current += 1;
+
+                let expression = self.expression()?;
+
+                match expression {
+                    Expr::Integer(expr) => {
+                        self.error.add(ParserErrType::CastPointless(
+                            self.tokens[integer_type_pos].clone(),
+                            ReturnType::Integer,
+                        ));
+
+                        Ok(Expr::Integer(expr))
+                    }
+                    Expr::Float(expr) => Ok(Expr::Integer(IntegerExpr::FloatCast(Box::new(expr)))),
+                    Expr::Boolean(expr) => {
+                        Ok(Expr::Integer(IntegerExpr::BooleanCast(Box::new(expr))))
+                    }
+                    Expr::String(expr) => {
+                        Ok(Expr::Integer(IntegerExpr::StringCast(Box::new(expr))))
+                    }
+                    expr => {
+                        self.error.add(ParserErrType::CastNotPossible(
+                            self.tokens[integer_type_pos].clone(),
+                            ReturnType::Integer,
+                            self.expr_type(&expr),
+                        ));
+
+                        Err(ParserStatus::Unwind)
+                    }
+                }
+            }
+            Some(TokenType::FloatType) => {
+                let float_type_pos = self.current;
+                self.current += 1;
+
+                let expression = self.expression()?;
+
+                match expression {
+                    Expr::Float(expr) => {
+                        self.error.add(ParserErrType::CastPointless(
+                            self.tokens[float_type_pos].clone(),
+                            ReturnType::Float,
+                        ));
+
+                        Ok(Expr::Float(expr))
+                    }
+                    Expr::Integer(expr) => Ok(Expr::Float(FloatExpr::IntegerCast(Box::new(expr)))),
+                    Expr::Boolean(expr) => Ok(Expr::Float(FloatExpr::BooleanCast(Box::new(expr)))),
+                    Expr::String(expr) => Ok(Expr::Float(FloatExpr::StringCast(Box::new(expr)))),
+                    expr => {
+                        self.error.add(ParserErrType::CastNotPossible(
+                            self.tokens[float_type_pos].clone(),
+                            ReturnType::Float,
+                            self.expr_type(&expr),
+                        ));
+
+                        Err(ParserStatus::Unwind)
+                    }
+                }
+            }
+            Some(TokenType::StringType) => {
+                let string_type_pos = self.current;
+                self.current += 1;
+
+                let expression = self.expression()?;
+
+                match expression {
+                    Expr::String(expr) => {
+                        self.error.add(ParserErrType::CastPointless(
+                            self.tokens[string_type_pos].clone(),
+                            ReturnType::String,
+                        ));
+
+                        Ok(Expr::String(expr))
+                    }
+                    Expr::Integer(expr) => {
+                        Ok(Expr::String(StringExpr::IntegerCast(Box::new(expr))))
+                    }
+                    Expr::Float(expr) => Ok(Expr::String(StringExpr::FloatCast(Box::new(expr)))),
+                    Expr::Boolean(expr) => {
+                        Ok(Expr::String(StringExpr::BooleanCast(Box::new(expr))))
+                    }
+                    expr => {
+                        self.error.add(ParserErrType::CastNotPossible(
+                            self.tokens[string_type_pos].clone(),
+                            ReturnType::String,
+                            self.expr_type(&expr),
+                        ));
+
+                        Err(ParserStatus::Unwind)
+                    }
+                }
+            }
+            Some(TokenType::BooleanType) => {
+                let boolean_type_pos = self.current;
+                self.current += 1;
+
+                let expression = self.expression()?;
+
+                match expression {
+                    Expr::Boolean(expr) => {
+                        self.error.add(ParserErrType::CastPointless(
+                            self.tokens[boolean_type_pos].clone(),
+                            ReturnType::Boolean,
+                        ));
+
+                        Ok(Expr::Boolean(expr))
+                    }
+                    Expr::Integer(expr) => {
+                        Ok(Expr::Boolean(BooleanExpr::IntegerCast(Box::new(expr))))
+                    }
+                    Expr::Float(expr) => Ok(Expr::Boolean(BooleanExpr::FloatCast(Box::new(expr)))),
+                    Expr::String(expr) => {
+                        Ok(Expr::Boolean(BooleanExpr::StringCast(Box::new(expr))))
+                    }
+                    expr => {
+                        self.error.add(ParserErrType::CastNotPossible(
+                            self.tokens[boolean_type_pos].clone(),
+                            ReturnType::Boolean,
+                            self.expr_type(&expr),
+                        ));
+
+                        Err(ParserStatus::Unwind)
+                    }
+                }
+            }
+            _ => self.equality(),
+        }
     }
 
     fn equality(&mut self) -> Result<Expr, ParserStatus> {
@@ -1373,24 +1543,18 @@ impl Parser {
             let operator_type = &self.tokens[operator_pos].token_type;
 
             match (operator_type, unary_expr) {
-                (TokenType::Minus, Expr::Integer(expr)) => Ok(Expr::Integer(
-                    IntegerExpr::Unary(
-                        NumericUnaryOperator::Minus,
-                        Box::new(expr),
-                    )
-                )),
-                (TokenType::Minus, Expr::Float(expr)) => Ok(Expr::Float(
-                    FloatExpr::Unary(
-                        NumericUnaryOperator::Minus,
-                        Box::new(expr),
-                    )
-                )),
-                (TokenType::Bang, Expr::Boolean(expr)) => Ok(Expr::Boolean(
-                    BooleanExpr::Unary(
-                        BooleanUnaryOperator::Bang,
-                        Box::new(expr),
-                    )
-                )),
+                (TokenType::Minus, Expr::Integer(expr)) => Ok(Expr::Integer(IntegerExpr::Unary(
+                    NumericUnaryOperator::Minus,
+                    Box::new(expr),
+                ))),
+                (TokenType::Minus, Expr::Float(expr)) => Ok(Expr::Float(FloatExpr::Unary(
+                    NumericUnaryOperator::Minus,
+                    Box::new(expr),
+                ))),
+                (TokenType::Bang, Expr::Boolean(expr)) => Ok(Expr::Boolean(BooleanExpr::Unary(
+                    BooleanUnaryOperator::Bang,
+                    Box::new(expr),
+                ))),
                 (_, expr) => {
                     let expr_type = self.expr_type(&expr);
 
@@ -1410,17 +1574,30 @@ impl Parser {
     fn literal(&mut self) -> Result<Expr, ParserStatus> {
         debug_information!("literal");
 
-        match self.consume_token_type() {
-            Some(TokenType::Integer(val)) => Ok(Expr::Integer(IntegerExpr::Literal(val))),
-            Some(TokenType::Float(val)) => Ok(Expr::Float(FloatExpr::Literal(val))),
-            Some(TokenType::String(val)) => Ok(Expr::String(StringExpr::Literal(val))),
-            Some(TokenType::Boolean(val)) => Ok(Expr::Boolean(BooleanExpr::Literal(val))),
+        match self.current_token_type().cloned() {
+            Some(TokenType::Integer(val)) => {
+                self.current += 1;
+                Ok(Expr::Integer(IntegerExpr::Literal(val)))
+            }
+            Some(TokenType::Float(val)) => {
+                self.current += 1;
+                Ok(Expr::Float(FloatExpr::Literal(val)))
+            }
+            Some(TokenType::String(val)) => {
+                self.current += 1;
+                Ok(Expr::String(StringExpr::Literal(val)))
+            }
+            Some(TokenType::Boolean(val)) => {
+                self.current += 1;
+                Ok(Expr::Boolean(BooleanExpr::Literal(val)))
+            }
             Some(TokenType::LeftParen) => {
-                let left_paren_pos = self.current - 1;
-                
-                let expression = self.equality()?;
+                let left_paren_pos = self.current;
+                self.current += 1;
 
-                match self.current_token() {
+                let expression = self.expression()?;
+
+                match self.tokens.get(self.current) {
                     Some(Token {
                         token_type: TokenType::RightParen,
                         ..
@@ -1433,11 +1610,13 @@ impl Parser {
                             self.tokens[left_paren_pos].clone(),
                             t.cloned(),
                         ));
-                        return Err(ParserStatus::End);
+                        return Err(ParserStatus::Unwind);
                     }
                 }
             }
             Some(TokenType::Identifier(val)) => {
+                self.current += 1;
+
                 if let Some(TokenType::LeftParen) = self.current_token_type() {
                     // Calling a function declared in this script
                     self.call(val.clone(), None, self.current)
@@ -1460,7 +1639,7 @@ impl Parser {
                                 }) => self.call(name.clone(), Some(val.clone()), self.current - 1),
                                 t => {
                                     self.error.add(ParserErrType::ModuleExpectedLeftParen(
-                                        self.previous_token().unwrap().clone(),
+                                        self.tokens[self.current - 1].clone(),
                                         t.cloned(),
                                     ));
                                     Err(ParserStatus::Unwind)
@@ -1469,7 +1648,7 @@ impl Parser {
                         }
                         t => {
                             self.error.add(ParserErrType::ModuleExpectedIdentifier(
-                                self.previous_token().unwrap().clone(),
+                                self.tokens[self.current - 1].clone(),
                                 t.cloned(),
                             ));
                             Err(ParserStatus::Unwind)
@@ -1497,15 +1676,15 @@ impl Parser {
 
                     self.error.add(ParserErrType::VariableNotFound(
                         self.tokens[self.current - 1].clone(),
-                        val,
+                        val.to_string(),
                     ));
                     Err(ParserStatus::Unwind)
                 }
             }
             _ => {
                 self.error.add(ParserErrType::ExpectedLiteralVariableCall(
-                    self.tokens[self.current - 2].clone(),
-                    self.tokens.get(self.current - 1).cloned(),
+                    self.tokens[self.current - 1].clone(),
+                    self.tokens.get(self.current).cloned(),
                 ));
                 Err(ParserStatus::Unwind)
             }
@@ -1528,11 +1707,11 @@ impl Parser {
                 self.current += 1;
             }
             _ => loop {
-                let argument = self.equality()?;
+                let argument = self.expression()?;
 
                 arguments.push(argument);
 
-                match self.current_token() {
+                match self.tokens.get(self.current) {
                     Some(Token {
                         token_type: TokenType::Comma,
                         ..
@@ -1739,7 +1918,7 @@ impl Parser {
     }
 
     fn data_type(&mut self) -> Result<ValueType, Option<Token>> {
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::IntegerType,
                 ..
@@ -1761,7 +1940,7 @@ impl Parser {
     }
 
     fn return_type(&mut self) -> Result<ReturnType, Option<Token>> {
-        match self.current_token() {
+        match self.tokens.get(self.current) {
             Some(Token {
                 token_type: TokenType::IntegerType,
                 ..

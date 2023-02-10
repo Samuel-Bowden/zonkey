@@ -22,7 +22,7 @@ Or be placing a unix shebang at the top of the file.
 
 function count(Integer start, Integer finish) {
 	for (let i = start, i < finish, i += 1) {
-		cli::print(i)
+		cli:print(i)
 	}
 }
 
@@ -30,7 +30,7 @@ start {
 	let start = 0;
 	let finish = 10;
 
-	cli::print("I'm going to count up from 0 to 10:");
+	cli:print("I'm going to count up from 0 to 10:");
 	count(start, finish);
 }
 ```

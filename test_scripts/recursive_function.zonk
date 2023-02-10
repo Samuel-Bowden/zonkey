@@ -7,7 +7,7 @@ function factorial(Integer n) -> Integer {
 }
 
 start {
-	let n = 5;
+	let n = Integer cli:prompt("Enter an integer n:");
 
-	cli:println(factorial(n));
+	cli:println("The factorial of n is " + (String factorial(n)));
 }

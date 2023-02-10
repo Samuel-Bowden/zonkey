@@ -1,6 +1,6 @@
 ---
 title: "Expressions"
-weight: 7
+weight: 8
 ---
 
 ## Arithmetic
@@ -9,6 +9,7 @@ weight: 7
 - Subtraction `-`
 - Division `/`
 - Multiplication `*`
+- Exponentiation `^` (To be done)
 
 ## Comparison
 
@@ -21,6 +22,6 @@ weight: 7
 
 ## Logical
 
-- And `and` or `&`
-- Or `or` or `|`
+- And `and` or `&` (To be done)
+- Or `or` or `|` (To be done)
 - Not `not` or `!`

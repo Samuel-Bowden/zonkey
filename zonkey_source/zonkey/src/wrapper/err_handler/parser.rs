@@ -348,8 +348,8 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.writeln(
                     format!(
                         "This return expression evaluates to type '{:?}', but the function it is declared in has a return type of {:?}.",
-                        func_ret_type,
                         expr_ret_type,
+                        func_ret_type,
                     ).as_str()
                 );
                 err_reporter.report_token(return_token);
@@ -522,13 +522,36 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_next_token(after);
             }
             //
-            
+
             // Unary operator errors
             ParserErrType::UnaryOperatorInvalidForType(token, expr_type) => {
                 err_reporter.writeln(
                     format!(
                         "Cannot perform unary operation '{}' on type {:?}.",
                         token.token_type, expr_type,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(token);
+            }
+
+            // Casting errors
+            ParserErrType::CastNotPossible(token, cast_to_type, expr_type) => {
+                err_reporter.writeln(
+                    format!(
+                        "Cannot cast evaluated value of expression from {:?} to {:?}.",
+                        expr_type, cast_to_type,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(token);
+            }
+
+            ParserErrType::CastPointless(token, cast_to_type) => {
+                err_reporter.writeln(
+                    format!(
+                        "Casting evaluated value of expression from {:?} to {:?} is pointless",
+                        cast_to_type, cast_to_type,
                     )
                     .as_str(),
                 );
