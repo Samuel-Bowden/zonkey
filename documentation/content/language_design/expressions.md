@@ -9,7 +9,6 @@ weight: 8
 - Subtraction `-`
 - Division `/`
 - Multiplication `*`
-- Exponentiation `^` (To be done)
 
 ## Comparison
 
@@ -22,6 +21,10 @@ weight: 8
 
 ## Logical
 
-- And `and` or `&` (To be done)
-- Or `or` or `|` (To be done)
-- Not `not` or `!`
+- And `&`
+- Or `|`
+- Not `!`
+
+## Other
+
+- Numeric Negation `-`

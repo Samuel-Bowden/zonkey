@@ -865,8 +865,7 @@ impl Parser {
                                 TokenType::PlusEqual => NumericAssignmentOperator::PlusEqual,
                                 TokenType::MinusEqual => NumericAssignmentOperator::MinusEqual,
                                 TokenType::StarEqual => NumericAssignmentOperator::StarEqual,
-                                TokenType::SlashEqual => NumericAssignmentOperator::SlashEqual,
-                                _ => panic!("Unreachable"),
+                                _ => NumericAssignmentOperator::SlashEqual,
                             },
                         ))
                     }
@@ -879,8 +878,7 @@ impl Parser {
                                 TokenType::PlusEqual => NumericAssignmentOperator::PlusEqual,
                                 TokenType::MinusEqual => NumericAssignmentOperator::MinusEqual,
                                 TokenType::StarEqual => NumericAssignmentOperator::StarEqual,
-                                TokenType::SlashEqual => NumericAssignmentOperator::SlashEqual,
-                                _ => panic!("Unreachable"),
+                                _ => NumericAssignmentOperator::SlashEqual,
                             },
                         ))
                     }
@@ -1190,8 +1188,104 @@ impl Parser {
                     }
                 }
             }
-            _ => self.equality(),
+            _ => self.or(),
         }
+    }
+
+    fn or(&mut self) -> Result<Expr, ParserStatus> {
+        debug_information!("or");
+
+        let mut left = self.and()?;
+
+        loop {
+            if let Some(TokenType::Or) = self.current_token_type() {
+                let or_token_pos = self.current;
+                self.current += 1;
+
+                let right = self.and()?;
+
+                match (left, right) {
+                    (Expr::Boolean(left_inside), Expr::Boolean(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::BooleanBinary {
+                            left: Box::new(left_inside),
+                            comparator: BooleanComparision::Or,
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        if left == right {
+                            self.error.add(ParserErrType::ComparisionInvalidForType(
+                                self.tokens[or_token_pos].clone(),
+                                left,
+                            ));
+                        } else {
+                            self.error.add(ParserErrType::ComparisionUnmatchingTypes(
+                                self.tokens[or_token_pos].clone(),
+                                left,
+                                right,
+                            ));
+                        }
+
+                        return Err(ParserStatus::Unwind);
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(left)
+    }
+
+    fn and(&mut self) -> Result<Expr, ParserStatus> {
+        debug_information!("and");
+
+        let mut left = self.equality()?;
+
+        loop {
+            if let Some(TokenType::And) = self.current_token_type() {
+                let and_token_pos = self.current;
+                self.current += 1;
+
+                let right = self.equality()?;
+
+                match (left, right) {
+                    (Expr::Boolean(left_inside), Expr::Boolean(right_inside)) => {
+                        left = Expr::Boolean(BooleanExpr::BooleanBinary {
+                            left: Box::new(left_inside),
+                            comparator: BooleanComparision::And,
+                            right: Box::new(right_inside),
+                        })
+                    }
+                    (left, right) => {
+                        let left = self.expr_type(&left);
+                        let right = self.expr_type(&right);
+
+                        if left == right {
+                            self.error.add(ParserErrType::ComparisionInvalidForType(
+                                self.tokens[and_token_pos].clone(),
+                                left,
+                            ));
+                        } else {
+                            self.error.add(ParserErrType::ComparisionUnmatchingTypes(
+                                self.tokens[and_token_pos].clone(),
+                                left,
+                                right,
+                            ));
+                        }
+
+                        return Err(ParserStatus::Unwind);
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        Ok(left)
     }
 
     fn equality(&mut self) -> Result<Expr, ParserStatus> {
@@ -1201,12 +1295,12 @@ impl Parser {
 
         loop {
             if let Some(TokenType::EqualEqual | TokenType::BangEqual) = self.current_token_type() {
-                let comparator = self.current;
+                let comparator_token_pos = self.current;
                 self.current += 1;
 
                 let right = self.comparision()?;
 
-                let comparator_type = &self.tokens[comparator].token_type;
+                let comparator_type = &self.tokens[comparator_token_pos].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
@@ -1214,8 +1308,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             comparator: match comparator_type {
                                 TokenType::EqualEqual => NumericComparision::Equal,
-                                TokenType::BangEqual => NumericComparision::Inequal,
-                                _ => panic!("Unreachable"),
+                                _ => NumericComparision::Inequal,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1225,8 +1318,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             comparator: match comparator_type {
                                 TokenType::EqualEqual => NumericComparision::Equal,
-                                TokenType::BangEqual => NumericComparision::Inequal,
-                                _ => panic!("Unreachable"),
+                                _ => NumericComparision::Inequal,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1236,8 +1328,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             comparator: match comparator_type {
                                 TokenType::EqualEqual => StringComparision::Equal,
-                                TokenType::BangEqual => StringComparision::Inequal,
-                                _ => panic!("Unreachable"),
+                                _ => StringComparision::Inequal,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1247,8 +1338,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             comparator: match comparator_type {
                                 TokenType::EqualEqual => BooleanComparision::Equal,
-                                TokenType::BangEqual => BooleanComparision::Inequal,
-                                _ => panic!("Unreachable"),
+                                _ => BooleanComparision::Inequal,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1257,11 +1347,18 @@ impl Parser {
                         let left = self.expr_type(&left);
                         let right = self.expr_type(&right);
 
-                        self.error.add(ParserErrType::ComparisionUnmatchingTypes(
-                            self.tokens[comparator].clone(),
-                            left,
-                            right,
-                        ));
+                        if left == right {
+                            self.error.add(ParserErrType::ComparisionInvalidForType(
+                                self.tokens[comparator_token_pos].clone(),
+                                left,
+                            ));
+                        } else {
+                            self.error.add(ParserErrType::ComparisionUnmatchingTypes(
+                                self.tokens[comparator_token_pos].clone(),
+                                left,
+                                right,
+                            ));
+                        }
 
                         return Err(ParserStatus::Unwind);
                     }
@@ -1284,12 +1381,12 @@ impl Parser {
                 TokenType::MoreEqual | TokenType::LessEqual | TokenType::Less | TokenType::More,
             ) = self.current_token_type()
             {
-                let comparator = self.current;
+                let comparator_token_pos = self.current;
                 self.current += 1;
 
                 let right = self.addsub()?;
 
-                let comparator_type = &self.tokens[comparator].token_type;
+                let comparator_type = &self.tokens[comparator_token_pos].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
@@ -1299,8 +1396,7 @@ impl Parser {
                                 TokenType::MoreEqual => NumericComparision::MoreEqual,
                                 TokenType::LessEqual => NumericComparision::LessEqual,
                                 TokenType::More => NumericComparision::More,
-                                TokenType::Less => NumericComparision::Less,
-                                _ => panic!("Unreachable"),
+                                _ => NumericComparision::Less,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1312,42 +1408,27 @@ impl Parser {
                                 TokenType::MoreEqual => NumericComparision::MoreEqual,
                                 TokenType::LessEqual => NumericComparision::LessEqual,
                                 TokenType::More => NumericComparision::More,
-                                TokenType::Less => NumericComparision::Less,
-                                _ => panic!("Unreachable"),
+                                _ => NumericComparision::Less,
                             },
                             right: Box::new(right_inside),
                         })
-                    }
-                    (Expr::String(_), Expr::String(_)) => {
-                        self.error.add(ParserErrType::ComparisionInvalidForType(
-                            self.tokens[comparator].clone(),
-                            ReturnType::String,
-                        ));
-                        return Err(ParserStatus::Unwind);
-                    }
-                    (Expr::Boolean(_), Expr::Boolean(_)) => {
-                        self.error.add(ParserErrType::ComparisionInvalidForType(
-                            self.tokens[comparator].clone(),
-                            ReturnType::Boolean,
-                        ));
-                        return Err(ParserStatus::Unwind);
-                    }
-                    (Expr::None(_), Expr::None(_)) => {
-                        self.error.add(ParserErrType::ComparisionInvalidForType(
-                            self.tokens[comparator].clone(),
-                            ReturnType::None,
-                        ));
-                        return Err(ParserStatus::Unwind);
                     }
                     (left, right) => {
                         let left = self.expr_type(&left);
                         let right = self.expr_type(&right);
 
-                        self.error.add(ParserErrType::ComparisionUnmatchingTypes(
-                            self.tokens[comparator].clone(),
-                            left,
-                            right,
-                        ));
+                        if left == right {
+                            self.error.add(ParserErrType::ComparisionInvalidForType(
+                                self.tokens[comparator_token_pos].clone(),
+                                left,
+                            ));
+                        } else {
+                            self.error.add(ParserErrType::ComparisionUnmatchingTypes(
+                                self.tokens[comparator_token_pos].clone(),
+                                left,
+                                right,
+                            ));
+                        }
 
                         return Err(ParserStatus::Unwind);
                     }
@@ -1367,12 +1448,12 @@ impl Parser {
 
         loop {
             if let Some(TokenType::Minus | TokenType::Plus) = self.current_token_type() {
-                let operator = self.current;
+                let operator_token_pos = self.current;
                 self.current += 1;
 
                 let right = self.multdiv()?;
 
-                let operator_type = &self.tokens[operator].token_type;
+                let operator_type = &self.tokens[operator_token_pos].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
@@ -1380,8 +1461,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             operator: match operator_type {
                                 TokenType::Plus => NumericOperator::Add,
-                                TokenType::Minus => NumericOperator::Subtract,
-                                _ => panic!("Unreachable"),
+                                _ => NumericOperator::Subtract,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1391,8 +1471,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             operator: match operator_type {
                                 TokenType::Plus => NumericOperator::Add,
-                                TokenType::Minus => NumericOperator::Subtract,
-                                _ => panic!("Unreachable"),
+                                _ => NumericOperator::Subtract,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1404,7 +1483,7 @@ impl Parser {
                                 TokenType::Plus => StringOperator::Add,
                                 _ => {
                                     self.error.add(ParserErrType::OperatorInvalidForType(
-                                        self.tokens[operator].clone(),
+                                        self.tokens[operator_token_pos].clone(),
                                         ReturnType::String,
                                     ));
 
@@ -1414,31 +1493,22 @@ impl Parser {
                             right: Box::new(right_inside),
                         })
                     }
-                    (Expr::Boolean(_), Expr::Boolean(_)) => {
-                        self.error.add(ParserErrType::OperatorInvalidForType(
-                            self.tokens[operator].clone(),
-                            ReturnType::Boolean,
-                        ));
-
-                        return Err(ParserStatus::Unwind);
-                    }
-                    (Expr::None(_), Expr::None(_)) => {
-                        self.error.add(ParserErrType::OperatorInvalidForType(
-                            self.tokens[operator].clone(),
-                            ReturnType::None,
-                        ));
-
-                        return Err(ParserStatus::Unwind);
-                    }
                     (left, right) => {
                         let left = self.expr_type(&left);
                         let right = self.expr_type(&right);
 
-                        self.error.add(ParserErrType::OperatorUnmatchingTypes(
-                            self.tokens[operator].clone(),
-                            left,
-                            right,
-                        ));
+                        if left == right {
+                            self.error.add(ParserErrType::OperatorInvalidForType(
+                                self.tokens[operator_token_pos].clone(),
+                                left,
+                            ));
+                        } else {
+                            self.error.add(ParserErrType::OperatorUnmatchingTypes(
+                                self.tokens[operator_token_pos].clone(),
+                                left,
+                                right,
+                            ));
+                        }
 
                         return Err(ParserStatus::Unwind);
                     }
@@ -1458,12 +1528,12 @@ impl Parser {
 
         loop {
             if let Some(TokenType::Star | TokenType::Slash) = self.current_token_type() {
-                let operator = self.current;
+                let operator_token_pos = self.current;
                 self.current += 1;
 
                 let right = self.unary()?;
 
-                let operator_type = &self.tokens[operator].token_type;
+                let operator_type = &self.tokens[operator_token_pos].token_type;
 
                 match (left, right) {
                     (Expr::Integer(left_inside), Expr::Integer(right_inside)) => {
@@ -1471,8 +1541,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             operator: match operator_type {
                                 TokenType::Star => NumericOperator::Multiply,
-                                TokenType::Slash => NumericOperator::Divide,
-                                _ => panic!("Unreachable"),
+                                _ => NumericOperator::Divide,
                             },
                             right: Box::new(right_inside),
                         })
@@ -1482,45 +1551,27 @@ impl Parser {
                             left: Box::new(left_inside),
                             operator: match operator_type {
                                 TokenType::Star => NumericOperator::Multiply,
-                                TokenType::Slash => NumericOperator::Divide,
-                                _ => panic!("Unreachable"),
+                                _ => NumericOperator::Divide,
                             },
                             right: Box::new(right_inside),
                         })
-                    }
-                    (Expr::String(_), Expr::String(_)) => {
-                        self.error.add(ParserErrType::OperatorInvalidForType(
-                            self.tokens[operator].clone(),
-                            ReturnType::Boolean,
-                        ));
-
-                        return Err(ParserStatus::Unwind);
-                    }
-                    (Expr::Boolean(_), Expr::Boolean(_)) => {
-                        self.error.add(ParserErrType::OperatorInvalidForType(
-                            self.tokens[operator].clone(),
-                            ReturnType::Boolean,
-                        ));
-
-                        return Err(ParserStatus::Unwind);
-                    }
-                    (Expr::None(_), Expr::None(_)) => {
-                        self.error.add(ParserErrType::OperatorInvalidForType(
-                            self.tokens[operator].clone(),
-                            ReturnType::None,
-                        ));
-
-                        return Err(ParserStatus::Unwind);
                     }
                     (left, right) => {
                         let left = self.expr_type(&left);
                         let right = self.expr_type(&right);
 
-                        self.error.add(ParserErrType::OperatorUnmatchingTypes(
-                            self.tokens[operator].clone(),
-                            left,
-                            right,
-                        ));
+                        if left == right {
+                            self.error.add(ParserErrType::OperatorInvalidForType(
+                                self.tokens[operator_token_pos].clone(),
+                                left,
+                            ));
+                        } else {
+                            self.error.add(ParserErrType::OperatorUnmatchingTypes(
+                                self.tokens[operator_token_pos].clone(),
+                                left,
+                                right,
+                            ));
+                        }
 
                         return Err(ParserStatus::Unwind);
                     }

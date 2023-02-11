@@ -18,7 +18,8 @@ pub enum TokenType {
     Dot,
     SemiColon,
     Colon,
-    QuestionMark,
+    And,
+    Or,
 
     // One or more grapheme tokens
     Bang,
@@ -74,7 +75,8 @@ impl Display for TokenType {
             Self::Comma => f.write_str(","),
             Self::Dot => f.write_str("."),
             Self::SemiColon => f.write_str(";"),
-            Self::QuestionMark => f.write_str("?"),
+            Self::And => f.write_str("&"),
+            Self::Or => f.write_str("|"),
             Self::Colon => f.write_str(":"),
             Self::Bang => f.write_str("!"),
             Self::BangEqual => f.write_str("!="),

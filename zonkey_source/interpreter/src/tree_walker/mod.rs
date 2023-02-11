@@ -371,6 +371,10 @@ impl<'a> TreeWalker<'a> {
                 BooleanComparision::Inequal => {
                     Ok(self.eval_boolean(left)? != self.eval_boolean(right)?)
                 }
+                BooleanComparision::And => {
+                    Ok(self.eval_boolean(left)? && self.eval_boolean(right)?)
+                }
+                BooleanComparision::Or => Ok(self.eval_boolean(left)? || self.eval_boolean(right)?),
             },
             BooleanExpr::Variable(id) => Ok(self.environment.get_boolean(*id)),
             BooleanExpr::Literal(val) => Ok(*val),

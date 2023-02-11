@@ -18,4 +18,6 @@ pub enum StringComparision {
 pub enum BooleanComparision {
     Equal,
     Inequal,
+    And,
+    Or,
 }

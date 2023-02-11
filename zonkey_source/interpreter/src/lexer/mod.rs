@@ -48,7 +48,8 @@ impl<'a> Lexer<'a> {
             "." => self.add_token(TokenType::Dot),
             ";" => self.add_token(TokenType::SemiColon),
             ":" => self.add_token(TokenType::Colon),
-            "?" => self.add_token(TokenType::QuestionMark),
+            "&" => self.add_token(TokenType::And),
+            "|" => self.add_token(TokenType::Or),
             // Single or double graphemes
             "!" => {
                 let token = match self.next_grapheme("=") {

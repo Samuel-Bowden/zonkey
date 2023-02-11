@@ -15,7 +15,9 @@ expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality
 variable_declaration = "let" IDENTIFIER "=" expression; 
 terminated_variable_declaration = variable_declaration ";";
 expression -> cast;
-cast -> data_type? equality;
+cast -> data_type? and;
+or -> and ("|" and)*;
+and -> equality ("&" equality)*;
 equality -> comparision (("==" | "!=") comparision)*;
 comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
