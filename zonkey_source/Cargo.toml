@@ -2,9 +2,11 @@
 
 members = [
 	"interpreter",
-	"browser",
+	"zonkey-browser",
 	"zonkey",
 ]
+
+resolver = "2"
 
 [profile.release]
 strip = true
@@ -12,3 +14,7 @@ lto = true
 opt-level = 3
 panic = "abort"
 codegen-units = 1
+
+[profile.no-debug-info]
+inherits = "dev"
+debug-assertions = false

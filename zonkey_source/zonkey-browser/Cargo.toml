@@ -1,10 +1,11 @@
 [package]
-name = "zonkey"
+name = "zonkey-browser"
 version = "0.1.0"
 edition = "2021"
-description = "CLI Interpreter for the Zonkey programming language"
+description = "Browser that run programs written in Zonkey script over the internet"
 authors = ["Sam Bowden"]
 
 [dependencies]
+iced = "0.7"
 interpreter = { path = "../interpreter" }
 unicode-segmentation = "1.10.0"

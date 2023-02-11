@@ -1,6 +1,7 @@
-use interpreter::token::Token;
 use std::io::Write;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
+
+use crate::token::Token;
 
 pub struct ErrReporter<'a> {
     stderr: StandardStream,

@@ -1,5 +1,6 @@
 use self::{lexer::LexerErr, parser::ParserErr, tree_walker::TreeWalkerErr};
 
+pub mod handler;
 pub mod lexer;
 pub mod parser;
 pub mod tree_walker;

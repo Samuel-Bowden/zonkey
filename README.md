@@ -8,26 +8,23 @@ Zonkey is a new programming language that I'm creating for my final year project
 
 Location: "zonkey_source/zonkey"
 
-This program is a CLI interface to the Zonkey interpreter. To get detailed help for this tool, run:
-```sh
-zonkey --help
-```
+This program is a CLI interface to the Zonkey interpreter.
 
 A Zonkey source file can be run by providing a path to that file as an argument:
 ```sh
 $ zonkey test.zonk
 ```
 
-For a debug build of the interpreter, debug information can be seen by adding the following argument.
-```sh
-$ zonkey test.zonk -d
-```
-
 ### Zonkey Browser
 
-Location: "zonkey_source/browser"
+Location: "zonkey_source/zonkey-browser"
 
-This program is not implemented yet, development on this will start later in the project.
+This program loads a browser GUI that lets users easily run Zonkey programs over the internet or from their local file system.
+
+Once installed to the system, this GUI can be launched with the following command:
+```sh
+$ zonkey-browser
+```
 
 ## Compiling and Running Programs
 
@@ -43,14 +40,22 @@ For example, if you wanted to run the "zonkey" CLI interpreter:
 $ cargo run -p zonkey
 ```
 
-When the program is invocated like this, additional argumemnts can be passed with the following syntax:
+Or if you wanted to run the "zonkey-browser":
 ```sh
-$ cargo run -p zonkey -- test.zonk -d
+$ cargo run -p zonkey-browser
 ```
 
-When invocating "cargo run" without the argument "-r", a debug build is created. It is important to compile as a debug build if you want access to the debug mode of the interpreter. Compiling with "-r" will create a release build without the debug mode.
+When the program is invocated like this, additional argumemnts can be passed with the following syntax:
+```sh
+$ cargo run -p zonkey -- test.zonk
+```
 
-You can also install the executables to your system for easier use and faster performance. You can install the "zonkey" CLI interpreter by doing the following:
+When invocating "cargo run" without the argument "-r" (for a release build), a debug build is created. This debug build reports a lot of debugging information to stdout, which can vastly reduce performance and can make it hard to use the CLI interface to zonkey. If you want the fast compiliation of debug builds, but not the debug information, use the following:
+```sh
+$ cargo run -p zonkey --profile no-debug-info -- test.zonk
+```
+
+You can also install the release builds of executables to your system for easier use. Navigate to the directory of the package and then use 'cargo install --path=. --force' to add this binary to your path. You can install the "zonkey" CLI interpreter this way by doing the following:
 ```sh
 $ cd zonkey
 $ cargo install --path=. --force
@@ -61,11 +66,7 @@ And then you can use it like a normal CLI utility:
 $ zonkey test.zonk
 ```
 
-Executables installed this way will not have access to the debug mode as they will be compiled as a release build.
-
 ## Documentation
-
-Up to date documentation for Zonkey can be viewed at <https://zonkey.sambowden.rocks>.
 
 ### Building
 

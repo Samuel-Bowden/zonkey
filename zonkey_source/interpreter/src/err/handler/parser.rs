@@ -1,5 +1,5 @@
 use super::err_reporter::ErrReporter;
-use interpreter::err::parser::{ParserErr, ParserErrType};
+use crate::err::parser::{ParserErr, ParserErrType};
 
 pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
     let len = parser_err.get_length();

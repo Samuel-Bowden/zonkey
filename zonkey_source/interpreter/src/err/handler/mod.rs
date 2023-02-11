@@ -1,5 +1,5 @@
 use self::err_reporter::ErrReporter;
-use interpreter::err::InterpreterErr;
+use super::InterpreterErr;
 
 mod err_reporter;
 mod lexer;

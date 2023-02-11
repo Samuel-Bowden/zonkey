@@ -1,5 +1,5 @@
 use super::err_reporter::ErrReporter;
-use interpreter::err::lexer::LexerErr;
+use crate::err::lexer::LexerErr;
 
 pub fn err_handler(mut err_reporter: ErrReporter, lexer_err: LexerErr) {
     err_reporter.error_prefix();
