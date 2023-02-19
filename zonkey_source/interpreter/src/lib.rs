@@ -1,5 +1,8 @@
+use std::sync::mpsc::Sender;
+
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
 use crate::{environment::Environment, parser::Parser, tree_walker::TreeWalker};
+use event::Event;
 use function::Function;
 use stmt::Stmt;
 
@@ -8,6 +11,7 @@ mod comparison;
 mod debugger;
 mod environment;
 pub mod err;
+pub mod event;
 mod expr;
 mod function;
 mod function_declaration;
@@ -23,14 +27,14 @@ mod tree_walker;
 mod unary_operator;
 pub mod value_type;
 
-pub fn run(source: &Vec<&str>) -> Result<(), InterpreterErr> {
+pub fn run(source: &Vec<&str>, sender: Sender<Event>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");
 
     let tokens = run_lexer(source)?;
 
     let (start, functions) = run_parser(tokens)?;
 
-    run_tree_walker(start, functions)?;
+    run_tree_walker(start, functions, sender)?;
 
     Ok(())
 }
@@ -61,12 +65,16 @@ fn run_parser(tokens: Vec<Token>) -> Result<(Stmt, Vec<Function>), InterpreterEr
     }
 }
 
-fn run_tree_walker(start: Stmt, functions: Vec<Function>) -> Result<(), InterpreterErr> {
+fn run_tree_walker(
+    start: Stmt,
+    functions: Vec<Function>,
+    sender: Sender<Event>,
+) -> Result<(), InterpreterErr> {
     interpreter_debug!("Starting tree walker");
 
     let environment = Environment::new();
 
-    match TreeWalker::new(&functions, environment).interpret(&start) {
+    match TreeWalker::new(&functions, environment, sender).interpret(&start) {
         Ok(_) => Ok(()),
         Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
     }

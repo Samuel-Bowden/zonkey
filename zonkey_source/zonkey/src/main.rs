@@ -1,5 +1,5 @@
 use interpreter::err;
-use std::{env::args, fs::read_to_string, path::Path, process::ExitCode};
+use std::{env::args, fs::read_to_string, path::Path, process::ExitCode, sync::mpsc};
 use unicode_segmentation::UnicodeSegmentation;
 
 fn main() -> ExitCode {
@@ -23,7 +23,9 @@ fn run(file: String) -> ExitCode {
 
     let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
-    match interpreter::run(&graphemes) {
+    let (sender, _) = mpsc::channel();
+
+    match interpreter::run(&graphemes, sender) {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
             err::handler::run(e, &graphemes);

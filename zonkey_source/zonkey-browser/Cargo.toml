@@ -9,3 +9,4 @@ authors = ["Sam Bowden"]
 iced = { version = "0.7", features = ["svg"] }
 interpreter = { path = "../interpreter" }
 unicode-segmentation = "1.10.0"
+directories = "4.0.1"

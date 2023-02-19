@@ -6,7 +6,6 @@ pub enum CliFunctionNone {
     PrintLineFloat(Box<FloatExpr>),
     PrintLineString(Box<StringExpr>),
     PrintLineBoolean(Box<BooleanExpr>),
-    PrintLine,
     PrintInteger(Box<IntegerExpr>),
     PrintFloat(Box<FloatExpr>),
     PrintString(Box<StringExpr>),

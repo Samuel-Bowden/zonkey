@@ -13,6 +13,7 @@ use crate::{
     function_declaration::FunctionDeclaration,
     native_function::{
         cli_api::{CliFunctionNone, CliFunctionString},
+        gui_api::GuiFunctionNone,
         NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
@@ -1789,127 +1790,130 @@ impl Parser {
         }
 
         if let Some(module) = module {
-            match module.as_str() {
-                "cli" => match name.as_str() {
-                    "println" => {
-                        if arguments.len() != 1 {
-                            self.error.add(ParserErrType::CallIncorrectArgumentsNum(
-                                self.tokens[token_pos].clone(),
-                                arguments.len(),
-                                1,
-                                "println".to_string(),
-                            ));
-                            return Err(ParserStatus::Unwind);
-                        }
-                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
-                            match arguments.pop() {
-                                Some(Expr::Integer(arg)) => {
-                                    CliFunctionNone::PrintLineInteger(Box::new(arg))
-                                }
-                                Some(Expr::Float(arg)) => {
-                                    CliFunctionNone::PrintLineFloat(Box::new(arg))
-                                }
-                                Some(Expr::String(arg)) => {
-                                    CliFunctionNone::PrintLineString(Box::new(arg))
-                                }
-                                Some(Expr::Boolean(arg)) => {
-                                    CliFunctionNone::PrintLineBoolean(Box::new(arg))
-                                }
-                                None => CliFunctionNone::PrintLine,
-                                _ => {
-                                    self.error.add(ParserErrType::CallArgumentIncorrectType(
-                                        self.tokens[token_pos].clone(),
-                                        1,
-                                        ReturnType::None,
-                                        "println".to_string(),
-                                    ));
-                                    return Err(ParserStatus::Unwind);
-                                }
-                            },
-                        ))));
-                    }
-                    "print" => {
-                        if arguments.len() != 1 {
-                            self.error.add(ParserErrType::CallIncorrectArgumentsNum(
-                                self.tokens[token_pos].clone(),
-                                arguments.len(),
-                                1,
-                                "print".to_string(),
-                            ));
-                            return Err(ParserStatus::Unwind);
-                        }
-                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
-                            match arguments.pop() {
-                                Some(Expr::Integer(arg)) => {
-                                    CliFunctionNone::PrintInteger(Box::new(arg))
-                                }
-                                Some(Expr::Float(arg)) => {
-                                    CliFunctionNone::PrintFloat(Box::new(arg))
-                                }
-                                Some(Expr::String(arg)) => {
-                                    CliFunctionNone::PrintString(Box::new(arg))
-                                }
-                                Some(Expr::Boolean(arg)) => {
-                                    CliFunctionNone::PrintBoolean(Box::new(arg))
-                                }
-                                _ => {
-                                    self.error.add(ParserErrType::CallArgumentIncorrectType(
-                                        self.tokens[token_pos].clone(),
-                                        1,
-                                        ReturnType::None,
-                                        "println".to_string(),
-                                    ));
-                                    return Err(ParserStatus::Unwind);
-                                }
-                            },
-                        ))));
-                    }
-                    "prompt" => {
-                        if arguments.len() != 1 {
-                            self.error.add(ParserErrType::CallIncorrectArgumentsNum(
-                                self.tokens[token_pos].clone(),
-                                arguments.len(),
-                                1,
-                                "prompt".to_string(),
-                            ));
-                            return Err(ParserStatus::Unwind);
-                        }
-                        match arguments.pop() {
-                            Some(Expr::String(argument)) => {
-                                return Ok(Expr::String(StringExpr::NativeCall(
-                                    NativeFunctionString::Cli(CliFunctionString::Prompt(Box::new(
-                                        argument,
-                                    ))),
-                                )));
-                            }
-                            _ => {
-                                self.error.add(ParserErrType::CallArgumentIncorrectType(
-                                    self.tokens[token_pos].clone(),
-                                    1,
-                                    ReturnType::None,
-                                    "prompt".to_string(),
-                                ));
-                                return Err(ParserStatus::Unwind);
-                            }
-                        }
-                    }
-                    name => {
-                        self.error.add(ParserErrType::CallModuleFunctionNotFound(
-                            self.tokens[token_pos].clone(),
-                            name.to_string(),
-                            module,
-                        ));
-                        return Err(ParserStatus::Unwind);
-                    }
-                },
-                module => {
-                    self.error.add(ParserErrType::CallModuleNotFound(
-                        self.tokens[token_pos - 2].clone(),
-                        module.to_string(),
+            #[allow(dead_code)]
+            enum InternalType {
+                Integer,
+                Float,
+                Boolean,
+                String,
+                Printable,
+            }
+
+            let parameters = match (module.as_str(), name.as_str()) {
+                ("cli", "println") => vec![InternalType::Printable],
+                ("cli", "print") => vec![InternalType::Printable],
+                ("cli", "prompt") => vec![InternalType::String],
+                ("gui", "add_heading") => vec![InternalType::String],
+                ("gui", "add_paragraph") => vec![InternalType::String],
+                ("cli" | "gui", _) => {
+                    self.error.add(ParserErrType::CallModuleFunctionNotFound(
+                        self.tokens[token_pos].clone(),
+                        name.to_string(),
+                        module,
                     ));
                     return Err(ParserStatus::Unwind);
                 }
+                _ => {
+                    self.error.add(ParserErrType::CallModuleNotFound(
+                        self.tokens[token_pos - 2].clone(),
+                        module,
+                    ));
+                    return Err(ParserStatus::Unwind);
+                }
+            };
+
+            if arguments.len() != parameters.len() {
+                self.error.add(ParserErrType::CallIncorrectArgumentsNum(
+                    self.tokens[token_pos].clone(),
+                    arguments.len(),
+                    parameters.len(),
+                    name,
+                ));
+                return Err(ParserStatus::Unwind);
             }
+
+            let mut argument_error = false;
+
+            for i in 0..arguments.len() {
+                match (&arguments[i], &parameters[i]) {
+                    (Expr::Integer(_), InternalType::Integer) => (),
+                    (Expr::Float(_), InternalType::Float) => (),
+                    (Expr::String(_), InternalType::String) => (),
+                    (Expr::Boolean(_), InternalType::Boolean) => (),
+                    (
+                        Expr::Integer(_) | Expr::Float(_) | Expr::String(_) | Expr::Boolean(_),
+                        InternalType::Printable,
+                    ) => (),
+                    (expr, _) => {
+                        let expr_type = self.expr_type(expr);
+
+                        self.error.add(ParserErrType::CallArgumentIncorrectType(
+                            self.tokens[token_pos].clone(),
+                            i,
+                            expr_type,
+                            name.clone(),
+                        ));
+
+                        argument_error = true;
+                    }
+                }
+            }
+
+            if argument_error {
+                return Err(ParserStatus::Unwind);
+            }
+
+            return Ok(match (module.as_str(), name.as_str()) {
+                ("cli", "println") => Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
+                    match arguments.pop() {
+                        Some(Expr::Integer(arg)) => {
+                            CliFunctionNone::PrintLineInteger(Box::new(arg))
+                        }
+                        Some(Expr::Float(arg)) => CliFunctionNone::PrintLineFloat(Box::new(arg)),
+                        Some(Expr::String(arg)) => CliFunctionNone::PrintLineString(Box::new(arg)),
+                        Some(Expr::Boolean(arg)) => {
+                            CliFunctionNone::PrintLineBoolean(Box::new(arg))
+                        }
+                        _ => unreachable!(),
+                    },
+                ))),
+                ("cli", "print") => Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Cli(
+                    match arguments.pop() {
+                        Some(Expr::Integer(arg)) => CliFunctionNone::PrintInteger(Box::new(arg)),
+                        Some(Expr::Float(arg)) => CliFunctionNone::PrintFloat(Box::new(arg)),
+                        Some(Expr::String(arg)) => CliFunctionNone::PrintString(Box::new(arg)),
+                        Some(Expr::Boolean(arg)) => CliFunctionNone::PrintBoolean(Box::new(arg)),
+                        _ => unreachable!(),
+                    },
+                ))),
+                ("cli", "prompt") => match arguments.pop() {
+                    Some(Expr::String(argument)) => {
+                        return Ok(Expr::String(StringExpr::NativeCall(
+                            NativeFunctionString::Cli(CliFunctionString::Prompt(Box::new(
+                                argument,
+                            ))),
+                        )));
+                    }
+                    _ => unreachable!(),
+                },
+                ("gui", "add_heading") => match arguments.pop() {
+                    Some(Expr::String(value)) => {
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Gui(
+                            GuiFunctionNone::AddHeading(Box::new(value)),
+                        ))));
+                    }
+                    _ => unreachable!(),
+                },
+                ("gui", "add_paragraph") => match arguments.pop() {
+                    Some(Expr::String(value)) => {
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Gui(
+                            GuiFunctionNone::AddParagraph(Box::new(value)),
+                        ))));
+                    }
+                    _ => unreachable!(),
+                },
+                _ => unreachable!(),
+            });
         }
 
         //Must be a zonkey function

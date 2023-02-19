@@ -7,5 +7,4 @@ pub enum ElementType {
     Heading(String),
     Paragraph(String),
     Page(Vec<Element>),
-    None,
 }

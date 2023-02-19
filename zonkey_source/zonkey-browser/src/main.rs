@@ -1,21 +1,25 @@
-mod app;
 mod component;
-mod default_app;
 mod message;
+mod zonkey_app;
 
-use std::{path::Path, fs::read_to_string};
+use std::{fs::read_to_string, path::PathBuf, sync::mpsc, thread};
 
-use app::{App, element::ElementType};
+use directories::ProjectDirs;
 use iced::{
-    executor,
+    executor, subscription,
     theme::Palette,
     widget::{Column, Container},
     Application, Color, Command, Element, Length, Settings, Theme,
 };
 use message::Message;
+use unicode_segmentation::UnicodeSegmentation;
+use zonkey_app::ZonkeyApp;
 
 pub struct ZonkeyBrowser {
-    app: App,
+    app: Option<ZonkeyApp>,
+    directories: ProjectDirs,
+    address: String,
+    sender: Option<mpsc::Sender<String>>,
 }
 
 impl Application for ZonkeyBrowser {
@@ -25,16 +29,26 @@ impl Application for ZonkeyBrowser {
     type Theme = Theme;
 
     fn new(_flags: ()) -> (ZonkeyBrowser, Command<Self::Message>) {
+        let directories = ProjectDirs::from("rocks.sambowden", "", "zonkey-browser")
+            .expect("Failed to find home directory of system");
+
         (
             ZonkeyBrowser {
-                app: default_app::home::new(),
+                app: None,
+                directories,
+                address: String::from(""),
+                sender: None,
             },
             Command::none(),
         )
     }
 
     fn title(&self) -> String {
-        format!("Zonkey Browser - {}", self.app.name)
+        if let Some(app) = &self.app {
+            format!("Zonkey Browser - {}", app.name)
+        } else {
+            "Zonkey Browser".to_string()
+        }
     }
 
     fn theme(&self) -> Self::Theme {
@@ -50,57 +64,54 @@ impl Application for ZonkeyBrowser {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::AddressChanged(val) => {
-                self.app.address = val;
+                self.address = val;
                 Command::none()
             }
             Message::AddressConfirmed => {
-                let mut it = self.app.address.split(":");
+                let mut it = self.address.split(":");
 
                 let mut invalid = false;
-                
+
                 match (it.next(), it.next(), it.next()) {
-                    (Some(first), Some(second), None) => {
-                        match first {
-                            "zonkey" => {
-                                match second {
-                                    "settings" => self.app = default_app::settings::new(),
-                                    "home" => self.app = default_app::home::new(),
-                                    _ => invalid = true,
-                                }
-                            }
-                            "file" => {
-                                match read_to_string(Path::new(second)) {
-                                    Ok(_) => {
-                                        self.app = App {
-                                            name: String::from("Test"),
-                                            address: std::mem::take(&mut self.app.address),
-                                            root: ElementType::None,
-                                        }
-                                    }
-                                    Err(_) => {
-                                        invalid = true;
-                                    }
-                                };
-                            }
+                    (Some(first), Some(second), None) => match first {
+                        "zonkey" => match second {
+                            "settings" => self.app = self.home_app(),
+                            "home" => self.app = self.settings_app(),
                             _ => invalid = true,
+                        },
+                        "file" => {
+                            self.app = self.app(PathBuf::from(second), "Custom app".to_string());
                         }
-                    }
+                        _ => invalid = true,
+                    },
                     (None, None, None) => (),
                     _ => invalid = true,
                 }
 
                 if invalid {
-                    self.app = default_app::invalid::new(self.app.address.clone());
+                    self.app = self.invalid_app(self.address.clone());
                 }
 
                 Command::none()
             }
             Message::HomePressed => {
-                self.app = default_app::home::new();
+                self.app = self.home_app();
+                self.address = String::from("zonkey:home");
                 Command::none()
             }
             Message::SettingsPressed => {
-                self.app = default_app::settings::new();
+                self.app = self.settings_app();
+                self.address = String::from("zonkey:settings");
+                Command::none()
+            }
+            Message::Event(event) => {
+                if let Some(app) = &mut self.app {
+                    app.update(event);
+                }
+                Command::none()
+            }
+            Message::Ready(sender) => {
+                self.sender = Some(sender);
                 Command::none()
             }
         }
@@ -109,7 +120,11 @@ impl Application for ZonkeyBrowser {
     fn view(&self) -> Element<Self::Message> {
         let top_bar = component::top_bar::build(&self);
 
-        let app_viewer = component::app_viewer::build(&self.app.root);
+        let app_viewer = if let Some(app) = &self.app {
+            component::app_viewer::build(&app.root)
+        } else {
+            Column::new().into()
+        };
 
         let content = Column::new()
             .push(top_bar)
@@ -120,6 +135,100 @@ impl Application for ZonkeyBrowser {
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
+    }
+
+    fn subscription(&self) -> iced::Subscription<Self::Message> {
+        subscription::unfold(0, SubscriptionState::Starting, |state| async move {
+            match state {
+                SubscriptionState::Starting => {
+                    let (sender, receiver) = mpsc::channel();
+
+                    (
+                        Some(Message::Ready(sender)),
+                        SubscriptionState::Ready(receiver),
+                    )
+                }
+                SubscriptionState::Ready(receiver) => {
+                    let source = if let Ok(s) = receiver.recv() {
+                        s
+                    } else {
+                        return (None, SubscriptionState::Finished);
+                    };
+
+                    let (browser_sender, interpreter_receiver) = mpsc::channel();
+
+                    thread::spawn(move || {
+                        let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true)
+                            .collect::<Vec<&str>>();
+
+                        match interpreter::run(&graphemes, browser_sender) {
+                            Ok(_) => (),
+                            Err(e) => {
+                                interpreter::err::handler::run(e, &graphemes);
+                            }
+                        }
+                    });
+
+                    (None, SubscriptionState::Running(interpreter_receiver))
+                }
+                SubscriptionState::Running(receiver) => match receiver.recv() {
+                    Ok(event) => (
+                        Some(Message::Event(event)),
+                        SubscriptionState::Running(receiver),
+                    ),
+                    Err(_) => (None, SubscriptionState::Starting),
+                },
+                SubscriptionState::Finished => (None, SubscriptionState::Finished),
+            }
+        })
+    }
+}
+
+enum SubscriptionState {
+    Starting,
+    Ready(mpsc::Receiver<String>),
+    Running(mpsc::Receiver<interpreter::event::Event>),
+    Finished,
+}
+
+impl ZonkeyBrowser {
+    fn home_app(&self) -> Option<ZonkeyApp> {
+        self.app(
+            self.directories.data_dir().join("home.zonk"),
+            "Home".to_string(),
+        )
+    }
+
+    fn settings_app(&self) -> Option<ZonkeyApp> {
+        self.app(
+            self.directories.data_dir().join("settings.zonk"),
+            "Settings".to_string(),
+        )
+    }
+
+    fn invalid_app(&self, address: String) -> Option<ZonkeyApp> {
+        self.app(self.directories.data_dir().join("invalid.zonk"), address)
+    }
+
+    fn app(&self, path: PathBuf, name: String) -> Option<ZonkeyApp> {
+        if let Some(sender) = &self.sender {
+            let source = if let Ok(s) = read_to_string(path) {
+                s
+            } else {
+                if let Ok(s) = read_to_string(self.directories.data_dir().join("invalid.zonk")) {
+                    s
+                } else {
+                    eprintln!("Failed to load invalid page");
+                    return None;
+                }
+            };
+
+            sender
+                .send(source)
+                .expect("Interpreter thread has died, cannot start app.");
+        }
+
+        Some(ZonkeyApp::new_from_file(name))
     }
 }
 

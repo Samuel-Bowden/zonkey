@@ -3,10 +3,12 @@ use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     environment::Environment,
     err::tree_walker::TreeWalkerErr,
+    event::Event,
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     function::Function,
     native_function::{
         cli_api::{CliFunctionNone, CliFunctionString},
+        gui_api::GuiFunctionNone,
         NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
@@ -14,7 +16,10 @@ use crate::{
     unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
 };
 use numtoa::NumToA;
-use std::io::{stdout, BufWriter, StdoutLock, Write};
+use std::{
+    io::{stdout, BufWriter, StdoutLock, Write},
+    sync::mpsc::Sender,
+};
 
 pub mod status;
 
@@ -22,14 +27,20 @@ pub struct TreeWalker<'a> {
     environment: Environment,
     functions: &'a Vec<Function>,
     stdout: BufWriter<StdoutLock<'a>>,
+    sender: Sender<Event>,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(functions: &'a Vec<Function>, environment: Environment) -> Self {
+    pub fn new(
+        functions: &'a Vec<Function>,
+        environment: Environment,
+        sender: Sender<Event>,
+    ) -> Self {
         Self {
             environment,
             functions,
             stdout: BufWriter::new(stdout().lock()),
+            sender,
         }
     }
 
@@ -200,8 +211,6 @@ impl<'a> TreeWalker<'a> {
             IntegerExpr::Variable(id) => Ok(self.environment.get_int(*id)),
             IntegerExpr::Literal(val) => Ok(*val),
             IntegerExpr::Call(id, expressions) => {
-                self.stdout.flush().unwrap();
-
                 let function = &self.functions[*id];
 
                 let mut environment = Environment::new();
@@ -216,10 +225,16 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, environment).interpret(&function.start)? {
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                let result = match self.interpret(&function.start)? {
                     TreeWalkerStatus::ReturnInt(v) => Ok(v),
                     _ => panic!("Function did not return the correct type"),
-                }
+                };
+
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                result
             }
             IntegerExpr::FloatCast(expr) => Ok(self.eval_float(expr)? as i64),
             IntegerExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64),
@@ -248,8 +263,6 @@ impl<'a> TreeWalker<'a> {
             FloatExpr::Variable(id) => Ok(self.environment.get_float(*id)),
             FloatExpr::Literal(val) => Ok(*val),
             FloatExpr::Call(id, expressions) => {
-                self.stdout.flush().unwrap();
-
                 let function = &self.functions[*id];
 
                 let mut environment = Environment::new();
@@ -264,10 +277,16 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, environment).interpret(&function.start)? {
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                let result = match self.interpret(&function.start)? {
                     TreeWalkerStatus::ReturnFloat(v) => Ok(v),
                     _ => panic!("Function did not return the correct type"),
-                }
+                };
+
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                result
             }
             FloatExpr::IntegerCast(expr) => Ok(self.eval_int(expr)? as f64),
             FloatExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64 as f64),
@@ -291,8 +310,6 @@ impl<'a> TreeWalker<'a> {
             StringExpr::Literal(val) => Ok(val.clone()),
             StringExpr::NativeCall(call) => self.native_call_string(call),
             StringExpr::Call(id, expressions) => {
-                self.stdout.flush().unwrap();
-
                 let function = &self.functions[*id];
 
                 let mut environment = Environment::new();
@@ -307,10 +324,16 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, environment).interpret(&function.start)? {
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                let result = match self.interpret(&function.start)? {
                     TreeWalkerStatus::ReturnString(v) => Ok(v),
                     _ => panic!("Function did not return the correct type"),
-                }
+                };
+
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                result
             }
             StringExpr::IntegerCast(expr) => Ok(self.eval_int(expr)?.to_string()),
             StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
@@ -395,10 +418,16 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, environment).interpret(&function.start)? {
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                let result = match self.interpret(&function.start)? {
                     TreeWalkerStatus::ReturnBoolean(v) => Ok(v),
                     _ => panic!("Function did not return the correct type"),
-                }
+                };
+
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                result
             }
             BooleanExpr::Unary(unary_operator, expr) => match unary_operator {
                 BooleanUnaryOperator::Bang => Ok(!self.eval_boolean(expr)?),
@@ -432,10 +461,16 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                match TreeWalker::new(self.functions, environment).interpret(&function.start) {
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                let result = match self.interpret(&function.start) {
                     Ok(TreeWalkerStatus::ReturnNone) | Ok(TreeWalkerStatus::Ok) => Ok(()),
                     _ => panic!("Function did not return the correct type"),
-                }
+                };
+
+                std::mem::swap(&mut environment, &mut self.environment);
+
+                result
             }
         }
     }
@@ -443,6 +478,7 @@ impl<'a> TreeWalker<'a> {
     fn native_call_none(&mut self, call: &NativeFunctionNone) -> Result<(), TreeWalkerErr> {
         match call {
             NativeFunctionNone::Cli(call) => self.cli_function_none(call),
+            NativeFunctionNone::Gui(call) => self.gui_function_none(call),
         }
     }
 
@@ -474,7 +510,6 @@ impl<'a> TreeWalker<'a> {
                 let boolean = self.eval_boolean(expr)?;
                 writeln!(self.stdout, "{}", boolean).unwrap()
             }
-            CliFunctionNone::PrintLine => writeln!(self.stdout).unwrap(),
             CliFunctionNone::PrintInteger(expr) => {
                 let mut buffer = [0u8; 20];
                 let int = self.eval_int(expr)?.numtoa(10, &mut buffer);
@@ -496,6 +531,25 @@ impl<'a> TreeWalker<'a> {
         }
 
         Ok(())
+    }
+
+    fn gui_function_none(&mut self, call: &GuiFunctionNone) -> Result<(), TreeWalkerErr> {
+        match call {
+            GuiFunctionNone::AddHeading(value) => {
+                let value = self.eval_string(value)?;
+
+                self.sender.send(Event::AddHeading(value)).unwrap();
+
+                Ok(())
+            }
+            GuiFunctionNone::AddParagraph(value) => {
+                let value = self.eval_string(value)?;
+
+                self.sender.send(Event::AddParagraph(value)).unwrap();
+
+                Ok(())
+            }
+        }
     }
 
     fn cli_function_string(&mut self, call: &CliFunctionString) -> Result<String, TreeWalkerErr> {

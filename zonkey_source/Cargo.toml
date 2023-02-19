@@ -4,6 +4,7 @@ members = [
 	"interpreter",
 	"zonkey-browser",
 	"zonkey",
+	"installer",
 ]
 
 resolver = "2"

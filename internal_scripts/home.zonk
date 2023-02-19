@@ -1,0 +1,5 @@
+start {
+	gui:add_heading("Home");
+
+	gui:add_paragraph("Welcome to the Zonkey Browser. Use the address bar to open your first app.");
+}

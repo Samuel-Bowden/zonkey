@@ -1,4 +1,4 @@
-use crate::{app::element::ElementType, message::Message};
+use crate::{message::Message, zonkey_app::element::ElementType};
 use iced::{
     widget::{Column, Scrollable, Text},
     Alignment, Element, Length,
@@ -20,9 +20,6 @@ pub fn build(element_type: &ElementType) -> Element<Message> {
             }
 
             Scrollable::new(Column::with_children(page_content).padding(30).spacing(20)).into()
-        }
-        ElementType::None => {
-            Column::new().into()
         }
     }
 }

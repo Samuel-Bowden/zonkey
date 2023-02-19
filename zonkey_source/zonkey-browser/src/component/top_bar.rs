@@ -34,12 +34,8 @@ impl From<TopBarStyle> for iced::theme::Container {
 }
 
 pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
-    let search_box = TextInput::new(
-        "Enter address",
-        &browser.app.address,
-        Message::AddressChanged,
-    )
-    .on_submit(Message::AddressConfirmed);
+    let search_box = TextInput::new("Enter address", &browser.address, Message::AddressChanged)
+        .on_submit(Message::AddressConfirmed);
 
     let settings_svg = Svg::new(Handle::from_memory(SETTINGS.as_bytes()));
     let settings_button = Button::new(settings_svg).on_press(Message::SettingsPressed);
