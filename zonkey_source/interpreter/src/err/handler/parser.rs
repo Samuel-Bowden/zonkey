@@ -414,7 +414,7 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
                 err_reporter
-                    .give_tip("All variables must be assigned a value when they are declared")
+                    .give_tip("All variables must be assigned a value when they are declared.")
             }
 
             ParserErrType::VariableDeclarationExprEvalNone(start, end) => {
@@ -422,7 +422,7 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                     "The expression to assign to the variable does not evaluate to a value",
                 );
                 err_reporter.report_section(start, end);
-                err_reporter.give_tip("An expression to assign to a variable must evaluate to a value such as an Integer, Float, String or Boolean. You may have assigned the result of a function that does not return a value by mistake");
+                err_reporter.give_tip("An expression to assign to a variable must evaluate to a value such as an Integer, Float, String or Boolean. You may have assigned the result of a function that does not return a value by mistake.");
             }
             //
 

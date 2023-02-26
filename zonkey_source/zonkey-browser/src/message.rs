@@ -8,4 +8,5 @@ pub enum Message {
     HomePressed,
     Event(interpreter::event::Event),
     Ready(mpsc::Sender<String>),
+    BootComplete(mpsc::Sender<String>),
 }

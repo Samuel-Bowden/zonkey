@@ -75,12 +75,12 @@ impl Application for ZonkeyBrowser {
                 match (it.next(), it.next(), it.next()) {
                     (Some(first), Some(second), None) => match first {
                         "zonkey" => match second {
-                            "settings" => self.app = self.home_app(),
-                            "home" => self.app = self.settings_app(),
+                            "home" => self.home_app(),
+                            "settings" => self.settings_app(),
                             _ => invalid = true,
                         },
                         "file" => {
-                            self.app = self.app(PathBuf::from(second), "Custom app".to_string());
+                            self.app(PathBuf::from(second), "Custom app".to_string());
                         }
                         _ => invalid = true,
                     },
@@ -89,18 +89,18 @@ impl Application for ZonkeyBrowser {
                 }
 
                 if invalid {
-                    self.app = self.invalid_app(self.address.clone());
+                    self.invalid_app(self.address.clone());
                 }
 
                 Command::none()
             }
             Message::HomePressed => {
-                self.app = self.home_app();
+                self.home_app();
                 self.address = String::from("zonkey:home");
                 Command::none()
             }
             Message::SettingsPressed => {
-                self.app = self.settings_app();
+                self.settings_app();
                 self.address = String::from("zonkey:settings");
                 Command::none()
             }
@@ -112,6 +112,12 @@ impl Application for ZonkeyBrowser {
             }
             Message::Ready(sender) => {
                 self.sender = Some(sender);
+                Command::none()
+            }
+            Message::BootComplete(sender) => {
+                self.sender = Some(sender);
+                self.home_app();
+                self.address = String::from("zonkey:home");
                 Command::none()
             }
         }
@@ -138,8 +144,16 @@ impl Application for ZonkeyBrowser {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        subscription::unfold(0, SubscriptionState::Starting, |state| async move {
+        subscription::unfold(0, SubscriptionState::Boot, |state| async move {
             match state {
+                SubscriptionState::Boot => {
+                    let (sender, receiver) = mpsc::channel();
+
+                    (
+                        Some(Message::BootComplete(sender)),
+                        SubscriptionState::Ready(receiver),
+                    )
+                }
                 SubscriptionState::Starting => {
                     let (sender, receiver) = mpsc::channel();
 
@@ -185,6 +199,7 @@ impl Application for ZonkeyBrowser {
 }
 
 enum SubscriptionState {
+    Boot,
     Starting,
     Ready(mpsc::Receiver<String>),
     Running(mpsc::Receiver<interpreter::event::Event>),
@@ -192,25 +207,25 @@ enum SubscriptionState {
 }
 
 impl ZonkeyBrowser {
-    fn home_app(&self) -> Option<ZonkeyApp> {
+    fn home_app(&mut self) {
         self.app(
             self.directories.data_dir().join("home.zonk"),
             "Home".to_string(),
-        )
+        );
     }
 
-    fn settings_app(&self) -> Option<ZonkeyApp> {
+    fn settings_app(&mut self) {
         self.app(
             self.directories.data_dir().join("settings.zonk"),
             "Settings".to_string(),
-        )
+        );
     }
 
-    fn invalid_app(&self, address: String) -> Option<ZonkeyApp> {
-        self.app(self.directories.data_dir().join("invalid.zonk"), address)
+    fn invalid_app(&mut self, address: String) {
+        self.app(self.directories.data_dir().join("invalid.zonk"), address);
     }
 
-    fn app(&self, path: PathBuf, name: String) -> Option<ZonkeyApp> {
+    fn app(&mut self, path: PathBuf, name: String) {
         if let Some(sender) = &self.sender {
             let source = if let Ok(s) = read_to_string(path) {
                 s
@@ -218,17 +233,21 @@ impl ZonkeyBrowser {
                 if let Ok(s) = read_to_string(self.directories.data_dir().join("invalid.zonk")) {
                     s
                 } else {
-                    eprintln!("Failed to load invalid page");
-                    return None;
+                    eprintln!("Failed to load invalid page.");
+                    return;
                 }
             };
 
-            sender
-                .send(source)
-                .expect("Interpreter thread has died, cannot start app.");
-        }
+            sender.send(source).expect(
+                "Could not start new app as communication with interpreter died unexpectedly.",
+            );
 
-        Some(ZonkeyApp::new_from_file(name))
+            self.sender = None;
+
+            self.app = Some(ZonkeyApp::new_from_file(name))
+        } else {
+            eprintln!("App is still executing.");
+        }
     }
 }
 

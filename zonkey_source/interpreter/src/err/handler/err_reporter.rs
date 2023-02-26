@@ -134,6 +134,6 @@ impl<'a> ErrReporter<'a> {
 
         self.stderr.reset().unwrap();
 
-        writeln!(&mut self.stderr, "{tip}.").unwrap();
+        writeln!(&mut self.stderr, "{tip}").unwrap();
     }
 }

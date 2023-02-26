@@ -1,0 +1,7 @@
+start {
+	gui:add_heading("Testing the scroll feature");
+
+	for (Integer count = 0, count <= 100, count += 1) {
+		gui:add_paragraph("Current iteration: " + (String count));
+	}
+}
