@@ -4,4 +4,5 @@ pub enum ValueType {
     Float,
     String,
     Boolean,
+    Class(String),
 }

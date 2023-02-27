@@ -4,5 +4,6 @@ pub enum ReturnType {
     Float,
     String,
     Boolean,
+    Class(String),
     None,
 }

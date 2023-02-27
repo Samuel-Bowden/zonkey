@@ -1,3 +1,5 @@
+use crate::class::Class;
+
 #[derive(Debug)]
 pub enum TreeWalkerStatus {
     Ok,
@@ -6,6 +8,7 @@ pub enum TreeWalkerStatus {
     ReturnFloat(f64),
     ReturnString(String),
     ReturnBoolean(bool),
+    ReturnClass(Class),
     ReturnNone,
     Break,
 }

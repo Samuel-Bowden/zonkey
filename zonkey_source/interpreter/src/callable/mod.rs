@@ -1,6 +1,6 @@
 use crate::stmt::Stmt;
 
 #[derive(Debug)]
-pub struct Function {
+pub struct Callable {
     pub start: Stmt,
 }

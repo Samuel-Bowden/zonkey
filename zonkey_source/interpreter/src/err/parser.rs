@@ -103,4 +103,11 @@ pub enum ParserErrType {
     // Casting errors
     CastNotPossible(Token, ReturnType, ReturnType),
     CastPointless(Token, ReturnType),
+
+    // Class declaration errors
+    ClassDeclarationExpectedName(Token, Option<Token>),
+    ClassDeclarationExpectedLeftBrace(Token, Option<Token>),
+    ClassDeclarationExpectedRightBrace(Token, Token),
+    ClassDeclarationExpectedPropertyName(Token, Option<Token>),
+    ClassDeclarationUnterminatedProperty(Token, Option<Token>),
 }

@@ -557,6 +557,61 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 );
                 err_reporter.report_token(token);
             }
+
+            // Class errors
+            ParserErrType::ClassDeclarationExpectedName(before, after) => {
+                err_reporter.writeln(
+                    format!("Expected a class name after '{}'.", before.token_type,).as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::ClassDeclarationExpectedLeftBrace(before, after) => {
+                err_reporter.writeln(
+                    format!(
+                        "Expected '{{' after '{}' to start body of class.",
+                        before.token_type
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::ClassDeclarationExpectedRightBrace(open, before) => {
+                err_reporter.writeln(
+                    "Expected class body to be closed with '}', but the end of the file was reached.",
+                );
+                err_reporter.writeln("        The body was opened here:");
+                err_reporter.report_token(open);
+                err_reporter.writeln("        But '}' was expected after the last character below to close the opened body:");
+                err_reporter.report_token(before);
+            }
+
+            ParserErrType::ClassDeclarationExpectedPropertyName(before, after) => {
+                err_reporter.writeln(
+                    format!(
+                        "Expected name of property after the data type '{}'.",
+                        before.token_type,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::ClassDeclarationUnterminatedProperty(before, after) => {
+                err_reporter.writeln(
+                    format!(
+                        "Expected ';' after '{}' to end property declaration.",
+                        before.token_type
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
         }
         err_reporter.newln();
     }

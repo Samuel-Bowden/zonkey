@@ -8,9 +8,7 @@ use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     debug_information,
     err::parser::{ParserErr, ParserErrType},
-    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
-    function::Function,
-    function_declaration::FunctionDeclaration,
+    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr, ClassExpr},
     native_function::{
         cli_api::{CliFunctionNone, CliFunctionString},
         gui_api::GuiFunctionNone,
@@ -23,7 +21,7 @@ use crate::{
     stmt::Stmt,
     token::{Token, TokenType},
     unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
-    value_type::ValueType,
+    value_type::ValueType, callable::Callable, declaration::{CallableDeclaration, DeclarationType},
 };
 use rustc_hash::FxHashMap;
 
@@ -34,9 +32,10 @@ pub struct Parser {
     float_next_id: usize,
     string_next_id: usize,
     boolean_next_id: usize,
-    function_declarations: FxHashMap<String, FunctionDeclaration>,
-    current_function_declaration: Option<FunctionDeclaration>,
-    functions: Vec<Function>,
+    class_next_id: usize,
+    declarations: FxHashMap<String, CallableDeclaration>,
+    current_function_declaration: Option<CallableDeclaration>,
+    callables: Vec<Callable>,
     error: ParserErr,
     start: Option<Start>,
     current: usize,
@@ -51,9 +50,10 @@ impl Parser {
             float_next_id: 0,
             string_next_id: 0,
             boolean_next_id: 0,
-            function_declarations: FxHashMap::default(),
+            class_next_id: 0,
+            declarations: FxHashMap::default(),
             current_function_declaration: None,
-            functions: vec![],
+            callables: vec![],
             error: ParserErr::new(),
             start: None,
             current: 0,
@@ -72,7 +72,7 @@ impl Parser {
         }
     }
 
-    pub fn run(mut self) -> Result<(Stmt, Vec<Function>), ParserErr> {
+    pub fn run(mut self) -> Result<(Stmt, Vec<Callable>), ParserErr> {
         parser_debug!("Production rule path:");
 
         self.program();
@@ -82,10 +82,13 @@ impl Parser {
         #[cfg(debug_assertions)]
         println!("Start block: {:?}", self.start);
 
+        #[cfg(debug_assertions)]
+        println!("Declarations: {:?}", self.declarations);
+
         if let Some(s) = self.start {
             if !self.error.had_error() {
                 if let Some(stmt) = s.stmt {
-                    return Ok((stmt, self.functions));
+                    return Ok((stmt, self.callables));
                 }
             }
         } else {
@@ -127,6 +130,10 @@ impl Parser {
                 token_type: TokenType::Function,
                 ..
             }) => self.function_declaration(),
+            Some(Token {
+                token_type: TokenType::Class,
+                ..
+            }) => self.class_declaration(),
             Some(unexpected_token) => {
                 self.error.add(ParserErrType::UnexpectedTokenInGlobal(
                     unexpected_token.clone(),
@@ -154,6 +161,7 @@ impl Parser {
         self.float_next_id = 0;
         self.string_next_id = 0;
         self.boolean_next_id = 0;
+        self.class_next_id = 0;
 
         if let Some(s) = &self.start {
             self.error
@@ -312,7 +320,7 @@ impl Parser {
         // Add parameters to the first value scope of function body
         let mut function_scope = FxHashMap::default();
         for parameter in &parameters {
-            match parameter.0 {
+            match &parameter.0 {
                 ValueType::Integer => {
                     function_scope.insert(
                         parameter.1.clone(),
@@ -339,17 +347,25 @@ impl Parser {
                     );
                     self.boolean_next_id += 1;
                 }
+                ValueType::Class(name) => {
+                    function_scope.insert(
+                        parameter.1.clone(),
+                        (ValueType::Class(name.clone()), self.class_next_id),
+                    );
+                    self.boolean_next_id += 1;
+                }
             }
         }
         self.value_stack.push(function_scope);
 
-        let function_declaration = FunctionDeclaration {
-            id: self.functions.len(),
+        let function_declaration = CallableDeclaration {
+            id: self.callables.len(),
             parameters,
             return_data_type,
+            declaration_type: DeclarationType::Function,
         };
 
-        self.function_declarations
+        self.declarations
             .insert(function_name, function_declaration.clone());
 
         self.current_function_declaration = Some(function_declaration);
@@ -363,11 +379,116 @@ impl Parser {
         self.float_next_id = 0;
         self.string_next_id = 0;
         self.boolean_next_id = 0;
+        self.class_next_id = 0;
 
         self.current_function_declaration = None;
 
-        // Finally add function
-        self.functions.push(Function { start: block });
+        // Finally add function to callables
+        self.callables.push(Callable { start: block });
+
+        Ok(())
+    }
+
+    fn class_declaration(&mut self) -> Result<(), ParserStatus> {
+        debug_information!("class_declaration");
+
+        let class_token_pos = self.current;
+        self.current += 1;
+
+        let class_name = match self.tokens.get(self.current) {
+            Some(Token {
+                token_type: TokenType::Identifier(name),
+                ..
+            }) => name.clone(),
+            t => {
+                self.error.add(ParserErrType::ClassDeclarationExpectedName(
+                    self.tokens[class_token_pos].clone(),
+                    t.cloned(),
+                ));
+                return Err(ParserStatus::Unwind);
+            }
+        };
+        self.current += 1;
+
+        let open_brace_pos = match self.tokens.get(self.current) {
+            Some(Token {
+                token_type: TokenType::LeftBrace,
+                ..
+            }) => self.current,
+            t => {
+                self.error
+                    .add(ParserErrType::ClassDeclarationExpectedLeftBrace(
+                        self.tokens[self.current - 1].clone(),
+                        t.cloned(),
+                    ));
+                return Err(ParserStatus::Unwind);
+            }
+        };
+        self.current += 1;
+
+        let mut properties = vec![];
+
+        while let Ok(dt) = self.data_type() {
+            self.current += 1;
+
+            match self.tokens.get(self.current) {
+                Some(Token {
+                    token_type: TokenType::Identifier(name),
+                    ..
+                }) => properties.push((dt, name.clone())),
+                t => {
+                    self.error
+                        .add(ParserErrType::ClassDeclarationExpectedPropertyName(
+                            self.tokens[self.current - 1].clone(),
+                            t.cloned(),
+                        ));
+                    return Err(ParserStatus::Unwind);
+                }
+            };
+            self.current += 1;
+
+            match self.tokens.get(self.current) {
+                Some(Token {
+                    token_type: TokenType::SemiColon,
+                    ..
+                }) => (),
+                t => {
+                    self.error
+                        .add(ParserErrType::ClassDeclarationUnterminatedProperty(
+                            self.tokens[self.current - 1].clone(),
+                            t.cloned(),
+                        ));
+                    return Err(ParserStatus::Unwind);
+                }
+            };
+            self.current += 1;
+        }
+
+        match self.tokens.get(self.current) {
+            Some(Token {
+                token_type: TokenType::RightBrace,
+                ..
+            }) => (),
+            _ => {
+                self.error
+                    .add(ParserErrType::ClassDeclarationExpectedRightBrace(
+                        self.tokens[open_brace_pos].clone(),
+                        self.tokens[self.current - 1].clone(),
+                    ));
+                return Err(ParserStatus::Unwind);
+            }
+        };
+        self.current += 1;
+
+        let class_declaration = CallableDeclaration { 
+            id: self.callables.len(),
+            parameters: vec![],
+            return_data_type: ReturnType::Class(class_name.clone()),
+            declaration_type: DeclarationType::Class(properties),
+        };
+
+        self.declarations
+            .insert(class_name, class_declaration);
 
         Ok(())
     }
@@ -628,6 +749,7 @@ impl Parser {
         let float_point = self.float_next_id;
         let string_point = self.string_next_id;
         let boolean_point = self.boolean_next_id;
+        let class_point = self.class_next_id;
 
         // Abort parsing when there are errors parsing the parameters, as a block has been
         // added and it will be very difficult to synchronise.
@@ -717,13 +839,14 @@ impl Parser {
         self.float_next_id = float_point;
         self.string_next_id = string_point;
         self.boolean_next_id = boolean_point;
+        self.class_next_id = class_point;
 
         Ok(Stmt::Block(
             vec![
                 initialiser_statement,
                 Stmt::While(test_statement, Box::new(block)),
             ],
-            (integer_point, float_point, string_point, boolean_point),
+            (integer_point, float_point, string_point, boolean_point, class_point),
         ))
     }
 
@@ -760,6 +883,7 @@ impl Parser {
         let float_point = self.float_next_id;
         let string_point = self.string_next_id;
         let boolean_point = self.boolean_next_id;
+        let class_point = self.class_next_id;
 
         loop {
             match self.current_token_type() {
@@ -771,10 +895,11 @@ impl Parser {
                     self.float_next_id = float_point;
                     self.string_next_id = string_point;
                     self.boolean_next_id = boolean_point;
+                    self.class_next_id = class_point;
 
                     return Ok(Stmt::Block(
                         statements,
-                        (integer_point, float_point, string_point, boolean_point),
+                        (integer_point, float_point, string_point, boolean_point, class_point),
                     ));
                 }
                 Some(_) => {
@@ -1018,6 +1143,15 @@ impl Parser {
                     .unwrap()
                     .insert(name.clone(), (ValueType::Boolean, id));
                 Ok(Stmt::BooleanVariableDeclaration(val))
+            }
+            Expr::Class(type_name, val) => {
+                let id = self.class_next_id;
+                self.class_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name, (ValueType::Class(type_name), id));
+                Ok(Stmt::ClassVariableDeclaration(val))
             }
             Expr::None(_) => {
                 self.error
@@ -1722,6 +1856,9 @@ impl Parser {
                                 ValueType::Boolean => {
                                     return Ok(Expr::Boolean(BooleanExpr::Variable(*id)))
                                 }
+                                ValueType::Class(name) => {
+                                    return Ok(Expr::Class(name.clone(), ClassExpr::Variable(*id)))
+                                }
                             }
                         }
                     }
@@ -1916,13 +2053,13 @@ impl Parser {
             });
         }
 
-        //Must be a zonkey function
-        if let Some(function) = self.function_declarations.get(&name) {
-            if arguments.len() != function.parameters.len() {
+        //Must be a zonkey call
+        if let Some(call) = self.declarations.get(&name) {
+            if arguments.len() != call.parameters.len() {
                 self.error.add(ParserErrType::CallIncorrectArgumentsNum(
                     self.tokens[token_pos - 1].clone(),
                     arguments.len(),
-                    function.parameters.len(),
+                    call.parameters.len(),
                     name,
                 ));
                 return Err(ParserStatus::Unwind);
@@ -1930,7 +2067,7 @@ impl Parser {
 
             // Check arguments evaluate to the same type as parameters
             for i in 0..arguments.len() {
-                match (&arguments[i], &function.parameters[i].0) {
+                match (&arguments[i], &call.parameters[i].0) {
                     (Expr::Integer(_), ValueType::Integer) => (),
                     (Expr::Float(_), ValueType::Float) => (),
                     (Expr::String(_), ValueType::String) => (),
@@ -1948,21 +2085,58 @@ impl Parser {
                 }
             }
 
-            match function.return_data_type {
+            return Ok(match &call.return_data_type {
                 ReturnType::Integer => {
-                    return Ok(Expr::Integer(IntegerExpr::Call(function.id, arguments)))
+                    Expr::Integer(IntegerExpr::Call(call.id, arguments))
                 }
                 ReturnType::Float => {
-                    return Ok(Expr::Float(FloatExpr::Call(function.id, arguments)))
+                    Expr::Float(FloatExpr::Call(call.id, arguments))
                 }
                 ReturnType::String => {
-                    return Ok(Expr::String(StringExpr::Call(function.id, arguments)))
+                    Expr::String(StringExpr::Call(call.id, arguments))
                 }
                 ReturnType::Boolean => {
-                    return Ok(Expr::Boolean(BooleanExpr::Call(function.id, arguments)))
+                    Expr::Boolean(BooleanExpr::Call(call.id, arguments))
                 }
-                ReturnType::None => return Ok(Expr::None(NoneExpr::Call(function.id, arguments))),
-            }
+                ReturnType::Class(name) => {
+                    Expr::Class(name.clone(),
+                        if let DeclarationType::Class(properties) = &call.declaration_type {
+                            let mut class_property_positions = vec![];
+
+                            for (vt, _) in properties {
+                                class_property_positions.push((vt.clone(), match vt {
+                                    ValueType::Integer => {
+                                        let id = self.integer_next_id;
+                                        self.integer_next_id += 1;
+                                        id
+                                    }
+                                    ValueType::Float => {
+                                        let id = self.float_next_id;
+                                        self.float_next_id += 1;
+                                        id
+                                    }
+                                    ValueType::String => {
+                                        let id = self.string_next_id;
+                                        self.string_next_id += 1;
+                                        id
+                                    }
+                                    ValueType::Boolean => {
+                                        let id = self.boolean_next_id;
+                                        self.boolean_next_id += 1;
+                                        id
+                                    }
+                                    ValueType::Class(_) => todo!()
+                                }));
+                            }
+
+                            ClassExpr::Constructor(class_property_positions, arguments)
+                        } else {
+                            ClassExpr::Call(arguments)
+                        }
+                    )
+                }
+                ReturnType::None => return Ok(Expr::None(NoneExpr::Call(call.id, arguments))),
+            })
         }
 
         self.error.add(ParserErrType::CallFunctionNotFound(
@@ -2022,6 +2196,7 @@ impl Parser {
             Expr::Float(_) => ReturnType::Float,
             Expr::String(_) => ReturnType::String,
             Expr::Boolean(_) => ReturnType::Boolean,
+            Expr::Class(name, _) => ReturnType::Class(name.clone()),
             Expr::None(_) => ReturnType::None,
         }
     }

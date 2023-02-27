@@ -1,0 +1,53 @@
+class TestClass1 {
+	Float zero;
+	Integer one;
+	String two;
+	String three;
+	String four;
+	Boolean five;
+	Float six;
+	Float seven;
+}
+
+class TestClass2 {
+	Boolean zero;
+	Integer one;
+	Integer two;
+	Integer three;
+	Float four;
+	String five;
+}
+
+start {
+	cli:println("Parsed successfully!");
+
+	let class_1 = TestClass1();
+
+	let int_1 = 0;
+
+	let class_2 = TestClass2();
+
+	let int_2 = 1;
+
+	loop {
+		if (int_1 == 10) {
+			break;
+		}
+
+		int_1 += 1;
+		int_2 += 100;
+	}
+
+	let string_1 = "Hello ";
+	string_1 += "World";
+
+	let boolean_1 = true;
+	let float_1 = 6.0;
+	float_1 *= 2.0;
+
+	cli:println("Printing int_1: " + (String int_1));
+	cli:println("Printing int_2: " + (String int_2));
+	cli:println("Printing float_1: " + (String float_1));
+	cli:println("Printing boolean_1: " + (String boolean_1));
+	cli:println("Printing string_1: " + string_1);
+}
