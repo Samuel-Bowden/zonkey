@@ -8,7 +8,6 @@ use stmt::Stmt;
 
 mod assignment_operator;
 mod comparison;
-mod class;
 mod debugger;
 mod environment;
 pub mod err;
@@ -27,6 +26,7 @@ pub mod token;
 mod tree_walker;
 mod unary_operator;
 pub mod value_type;
+mod value;
 
 pub fn run(source: &Vec<&str>, sender: Sender<Event>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");

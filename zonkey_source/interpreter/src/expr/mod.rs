@@ -2,7 +2,7 @@ use crate::{
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     native_function::{NativeFunctionNone, NativeFunctionString},
     operator::{NumericOperator, StringOperator},
-    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator}, value_type::ValueType,
+    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
 };
 
 #[derive(Debug)]
@@ -11,7 +11,7 @@ pub enum Expr {
     Float(FloatExpr),
     String(StringExpr),
     Boolean(BooleanExpr),
-    Class(String, ClassExpr),
+    Object(String, String, Vec<Expr>),
     None(NoneExpr),
 }
 
@@ -92,13 +92,6 @@ pub enum BooleanExpr {
     StringCast(Box<StringExpr>),
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
     Call(usize, Vec<Expr>),
-}
-
-#[derive(Debug)]
-pub enum ClassExpr {
-    Call(Vec<Expr>),
-    Variable(usize),
-    Constructor(Vec<(ValueType, usize)>, Vec<Expr>),
 }
 
 #[derive(Debug)]

@@ -2,7 +2,7 @@ use crate::{
     assignment_operator::{
         BooleanAssignmentOperator, NumericAssignmentOperator, StringAssignmentOperator,
     },
-    interpreter_debug, class::Class,
+    interpreter_debug,
 };
 
 pub struct Environment {
@@ -10,7 +10,6 @@ pub struct Environment {
     float_stack: Vec<f64>,
     string_stack: Vec<String>,
     boolean_stack: Vec<bool>,
-    class_stack: Vec<Class>,
 }
 
 impl Environment {
@@ -20,11 +19,10 @@ impl Environment {
             float_stack: vec![],
             string_stack: vec![],
             boolean_stack: vec![],
-            class_stack: vec![],
         }
     }
 
-    pub fn pop_stack(&mut self, block_start_points: &(usize, usize, usize, usize, usize)) {
+    pub fn pop_stack(&mut self, block_start_points: &(usize, usize, usize, usize)) {
         interpreter_debug!(format!(
             "Popping int stack at end of block: Before: {:?}",
             self.integer_stack
@@ -53,18 +51,10 @@ impl Environment {
         .as_str());
         self.boolean_stack.truncate(block_start_points.3);
 
-        interpreter_debug!(format!(
-            "Popping class stack at end of block: Before: {:?}",
-            self.class_stack
-        )
-        .as_str());
-        self.class_stack.truncate(block_start_points.4);
-
         interpreter_debug!(format!("Int stack after: {:?}", self.integer_stack).as_str());
         interpreter_debug!(format!("Float stack after: {:?}", self.float_stack).as_str());
         interpreter_debug!(format!("String stack after: {:?}", self.string_stack).as_str());
         interpreter_debug!(format!("Boolean stack after: {:?}", self.boolean_stack).as_str());
-        interpreter_debug!(format!("Class stack after: {:?}", self.class_stack).as_str());
     }
 
     pub fn push_int(&mut self, integer: i64) {
@@ -81,10 +71,6 @@ impl Environment {
 
     pub fn push_boolean(&mut self, boolean: bool) {
         self.boolean_stack.push(boolean);
-    }
-
-    pub fn push_class(&mut self, class: Class) {
-        self.class_stack.push(class);
     }
 
     pub fn push_stack(&mut self) {

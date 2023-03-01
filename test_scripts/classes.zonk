@@ -1,0 +1,40 @@
+class Pet {
+	String type;
+	String name;
+	Integer age;
+}
+
+class Person {
+	String name;
+	Integer age;
+	Pet pet;
+}
+
+function print_pet(Pet pt) {
+	cli:println("	Pet - Type: " + pt.type + ", Name: " + pt.name + ", Age: " + (String pt.age));
+}
+
+function print_person(Person pn, Integer record) {
+	cli:println("Record " + (String record));
+	cli:println("	Person - Name: " + pn.name + ", Age: " + (String pn.age));
+	print_pet(pn.pet);
+}
+ 
+start {
+	let p1 = new Person;
+	p1.age = 21;
+	p1.name = "Sam";
+	p1.pet.type = "Dog";
+	p1.pet.name = "Max";
+	p1.pet.age = 5;
+
+	let p2 = new Person;
+	p2.age = 45;
+	p2.name = "Steve";
+	p2.pet.type = "Tortoise";
+	p2.pet.name = "Terry";
+	p2.pet.age = 40;
+
+	print_person(p1, 1);
+	print_person(p2, 2);
+}

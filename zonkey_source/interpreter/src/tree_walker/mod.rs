@@ -4,15 +4,15 @@ use crate::{
     environment::Environment,
     err::tree_walker::TreeWalkerErr,
     event::Event,
-    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr, ClassExpr},
+    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     native_function::{
         cli_api::{CliFunctionNone, CliFunctionString},
         gui_api::GuiFunctionNone,
         NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
-    stmt::Stmt,
-    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator}, callable::Callable, class::Class, value_type::ValueType,
+    stmt::{Stmt, ConstructionType},
+    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator}, callable::Callable,
 };
 use numtoa::NumToA;
 use std::{
@@ -71,9 +71,8 @@ impl<'a> TreeWalker<'a> {
                 self.environment.push_string(string);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::ClassVariableDeclaration(expr) => {
-                let class = self.eval_class(expr)?;
-                self.environment.push_class(class);
+            Stmt::ClassVariableDeclaration(types) => {
+                self.construct_class(types);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::StringVariableAssignment(id, expr, assignment_operator) => {
@@ -135,11 +134,10 @@ impl<'a> TreeWalker<'a> {
                     Expr::Boolean(expr) => {
                         self.eval_boolean(expr)?;
                     }
-                    Expr::Class(_, expr) => {
-                        self.eval_class(expr)?;
-                    }
                     Expr::None(expr) => {
                         self.eval_none(expr)?;
+                    }
+                    Expr::Object(..) => {
                     }
                 }
 
@@ -186,37 +184,11 @@ impl<'a> TreeWalker<'a> {
                     self.eval_none(expr)?;
                     Ok(TreeWalkerStatus::ReturnNone)
                 }
-                Some(Expr::Class(_, expr)) => {
+                Some(Expr::Object(..)) => {
                     todo!()
                 }
                 None => Ok(TreeWalkerStatus::ReturnNone),
             },
-        }
-    }
-
-    fn eval_class(&mut self, expression: &ClassExpr) -> Result<Class, TreeWalkerErr> {
-        match expression {
-            ClassExpr::Call(..) => {
-                todo!()
-            }
-            ClassExpr::Variable(_) => {
-                todo!()
-            }
-            ClassExpr::Constructor(properties, _) => {
-                for (vt, _) in properties {
-                    match vt {
-                        ValueType::Integer => self.environment.push_int(0),
-                        ValueType::Float => self.environment.push_float(0.),
-                        ValueType::String => self.environment.push_string(String::new()),
-                        ValueType::Boolean => self.environment.push_boolean(false),
-                        ValueType::Class(_) => todo!()
-                    }
-                }
-
-                Ok(Class {
-                    properties: properties.clone()
-                })
-            }
         }
     }
 
@@ -247,31 +219,10 @@ impl<'a> TreeWalker<'a> {
             IntegerExpr::Variable(id) => Ok(self.environment.get_int(*id)),
             IntegerExpr::Literal(val) => Ok(*val),
             IntegerExpr::Call(id, expressions) => {
-                let callable = &self.callables[*id];
-
-                let mut environment = Environment::new();
-
-                for expression in expressions {
-                    match expression {
-                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
-                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
-                        Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
-                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
-                        Expr::Class(_, expr) => environment.push_class(self.eval_class(expr)?),
-                        Expr::None(_) => panic!("Cannot pass none to a callable"),
-                    }
-                }
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                let result = match self.interpret(&callable.start)? {
+                match self.eval_call(*id, expressions)? {
                     TreeWalkerStatus::ReturnInt(v) => Ok(v),
-                    _ => panic!("Function did not return the correct type"),
-                };
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                result
+                    _ => panic!("Call did not return correct type")
+                }
             }
             IntegerExpr::FloatCast(expr) => Ok(self.eval_float(expr)? as i64),
             IntegerExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64),
@@ -300,31 +251,10 @@ impl<'a> TreeWalker<'a> {
             FloatExpr::Variable(id) => Ok(self.environment.get_float(*id)),
             FloatExpr::Literal(val) => Ok(*val),
             FloatExpr::Call(id, expressions) => {
-                let callable = &self.callables[*id];
-
-                let mut environment = Environment::new();
-
-                for expression in expressions {
-                    match expression {
-                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
-                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
-                        Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
-                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
-                        Expr::Class(_, expr) => environment.push_class(self.eval_class(expr)?),
-                        Expr::None(_) => panic!("Cannot pass none to a callable"),
-                    }
-                }
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                let result = match self.interpret(&callable.start)? {
+                match self.eval_call(*id, expressions)? {
                     TreeWalkerStatus::ReturnFloat(v) => Ok(v),
-                    _ => panic!("Function did not return the correct type"),
-                };
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                result
+                    _ => panic!("Call did not return correct type")
+                }
             }
             FloatExpr::IntegerCast(expr) => Ok(self.eval_int(expr)? as f64),
             FloatExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64 as f64),
@@ -348,31 +278,10 @@ impl<'a> TreeWalker<'a> {
             StringExpr::Literal(val) => Ok(val.clone()),
             StringExpr::NativeCall(call) => self.native_call_string(call),
             StringExpr::Call(id, expressions) => {
-                let callable = &self.callables[*id];
-
-                let mut environment = Environment::new();
-
-                for expression in expressions {
-                    match expression {
-                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
-                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
-                        Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
-                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
-                        Expr::Class(_, expr) => environment.push_class(self.eval_class(expr)?),
-                        Expr::None(_) => panic!("Cannot pass none to a callable"),
-                    }
-                }
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                let result = match self.interpret(&callable.start)? {
+                match self.eval_call(*id, expressions)? {
                     TreeWalkerStatus::ReturnString(v) => Ok(v),
-                    _ => panic!("Function did not return the correct type"),
-                };
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                result
+                    _ => panic!("Call did not return correct type")
+                }
             }
             StringExpr::IntegerCast(expr) => Ok(self.eval_int(expr)?.to_string()),
             StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
@@ -441,33 +350,10 @@ impl<'a> TreeWalker<'a> {
             BooleanExpr::Variable(id) => Ok(self.environment.get_boolean(*id)),
             BooleanExpr::Literal(val) => Ok(*val),
             BooleanExpr::Call(id, expressions) => {
-                self.stdout.flush().unwrap();
-
-                let callable = &self.callables[*id];
-
-                let mut environment = Environment::new();
-
-                for expression in expressions {
-                    match expression {
-                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
-                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
-                        Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
-                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
-                        Expr::Class(_, expr) => environment.push_class(self.eval_class(expr)?),
-                        Expr::None(_) => panic!("Cannot pass none to a callable"),
-                    }
-                }
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                let result = match self.interpret(&callable.start)? {
+                match self.eval_call(*id, expressions)? {
                     TreeWalkerStatus::ReturnBoolean(v) => Ok(v),
-                    _ => panic!("Function did not return the correct type"),
-                };
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                result
+                    _ => panic!("Call did not return correct type")
+                }
             }
             BooleanExpr::Unary(unary_operator, expr) => match unary_operator {
                 BooleanUnaryOperator::Bang => Ok(!self.eval_boolean(expr)?),
@@ -485,33 +371,10 @@ impl<'a> TreeWalker<'a> {
         match expression {
             NoneExpr::NativeCall(call) => self.native_call_none(call),
             NoneExpr::Call(id, expressions) => {
-                self.stdout.flush().unwrap();
-
-                let callable = &self.callables[*id];
-
-                let mut environment = Environment::new();
-
-                for expression in expressions {
-                    match expression {
-                        Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
-                        Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
-                        Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
-                        Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
-                        Expr::Class(_, expr) => environment.push_class(self.eval_class(expr)?),
-                        Expr::None(_) => panic!("Cannot pass none to a callable"),
-                    }
+                match self.eval_call(*id, expressions)? {
+                    TreeWalkerStatus::ReturnNone | TreeWalkerStatus::Ok => Ok(()),
+                    _ => panic!("Call did not return correct type")
                 }
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                let result = match self.interpret(&callable.start) {
-                    Ok(TreeWalkerStatus::ReturnNone) | Ok(TreeWalkerStatus::Ok) => Ok(()),
-                    _ => panic!("Function did not return the correct type"),
-                };
-
-                std::mem::swap(&mut environment, &mut self.environment);
-
-                result
             }
         }
     }
@@ -609,6 +472,53 @@ impl<'a> TreeWalker<'a> {
                 std::io::stdin().read_line(&mut input).unwrap();
 
                 Ok(input.trim().to_string())
+            }
+        }
+    }
+
+    fn eval_call(&mut self, id: usize, expressions: &Vec<Expr>) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+        let callable = &self.callables[id];
+
+        let mut environment = Environment::new();
+
+        for expression in expressions {
+            self.add_expr_to_environment(expression, &mut environment)?;
+        }
+
+        std::mem::swap(&mut environment, &mut self.environment);
+
+        let result = self.interpret(&callable.start);
+
+        std::mem::swap(&mut environment, &mut self.environment);
+
+        result
+    }
+
+    fn add_expr_to_environment(&mut self, expr: &Expr, environment: &mut Environment) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+        match expr {
+            Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
+            Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
+            Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
+            Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
+            Expr::None(_) => panic!("Cannot pass none to a callable"),
+            Expr::Object(_, _, exprs) => {
+                for expr in exprs {
+                    self.add_expr_to_environment(expr, environment)?;
+                }
+            },
+        }
+
+        Ok(TreeWalkerStatus::Ok)
+    }
+
+    fn construct_class(&mut self, types: &Vec<ConstructionType>) {
+        for value_type in types {
+            match value_type {
+                ConstructionType::Integer => self.environment.push_int(0),
+                ConstructionType::Float => self.environment.push_float(0.),
+                ConstructionType::String => self.environment.push_string(String::new()),
+                ConstructionType::Boolean => self.environment.push_boolean(false),
+                ConstructionType::Class(types) => self.construct_class(types),
             }
         }
     }

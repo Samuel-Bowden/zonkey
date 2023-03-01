@@ -12,7 +12,7 @@ local_declaration -> terminated_variable_declaration | statement;
 statement -> terminated_statement | block | if_statement | while_statement | loop_statement | for_statement;
 terminated_statement -> (expression_statement | return_statement | "break" | "continue") ";";
 expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
-variable_declaration = "let" IDENTIFIER "=" expression; 
+variable_declaration = "let" IDENTIFIER "=" (expression | new IDENTIFIER); 
 terminated_variable_declaration = variable_declaration ";";
 expression -> cast;
 cast -> data_type? and;
@@ -23,7 +23,7 @@ comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 unary -> ("-" | "!") unary | literal;
-literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER | call | "(" equality ")";
+literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER (. IDENTIFIER)* | call | "(" equality ")";
 call -> (IDENTIFIER ":")? IDENTIFIER "(" equality ("," equality)* ")";
 block -> "{" local_declaration* "}"
 if_statement -> "if" "(" equality ")" block ("else" block)?; 
