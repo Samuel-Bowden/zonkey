@@ -4,4 +4,7 @@ use crate::expr::StringExpr;
 pub enum GuiFunctionNone {
     AddHeading(Box<StringExpr>),
     AddParagraph(Box<StringExpr>),
+    AddHyperlink(Box<StringExpr>),
+    AddButton(Box<StringExpr>),
+    AddImage(Box<StringExpr>),
 }

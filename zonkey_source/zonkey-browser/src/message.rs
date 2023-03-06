@@ -9,4 +9,6 @@ pub enum Message {
     Event(interpreter::event::Event),
     Ready(mpsc::Sender<String>),
     BootComplete(mpsc::Sender<String>),
+    PageButtonPressed,
+    Hyperlink(String),
 }

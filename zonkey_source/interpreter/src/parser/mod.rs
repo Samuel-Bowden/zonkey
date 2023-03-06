@@ -5,8 +5,10 @@ use crate::{
     assignment_operator::{
         BooleanAssignmentOperator, NumericAssignmentOperator, StringAssignmentOperator,
     },
+    callable::Callable,
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     debug_information,
+    declaration::{ClassDeclaration, FunctionDeclaration},
     err::parser::{ParserErr, ParserErrType},
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
     native_function::{
@@ -18,10 +20,11 @@ use crate::{
     parser_debug,
     return_type::ReturnType,
     start::Start,
-    stmt::{Stmt, ConstructionType},
+    stmt::{ConstructionType, Stmt},
     token::{Token, TokenType},
     unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
-    value_type::ValueType, callable::Callable, declaration::{FunctionDeclaration, ClassDeclaration}, value::{Value, Object},
+    value::{Object, Value},
+    value_type::ValueType,
 };
 use indexmap::IndexMap;
 use rustc_hash::FxHashMap;
@@ -442,9 +445,7 @@ impl Parser {
         };
         self.current += 1;
 
-        let class_declaration = ClassDeclaration { 
-            properties,
-        };
+        let class_declaration = ClassDeclaration { properties };
 
         self.class_declarations
             .insert(class_name, class_declaration);
@@ -1062,7 +1063,7 @@ impl Parser {
 
         if let Some(TokenType::New) = self.current_token_type() {
             self.current += 1;
-            
+
             match self.current_token_type().cloned() {
                 Some(TokenType::Identifier(class_name)) => {
                     self.current += 1;
@@ -1770,9 +1771,7 @@ impl Parser {
                 self.current += 1;
 
                 match self.current_token_type() {
-                    Some(TokenType::LeftParen) => {
-                        self.call(&name, None, self.current)
-                    }
+                    Some(TokenType::LeftParen) => self.call(&name, None, self.current),
                     Some(TokenType::Colon) => {
                         self.current += 1;
 
@@ -1782,9 +1781,11 @@ impl Parser {
                                 self.current += 1;
 
                                 match self.current_token_type() {
-                                    Some(TokenType::LeftParen) => {
-                                        self.call(&second_name, Some(name.clone()), self.current - 1)
-                                    }
+                                    Some(TokenType::LeftParen) => self.call(
+                                        &second_name,
+                                        Some(name.clone()),
+                                        self.current - 1,
+                                    ),
                                     _ => {
                                         self.error.add(ParserErrType::ModuleExpectedLeftParen(
                                             self.tokens[self.current - 1].clone(),
@@ -1805,9 +1806,7 @@ impl Parser {
                     }
                     Some(TokenType::Dot) => {
                         let mut object = match self.find_value(&name) {
-                            Some(Value::Object(obj)) => {
-                                obj
-                            }
+                            Some(Value::Object(obj)) => obj,
                             _ => {
                                 panic!("Value {name} is not an object");
                             }
@@ -1816,7 +1815,9 @@ impl Parser {
                         loop {
                             self.current += 1;
 
-                            name = if let Some(TokenType::Identifier(name)) = self.current_token_type() {
+                            name = if let Some(TokenType::Identifier(name)) =
+                                self.current_token_type()
+                            {
                                 name.clone()
                             } else {
                                 panic!("Expected identifier for property name");
@@ -1829,9 +1830,7 @@ impl Parser {
                                     object = obj.clone();
                                     continue;
                                 }
-                                (Some(v), _) => {
-                                    return Ok(self.get_variable_expr(v.clone(), name))
-                                }
+                                (Some(v), _) => return Ok(self.get_variable_expr(v.clone(), name)),
                                 (_, Some(TokenType::Dot)) => {
                                     panic!("Value {name} is not an object");
                                 }
@@ -1841,14 +1840,12 @@ impl Parser {
                             }
                         }
                     }
-                    _ => {
-                        match self.find_value(&name) {
-                            Some(value) => Ok(self.get_variable_expr(value, name)),
-                            None => {
-                                panic!("Value not found");
-                            }
+                    _ => match self.find_value(&name) {
+                        Some(value) => Ok(self.get_variable_expr(value, name)),
+                        None => {
+                            panic!("Value not found");
                         }
-                    }
+                    },
                 }
             }
             _ => {
@@ -1923,6 +1920,9 @@ impl Parser {
                 ("cli", "prompt") => vec![InternalType::String],
                 ("gui", "add_heading") => vec![InternalType::String],
                 ("gui", "add_paragraph") => vec![InternalType::String],
+                ("gui", "add_hyperlink") => vec![InternalType::String],
+                ("gui", "add_image") => vec![InternalType::String],
+                ("gui", "add_button") => vec![InternalType::String],
                 ("cli" | "gui", _) => {
                     self.error.add(ParserErrType::CallModuleFunctionNotFound(
                         self.tokens[token_pos].clone(),
@@ -2030,6 +2030,30 @@ impl Parser {
                     }
                     _ => unreachable!(),
                 },
+                ("gui", "add_hyperlink") => match arguments.pop() {
+                    Some(Expr::String(value)) => {
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Gui(
+                            GuiFunctionNone::AddHyperlink(Box::new(value)),
+                        ))));
+                    }
+                    _ => unreachable!(),
+                },
+                ("gui", "add_image") => match arguments.pop() {
+                    Some(Expr::String(value)) => {
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Gui(
+                            GuiFunctionNone::AddImage(Box::new(value)),
+                        ))));
+                    }
+                    _ => unreachable!(),
+                },
+                ("gui", "add_button") => match arguments.pop() {
+                    Some(Expr::String(value)) => {
+                        return Ok(Expr::None(NoneExpr::NativeCall(NativeFunctionNone::Gui(
+                            GuiFunctionNone::AddButton(Box::new(value)),
+                        ))));
+                    }
+                    _ => unreachable!(),
+                },
                 _ => unreachable!(),
             });
         }
@@ -2053,7 +2077,11 @@ impl Parser {
                     (Expr::Float(_), ValueType::Float) => (),
                     (Expr::String(_), ValueType::String) => (),
                     (Expr::Boolean(_), ValueType::Boolean) => (),
-                    (Expr::Object(object_type, ..), ValueType::Class(class_type)) if object_type == class_type => (),
+                    (Expr::Object(object_type, ..), ValueType::Class(class_type))
+                        if object_type == class_type =>
+                    {
+                        ()
+                    }
                     (expr, _) => {
                         let expr_type = self.expr_type(expr);
 
@@ -2068,23 +2096,15 @@ impl Parser {
             }
 
             return Ok(match &call.return_data_type {
-                ReturnType::Integer => {
-                    Expr::Integer(IntegerExpr::Call(call.id, arguments))
-                }
-                ReturnType::Float => {
-                    Expr::Float(FloatExpr::Call(call.id, arguments))
-                }
-                ReturnType::String => {
-                    Expr::String(StringExpr::Call(call.id, arguments))
-                }
-                ReturnType::Boolean => {
-                    Expr::Boolean(BooleanExpr::Call(call.id, arguments))
-                }
+                ReturnType::Integer => Expr::Integer(IntegerExpr::Call(call.id, arguments)),
+                ReturnType::Float => Expr::Float(FloatExpr::Call(call.id, arguments)),
+                ReturnType::String => Expr::String(StringExpr::Call(call.id, arguments)),
+                ReturnType::Boolean => Expr::Boolean(BooleanExpr::Call(call.id, arguments)),
                 ReturnType::Class(_) => {
                     todo!()
                 }
                 ReturnType::None => return Ok(Expr::None(NoneExpr::Call(call.id, arguments))),
-            })
+            });
         }
 
         self.error.add(ParserErrType::CallFunctionNotFound(
@@ -2138,7 +2158,10 @@ impl Parser {
         }
     }
 
-    fn create_object(&mut self, class_name: String) -> Result<(Object, Vec<ConstructionType>), ParserStatus> {
+    fn create_object(
+        &mut self,
+        class_name: String,
+    ) -> Result<(Object, Vec<ConstructionType>), ParserStatus> {
         let declaration = match self.class_declarations.get(&class_name) {
             Some(declaration) => declaration,
             None => {
@@ -2156,22 +2179,30 @@ impl Parser {
         for (name, value_type) in declaration.properties.clone() {
             match value_type {
                 ValueType::Integer => {
-                    object.properties.insert(name.to_string(), Value::Integer(self.integer_next_id));
+                    object
+                        .properties
+                        .insert(name.to_string(), Value::Integer(self.integer_next_id));
                     self.integer_next_id += 1;
                     types.push(ConstructionType::Integer);
                 }
                 ValueType::Float => {
-                    object.properties.insert(name.to_string(), Value::Float(self.float_next_id));
+                    object
+                        .properties
+                        .insert(name.to_string(), Value::Float(self.float_next_id));
                     self.float_next_id += 1;
                     types.push(ConstructionType::Float);
                 }
                 ValueType::String => {
-                    object.properties.insert(name.to_string(), Value::String(self.string_next_id));
+                    object
+                        .properties
+                        .insert(name.to_string(), Value::String(self.string_next_id));
                     self.string_next_id += 1;
                     types.push(ConstructionType::String);
                 }
                 ValueType::Boolean => {
-                    object.properties.insert(name.to_string(), Value::Boolean(self.boolean_next_id));
+                    object
+                        .properties
+                        .insert(name.to_string(), Value::Boolean(self.boolean_next_id));
                     self.boolean_next_id += 1;
                     types.push(ConstructionType::Boolean);
                 }
@@ -2189,7 +2220,7 @@ impl Parser {
     fn find_value(&self, name: &str) -> Option<Value> {
         for scope in self.value_stack.iter().rev() {
             if let Some(value) = scope.get(name) {
-                return Some(value.clone())
+                return Some(value.clone());
             }
         }
         None
@@ -2197,84 +2228,63 @@ impl Parser {
 
     fn get_variable_expr(&self, value: Value, name: String) -> Expr {
         match value {
-            Value::Integer(id) => {
-                Expr::Integer(IntegerExpr::Variable(id))
-            }
-            Value::Float(id) => {
-                Expr::Float(FloatExpr::Variable(id))
-            }
-            Value::String(id) => {
-                Expr::String(StringExpr::Variable(id))
-            }
-            Value::Boolean(id) => {
-                Expr::Boolean(BooleanExpr::Variable(id))
-            }
-            Value::Object(obj) => {
-                Expr::Object(
-                    obj.class_declaration.clone(),
-                    name.to_string(),
-                    {
-                        let mut expressions = vec![];
-                        for (name, value) in obj.properties {
-                            expressions.push(self.get_variable_expr(value, name));
-                        }
-                        expressions
-                    }
-                )
-            }
+            Value::Integer(id) => Expr::Integer(IntegerExpr::Variable(id)),
+            Value::Float(id) => Expr::Float(FloatExpr::Variable(id)),
+            Value::String(id) => Expr::String(StringExpr::Variable(id)),
+            Value::Boolean(id) => Expr::Boolean(BooleanExpr::Variable(id)),
+            Value::Object(obj) => Expr::Object(obj.class_declaration.clone(), name.to_string(), {
+                let mut expressions = vec![];
+                for (name, value) in obj.properties {
+                    expressions.push(self.get_variable_expr(value, name));
+                }
+                expressions
+            }),
         }
     }
 
-    fn add_function_parameter(&mut self, value_type: &ValueType, name: &str, scope: &mut IndexMap<String, Value>) {
+    fn add_function_parameter(
+        &mut self,
+        value_type: &ValueType,
+        name: &str,
+        scope: &mut IndexMap<String, Value>,
+    ) {
         match value_type {
             ValueType::Integer => {
-                scope.insert(
-                    name.to_string(),
-                    Value::Integer(self.integer_next_id),
-                );
+                scope.insert(name.to_string(), Value::Integer(self.integer_next_id));
                 self.integer_next_id += 1;
             }
             ValueType::Float => {
-                scope
-                    .insert(name.to_string(), Value::Float(self.float_next_id));
+                scope.insert(name.to_string(), Value::Float(self.float_next_id));
                 self.float_next_id += 1;
             }
             ValueType::String => {
-                scope.insert(
-                    name.to_string(),
-                    Value::String(self.string_next_id),
-                );
+                scope.insert(name.to_string(), Value::String(self.string_next_id));
                 self.string_next_id += 1;
             }
             ValueType::Boolean => {
-                scope.insert(
-                    name.to_string(),
-                    Value::Boolean(self.boolean_next_id),
-                );
+                scope.insert(name.to_string(), Value::Boolean(self.boolean_next_id));
                 self.boolean_next_id += 1;
             }
-            ValueType::Class(class_type) => {
-                match self.class_declarations.remove(class_type) {
-                    Some(cd) => {
-                        let mut properties = IndexMap::new();
+            ValueType::Class(class_type) => match self.class_declarations.remove(class_type) {
+                Some(cd) => {
+                    let mut properties = IndexMap::new();
 
-                        for (name, value_type) in &cd.properties {
-                            self.add_function_parameter(value_type, name, &mut properties);
-                        }
-
-                        self.class_declarations.insert(class_type.to_string(), cd);
-
-                        scope.insert(
-                            name.to_string(),
-                            Value::Object(Object {
-                                class_declaration: class_type.to_string(),
-                                properties,
-                            }),
-                        );
+                    for (name, value_type) in &cd.properties {
+                        self.add_function_parameter(value_type, name, &mut properties);
                     }
-                    None => panic!("Function parameter of undefined class type")
+
+                    self.class_declarations.insert(class_type.to_string(), cd);
+
+                    scope.insert(
+                        name.to_string(),
+                        Value::Object(Object {
+                            class_declaration: class_type.to_string(),
+                            properties,
+                        }),
+                    );
                 }
-            }
+                None => panic!("Function parameter of undefined class type"),
+            },
         }
     }
 }

@@ -1,5 +1,5 @@
+use crate::{return_type::ReturnType, value_type::ValueType};
 use rustc_hash::FxHashMap;
-use crate::{value_type::ValueType, return_type::ReturnType};
 
 #[derive(Debug, Clone)]
 pub struct FunctionDeclaration {

@@ -6,7 +6,7 @@ description = "Browser that run programs written in Zonkey script over the inter
 authors = ["Sam Bowden"]
 
 [dependencies]
-iced = { version = "0.8", features = ["svg"] }
+iced = { version = "0.8", features = ["svg", "image"] }
 interpreter = { path = "../interpreter" }
 unicode-segmentation = "1.10.0"
 directories = "4.0.1"

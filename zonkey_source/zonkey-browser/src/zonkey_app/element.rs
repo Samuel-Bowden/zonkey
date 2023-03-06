@@ -6,5 +6,8 @@ pub struct Element {
 pub enum ElementType {
     Heading(String),
     Paragraph(String),
+    Hyperlink(String),
+    Image(String),
     Page(Vec<Element>),
+    Button(String),
 }

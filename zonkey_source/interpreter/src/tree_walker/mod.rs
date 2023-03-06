@@ -1,5 +1,6 @@
 use self::status::TreeWalkerStatus;
 use crate::{
+    callable::Callable,
     comparison::{BooleanComparision, NumericComparision, StringComparision},
     environment::Environment,
     err::tree_walker::TreeWalkerErr,
@@ -11,8 +12,8 @@ use crate::{
         NativeFunctionNone, NativeFunctionString,
     },
     operator::{NumericOperator, StringOperator},
-    stmt::{Stmt, ConstructionType},
-    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator}, callable::Callable,
+    stmt::{ConstructionType, Stmt},
+    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
 };
 use numtoa::NumToA;
 use std::{
@@ -137,8 +138,7 @@ impl<'a> TreeWalker<'a> {
                     Expr::None(expr) => {
                         self.eval_none(expr)?;
                     }
-                    Expr::Object(..) => {
-                    }
+                    Expr::Object(..) => {}
                 }
 
                 Ok(TreeWalkerStatus::Ok)
@@ -218,12 +218,10 @@ impl<'a> TreeWalker<'a> {
             },
             IntegerExpr::Variable(id) => Ok(self.environment.get_int(*id)),
             IntegerExpr::Literal(val) => Ok(*val),
-            IntegerExpr::Call(id, expressions) => {
-                match self.eval_call(*id, expressions)? {
-                    TreeWalkerStatus::ReturnInt(v) => Ok(v),
-                    _ => panic!("Call did not return correct type")
-                }
-            }
+            IntegerExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
+                TreeWalkerStatus::ReturnInt(v) => Ok(v),
+                _ => panic!("Call did not return correct type"),
+            },
             IntegerExpr::FloatCast(expr) => Ok(self.eval_float(expr)? as i64),
             IntegerExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64),
             IntegerExpr::StringCast(expr) => match self.eval_string(expr)?.parse() {
@@ -250,12 +248,10 @@ impl<'a> TreeWalker<'a> {
             },
             FloatExpr::Variable(id) => Ok(self.environment.get_float(*id)),
             FloatExpr::Literal(val) => Ok(*val),
-            FloatExpr::Call(id, expressions) => {
-                match self.eval_call(*id, expressions)? {
-                    TreeWalkerStatus::ReturnFloat(v) => Ok(v),
-                    _ => panic!("Call did not return correct type")
-                }
-            }
+            FloatExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
+                TreeWalkerStatus::ReturnFloat(v) => Ok(v),
+                _ => panic!("Call did not return correct type"),
+            },
             FloatExpr::IntegerCast(expr) => Ok(self.eval_int(expr)? as f64),
             FloatExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64 as f64),
             FloatExpr::StringCast(expr) => match self.eval_string(expr)?.parse() {
@@ -277,12 +273,10 @@ impl<'a> TreeWalker<'a> {
             StringExpr::Variable(id) => Ok(self.environment.get_string(*id)),
             StringExpr::Literal(val) => Ok(val.clone()),
             StringExpr::NativeCall(call) => self.native_call_string(call),
-            StringExpr::Call(id, expressions) => {
-                match self.eval_call(*id, expressions)? {
-                    TreeWalkerStatus::ReturnString(v) => Ok(v),
-                    _ => panic!("Call did not return correct type")
-                }
-            }
+            StringExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
+                TreeWalkerStatus::ReturnString(v) => Ok(v),
+                _ => panic!("Call did not return correct type"),
+            },
             StringExpr::IntegerCast(expr) => Ok(self.eval_int(expr)?.to_string()),
             StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
             StringExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)?.to_string()),
@@ -349,12 +343,10 @@ impl<'a> TreeWalker<'a> {
             },
             BooleanExpr::Variable(id) => Ok(self.environment.get_boolean(*id)),
             BooleanExpr::Literal(val) => Ok(*val),
-            BooleanExpr::Call(id, expressions) => {
-                match self.eval_call(*id, expressions)? {
-                    TreeWalkerStatus::ReturnBoolean(v) => Ok(v),
-                    _ => panic!("Call did not return correct type")
-                }
-            }
+            BooleanExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
+                TreeWalkerStatus::ReturnBoolean(v) => Ok(v),
+                _ => panic!("Call did not return correct type"),
+            },
             BooleanExpr::Unary(unary_operator, expr) => match unary_operator {
                 BooleanUnaryOperator::Bang => Ok(!self.eval_boolean(expr)?),
             },
@@ -370,12 +362,10 @@ impl<'a> TreeWalker<'a> {
     fn eval_none(&mut self, expression: &NoneExpr) -> Result<(), TreeWalkerErr> {
         match expression {
             NoneExpr::NativeCall(call) => self.native_call_none(call),
-            NoneExpr::Call(id, expressions) => {
-                match self.eval_call(*id, expressions)? {
-                    TreeWalkerStatus::ReturnNone | TreeWalkerStatus::Ok => Ok(()),
-                    _ => panic!("Call did not return correct type")
-                }
-            }
+            NoneExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
+                TreeWalkerStatus::ReturnNone | TreeWalkerStatus::Ok => Ok(()),
+                _ => panic!("Call did not return correct type"),
+            },
         }
     }
 
@@ -453,6 +443,27 @@ impl<'a> TreeWalker<'a> {
 
                 Ok(())
             }
+            GuiFunctionNone::AddHyperlink(value) => {
+                let value = self.eval_string(value)?;
+
+                self.sender.send(Event::AddHyperlink(value)).unwrap();
+
+                Ok(())
+            }
+            GuiFunctionNone::AddImage(value) => {
+                let value = self.eval_string(value)?;
+
+                self.sender.send(Event::AddImage(value)).unwrap();
+
+                Ok(())
+            }
+            GuiFunctionNone::AddButton(name) => {
+                let name = self.eval_string(name)?;
+
+                self.sender.send(Event::AddButton(name)).unwrap();
+
+                Ok(())
+            }
         }
     }
 
@@ -476,7 +487,11 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn eval_call(&mut self, id: usize, expressions: &Vec<Expr>) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+    fn eval_call(
+        &mut self,
+        id: usize,
+        expressions: &Vec<Expr>,
+    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         let callable = &self.callables[id];
 
         let mut environment = Environment::new();
@@ -494,7 +509,11 @@ impl<'a> TreeWalker<'a> {
         result
     }
 
-    fn add_expr_to_environment(&mut self, expr: &Expr, environment: &mut Environment) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+    fn add_expr_to_environment(
+        &mut self,
+        expr: &Expr,
+        environment: &mut Environment,
+    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         match expr {
             Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
             Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
@@ -505,7 +524,7 @@ impl<'a> TreeWalker<'a> {
                 for expr in exprs {
                     self.add_expr_to_environment(expr, environment)?;
                 }
-            },
+            }
         }
 
         Ok(TreeWalkerStatus::Ok)

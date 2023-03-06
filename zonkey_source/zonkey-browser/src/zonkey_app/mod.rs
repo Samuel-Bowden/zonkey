@@ -30,6 +30,24 @@ impl ZonkeyApp {
                         element_type: ElementType::Paragraph(value),
                     });
                 }
+                interpreter::event::Event::AddButton(name) => {
+                    column.push(Element {
+                        id: None,
+                        element_type: ElementType::Button(name),
+                    });
+                }
+                interpreter::event::Event::AddHyperlink(location) => {
+                    column.push(Element {
+                        id: None,
+                        element_type: ElementType::Hyperlink(location),
+                    });
+                }
+                interpreter::event::Event::AddImage(location) => {
+                    column.push(Element {
+                        id: None,
+                        element_type: ElementType::Image(location),
+                    });
+                }
             }
         }
     }

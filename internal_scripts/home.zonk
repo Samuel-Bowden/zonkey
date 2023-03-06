@@ -2,4 +2,10 @@ start {
 	gui:add_heading("Home");
 
 	gui:add_paragraph("Welcome to the Zonkey Browser. Use the address bar to open your first app.");
+
+	gui:add_paragraph("Some test apps:");
+
+	gui:add_hyperlink("file:../test_scripts/long_page.zonk");
+	gui:add_hyperlink("file:../test_scripts/button.zonk");
+	gui:add_hyperlink("file:../test_scripts/image.zonk");
 }

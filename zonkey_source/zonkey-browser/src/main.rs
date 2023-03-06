@@ -68,30 +68,7 @@ impl Application for ZonkeyBrowser {
                 Command::none()
             }
             Message::AddressConfirmed => {
-                let mut it = self.address.split(":");
-
-                let mut invalid = false;
-
-                match (it.next(), it.next(), it.next()) {
-                    (Some(first), Some(second), None) => match first {
-                        "zonkey" => match second {
-                            "home" => self.home_app(),
-                            "settings" => self.settings_app(),
-                            _ => invalid = true,
-                        },
-                        "file" => {
-                            self.app(PathBuf::from(second), "Custom app".to_string());
-                        }
-                        _ => invalid = true,
-                    },
-                    (None, None, None) => (),
-                    _ => invalid = true,
-                }
-
-                if invalid {
-                    self.invalid_app(self.address.clone());
-                }
-
+                self.open_address(self.address.clone());
                 Command::none()
             }
             Message::HomePressed => {
@@ -118,6 +95,14 @@ impl Application for ZonkeyBrowser {
                 self.sender = Some(sender);
                 self.home_app();
                 self.address = String::from("zonkey:home");
+                Command::none()
+            }
+            Message::PageButtonPressed => {
+                eprintln!("Cannot react to button clicks yet");
+                Command::none()
+            }
+            Message::Hyperlink(location) => {
+                self.open_address(location);
                 Command::none()
             }
         }
@@ -247,6 +232,34 @@ impl ZonkeyBrowser {
             self.app = Some(ZonkeyApp::new_from_file(name))
         } else {
             eprintln!("App is still executing.");
+        }
+    }
+
+    fn open_address(&mut self, address: String) {
+        self.address = address.clone();
+
+        let mut it = address.split(":");
+
+        let mut invalid = false;
+
+        match (it.next(), it.next(), it.next()) {
+            (Some(first), Some(second), None) => match first {
+                "zonkey" => match second {
+                    "home" => self.home_app(),
+                    "settings" => self.settings_app(),
+                    _ => invalid = true,
+                },
+                "file" => {
+                    self.app(PathBuf::from(second), "Custom app".to_string());
+                }
+                _ => invalid = true,
+            },
+            (None, None, None) => (),
+            _ => invalid = true,
+        }
+
+        if invalid {
+            self.invalid_app(self.address.clone());
         }
     }
 }

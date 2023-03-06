@@ -7,14 +7,14 @@ use event::Event;
 use stmt::Stmt;
 
 mod assignment_operator;
+mod callable;
 mod comparison;
 mod debugger;
+mod declaration;
 mod environment;
 pub mod err;
 pub mod event;
 mod expr;
-mod callable;
-mod declaration;
 mod lexer;
 mod native_function;
 mod operator;
@@ -25,8 +25,8 @@ mod stmt;
 pub mod token;
 mod tree_walker;
 mod unary_operator;
-pub mod value_type;
 mod value;
+pub mod value_type;
 
 pub fn run(source: &Vec<&str>, sender: Sender<Event>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");

@@ -1,0 +1,5 @@
+start {
+	gui:add_paragraph("Tests creating a button, cannot emit events to calling code yet, only prints message on CLI.");
+
+	gui:add_button("Hello");
+}
