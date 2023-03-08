@@ -1,19 +1,11 @@
-use self::status::TreeWalkerStatus;
+use self::{environment::Environment, status::TreeWalkerStatus};
 use crate::{
-    callable::Callable,
-    comparison::{BooleanComparision, NumericComparision, StringComparision},
-    environment::Environment,
+    ast::AST,
     err::tree_walker::TreeWalkerErr,
     event::Event,
-    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, NoneExpr, StringExpr},
-    native_function::{
-        cli_api::{CliFunctionNone, CliFunctionString},
-        gui_api::GuiFunctionNone,
-        NativeFunctionNone, NativeFunctionString,
-    },
-    operator::{NumericOperator, StringOperator},
+    expr::*,
+    native_function::*,
     stmt::{ConstructionType, Stmt},
-    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
 };
 use numtoa::NumToA;
 use std::{
@@ -21,21 +13,23 @@ use std::{
     sync::mpsc::Sender,
 };
 
+mod environment;
 pub mod status;
 
 pub struct TreeWalker<'a> {
     environment: Environment,
-    callables: &'a Vec<Callable>,
+    callables: &'a Vec<Stmt>,
     stdout: BufWriter<StdoutLock<'a>>,
     sender: Sender<Event>,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn new(
-        callables: &'a Vec<Callable>,
-        environment: Environment,
-        sender: Sender<Event>,
-    ) -> Self {
+    pub fn run(ast: AST, sender: Sender<Event>) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+        let environment = Environment::new();
+        TreeWalker::new(&ast.callable, environment, sender).interpret(&ast.start)
+    }
+
+    pub fn new(callables: &'a Vec<Stmt>, environment: Environment, sender: Sender<Event>) -> Self {
         Self {
             environment,
             callables,
@@ -46,7 +40,7 @@ impl<'a> TreeWalker<'a> {
 
     pub fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         match statement {
-            Stmt::IntegerVariableDeclaration(expr) => {
+            Stmt::IntegerVariableInitialisation(expr) => {
                 let int = self.eval_int(expr)?;
                 self.environment.push_int(int);
                 Ok(TreeWalkerStatus::Ok)
@@ -56,7 +50,7 @@ impl<'a> TreeWalker<'a> {
                 self.environment.assign_int(*id, int, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::FloatVariableDeclaration(expr) => {
+            Stmt::FloatVariableInitialisation(expr) => {
                 let float = self.eval_float(expr)?;
                 self.environment.push_float(float);
                 Ok(TreeWalkerStatus::Ok)
@@ -67,12 +61,12 @@ impl<'a> TreeWalker<'a> {
                     .assign_float(*id, float, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::StringVariableDeclaration(expr) => {
+            Stmt::StringVariableInitialisation(expr) => {
                 let string = self.eval_string(expr)?;
                 self.environment.push_string(string);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::ClassVariableDeclaration(types) => {
+            Stmt::ClassVariableInitialisation(types) => {
                 self.construct_class(types);
                 Ok(TreeWalkerStatus::Ok)
             }
@@ -82,7 +76,7 @@ impl<'a> TreeWalker<'a> {
                     .assign_string(*id, string, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::BooleanVariableDeclaration(expr) => {
+            Stmt::BooleanVariableInitialisation(expr) => {
                 let boolean = self.eval_boolean(expr)?;
                 self.environment.push_boolean(boolean);
                 Ok(TreeWalkerStatus::Ok)
@@ -432,35 +426,35 @@ impl<'a> TreeWalker<'a> {
             GuiFunctionNone::AddHeading(value) => {
                 let value = self.eval_string(value)?;
 
-                self.sender.send(Event::AddHeading(value)).unwrap();
+                self.event(Event::AddHeading(value))?;
 
                 Ok(())
             }
             GuiFunctionNone::AddParagraph(value) => {
                 let value = self.eval_string(value)?;
 
-                self.sender.send(Event::AddParagraph(value)).unwrap();
+                self.event(Event::AddParagraph(value))?;
 
                 Ok(())
             }
             GuiFunctionNone::AddHyperlink(value) => {
                 let value = self.eval_string(value)?;
 
-                self.sender.send(Event::AddHyperlink(value)).unwrap();
+                self.event(Event::AddHyperlink(value))?;
 
                 Ok(())
             }
             GuiFunctionNone::AddImage(value) => {
                 let value = self.eval_string(value)?;
 
-                self.sender.send(Event::AddImage(value)).unwrap();
+                self.event(Event::AddImage(value))?;
 
                 Ok(())
             }
             GuiFunctionNone::AddButton(name) => {
                 let name = self.eval_string(name)?;
 
-                self.sender.send(Event::AddButton(name)).unwrap();
+                self.event(Event::AddButton(name))?;
 
                 Ok(())
             }
@@ -502,7 +496,7 @@ impl<'a> TreeWalker<'a> {
 
         std::mem::swap(&mut environment, &mut self.environment);
 
-        let result = self.interpret(&callable.start);
+        let result = self.interpret(&callable);
 
         std::mem::swap(&mut environment, &mut self.environment);
 
@@ -539,6 +533,13 @@ impl<'a> TreeWalker<'a> {
                 ConstructionType::Boolean => self.environment.push_boolean(false),
                 ConstructionType::Class(types) => self.construct_class(types),
             }
+        }
+    }
+
+    fn event(&mut self, event: Event) -> Result<(), TreeWalkerErr> {
+        match self.sender.send(event) {
+            Ok(()) => Ok(()),
+            Err(_) => Err(TreeWalkerErr::FailedToSendEventToBrowser),
         }
     }
 }

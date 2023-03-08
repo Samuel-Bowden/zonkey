@@ -1,7 +1,7 @@
 use std::io::Write;
 use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 
-use crate::token::Token;
+use crate::{parser::value::ValueType, token::Token};
 
 pub struct ErrReporter<'a> {
     stderr: StandardStream,
@@ -135,5 +135,16 @@ impl<'a> ErrReporter<'a> {
         self.stderr.reset().unwrap();
 
         writeln!(&mut self.stderr, "{tip}").unwrap();
+    }
+}
+
+pub fn print_type<'a>(value_type: &'a Option<ValueType>) -> &'a str {
+    match value_type {
+        Some(ValueType::Integer) => "Integer",
+        Some(ValueType::Float) => "Float",
+        Some(ValueType::String) => "String",
+        Some(ValueType::Boolean) => "Boolean",
+        Some(ValueType::Class(name)) => &name,
+        None => "none",
     }
 }

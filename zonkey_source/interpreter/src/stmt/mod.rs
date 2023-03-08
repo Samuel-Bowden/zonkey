@@ -1,18 +1,13 @@
-use crate::{
-    assignment_operator::{
-        BooleanAssignmentOperator, NumericAssignmentOperator, StringAssignmentOperator,
-    },
-    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, StringExpr},
-};
+use crate::expr::*;
 
 #[derive(Debug)]
 pub enum Stmt {
     Expression(Expr),
-    IntegerVariableDeclaration(IntegerExpr),
-    FloatVariableDeclaration(FloatExpr),
-    StringVariableDeclaration(StringExpr),
-    BooleanVariableDeclaration(BooleanExpr),
-    ClassVariableDeclaration(Vec<ConstructionType>),
+    IntegerVariableInitialisation(IntegerExpr),
+    FloatVariableInitialisation(FloatExpr),
+    StringVariableInitialisation(StringExpr),
+    BooleanVariableInitialisation(BooleanExpr),
+    ClassVariableInitialisation(Vec<ConstructionType>),
     IntegerVariableAssignment(usize, IntegerExpr, NumericAssignmentOperator),
     FloatVariableAssignment(usize, FloatExpr, NumericAssignmentOperator),
     StringVariableAssignment(usize, StringExpr, StringAssignmentOperator),

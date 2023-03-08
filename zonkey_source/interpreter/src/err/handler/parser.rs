@@ -1,4 +1,4 @@
-use super::err_reporter::ErrReporter;
+use super::err_reporter::{print_type, ErrReporter};
 use crate::err::parser::{ParserErr, ParserErrType};
 
 pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
@@ -31,7 +31,7 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 );
                 err_reporter.report_token(unexpected_token);
                 err_reporter.give_tip(
-                    "There should only be 'start' or 'function' blocks in the global scope.",
+                    "There should only be start, function or class definitions in the global scope.",
                 );
             }
 
@@ -128,8 +128,8 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::CallArgumentIncorrectType(token, position, expr_type, name) => {
                 err_reporter.writeln(
                     format!(
-                        "Function call {name} does not accept a value of type {:?} for the parameter at position {position}.",
-                        expr_type,
+                        "Function call {name} does not accept a value of type {} for the parameter at position {position}.",
+                        print_type(&expr_type),
                     )
                     .as_str(),
                 );
@@ -347,9 +347,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ) => {
                 err_reporter.writeln(
                     format!(
-                        "This return expression evaluates to type '{:?}', but the function it is declared in has a return type of {:?}.",
-                        expr_ret_type,
-                        func_ret_type,
+                        "This return expression evaluates to type '{}', but the function it is declared in has a return type of {}.",
+                        print_type(&expr_ret_type),
+                        print_type(&func_ret_type),
                     ).as_str()
                 );
                 err_reporter.report_token(return_token);
@@ -360,8 +360,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::InvalidAssignmentOperator(assignment_operator, value_type) => {
                 err_reporter.writeln(
                     format!(
-                        "Cannot use assignment operator '{}' with value of type {:?}.",
-                        assignment_operator.token_type, value_type,
+                        "Cannot use assignment operator '{}' with value of type {}.",
+                        assignment_operator.token_type,
+                        print_type(&Some(value_type)),
                     )
                     .as_str(),
                 );
@@ -375,10 +376,10 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ) => {
                 err_reporter.writeln(
                     format!(
-                        "Expression to assign to variable with operator '{}' evaluated to the type {:?}, but the variable is of type {:?}.",
+                        "Expression to assign to variable with operator '{}' evaluated to the type {}, but the variable is of type {}.",
                         assignment_operator.token_type,
-                        expr_type,
-                        variable_type,
+                        print_type(&expr_type),
+                        print_type(&variable_type),
                     ).as_str()
                 );
                 err_reporter.report_token(assignment_operator);
@@ -432,9 +433,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(token);
                 err_reporter.writeln(
                     format!(
-                        "        Left expression evaluates to type {:?}, while the right expression evaluates to type {:?}.",
-                        left,
-                        right,
+                        "        Left expression evaluates to type {}, while the right expression evaluates to type {}.",
+                        print_type(&left),
+                        print_type(&right),
                     )
                     .as_str(),
                 );
@@ -443,8 +444,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::ComparisionInvalidForType(token, expr_type) => {
                 err_reporter.writeln(
                     format!(
-                        "Cannot perform comparision '{}' for type {:?}.",
-                        token.token_type, expr_type,
+                        "Cannot perform comparision '{}' for type {}.",
+                        token.token_type,
+                        print_type(&expr_type),
                     )
                     .as_str(),
                 );
@@ -464,9 +466,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(token);
                 err_reporter.writeln(
                     format!(
-                        "        Left expression evaluates to type {:?}, while the right expression evaluates to type {:?}.",
-                        left,
-                        right,
+                        "        Left expression evaluates to type {}, while the right expression evaluates to type {}.",
+                        print_type(&left),
+                        print_type(&right),
                     )
                     .as_str(),
                 );
@@ -475,8 +477,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::OperatorInvalidForType(token, expr_type) => {
                 err_reporter.writeln(
                     format!(
-                        "Cannot perform operation '{}' on type {:?}.",
-                        token.token_type, expr_type,
+                        "Cannot perform operation '{}' on type {}.",
+                        token.token_type,
+                        print_type(&expr_type),
                     )
                     .as_str(),
                 );
@@ -527,8 +530,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::UnaryOperatorInvalidForType(token, expr_type) => {
                 err_reporter.writeln(
                     format!(
-                        "Cannot perform unary operation '{}' on type {:?}.",
-                        token.token_type, expr_type,
+                        "Cannot perform unary operation '{}' on type {}.",
+                        token.token_type,
+                        print_type(&expr_type),
                     )
                     .as_str(),
                 );
@@ -539,8 +543,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::CastNotPossible(token, cast_to_type, expr_type) => {
                 err_reporter.writeln(
                     format!(
-                        "Cannot cast evaluated value of expression from {:?} to {:?}.",
-                        expr_type, cast_to_type,
+                        "Cannot cast evaluated value of expression from {} to {}.",
+                        print_type(&expr_type),
+                        print_type(&cast_to_type),
                     )
                     .as_str(),
                 );
@@ -550,8 +555,9 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
             ParserErrType::CastPointless(token, cast_to_type) => {
                 err_reporter.writeln(
                     format!(
-                        "Casting evaluated value of expression from {:?} to {:?} is pointless",
-                        cast_to_type, cast_to_type,
+                        "Casting evaluated value of expression from {} to {} is pointless",
+                        print_type(&cast_to_type),
+                        print_type(&cast_to_type),
                     )
                     .as_str(),
                 );

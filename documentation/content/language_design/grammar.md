@@ -3,17 +3,37 @@ title: "Grammar"
 weight: 1
 ---
 
-This is the current grammar that I'm implementing in the parser, which is a subset of the language. It uses the notation defined in Crafting Interpreters.
+This is the current grammar that I'm implementing in the parser. It uses the notation defined in Crafting Interpreters.
 
 ```grammar
-program -> global_declaration*;
-global_declaration -> function_declaration | start_declaration | structure_declaration;
-local_declaration -> terminated_variable_declaration | statement;
+# Entry
+program -> (function | start | class)*;
+
+# Current data types
+data_type -> "Integer" | "String" | "Float" | "Boolean" | IDENTIFIER;
+
+# Definitions
+start -> "start" block;
+
+function -> "function" IDENTIFIER "(" parameters? ")" ("->" data_type)? block;
+parameters -> data_type IDENTIFIER ("," data_type IDENTIFIER)*;
+
+class -> "class" IDENTIFIER "{" property* "}";
+property -> data_type IDENTIFIER ";";
+
+# Statements
 statement -> terminated_statement | block | if_statement | while_statement | loop_statement | for_statement;
-terminated_statement -> (expression_statement | return_statement | "break" | "continue") ";";
-expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? equality;
-variable_declaration = "let" IDENTIFIER "=" (expression | new IDENTIFIER); 
-terminated_variable_declaration = variable_declaration ";";
+terminated_statement -> (expression_statement | return_statement | variable_init | "break" | "continue") ";";
+expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? expression;
+variable_init = "let" IDENTIFIER "=" (expression | new IDENTIFIER); 
+if_statement -> "if" "(" expression ")" block ("else" block)?; 
+loop_statement -> "loop" block;
+while_statement -> "while" "(" expression ")" block;
+for_statement -> "for" "(" variable_init "," expression "," expression_statement ")" block;
+block -> "{" statement* "}"
+return_statement -> "return" expression?;
+
+# Expressions
 expression -> cast;
 cast -> data_type? and;
 or -> and ("|" and)*;
@@ -23,19 +43,6 @@ comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 unary -> ("-" | "!") unary | literal;
-literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER (. IDENTIFIER)* | call | "(" equality ")";
-call -> (IDENTIFIER ":")? IDENTIFIER "(" equality ("," equality)* ")";
-block -> "{" local_declaration* "}"
-if_statement -> "if" "(" equality ")" block ("else" block)?; 
-while_statement -> "while" "(" equality ")" block;
-loop_statement -> "loop" block;
-for_statement -> "for" "(" variable_declaration "," equality "," expression_statement ")" block;
-function_declaration -> "function" IDENTIFIER "(" parameters? ")" ("->" data_type)? block;
-parameters -> data_type IDENTIFIER ("," data_type IDENTIFIER)*;
-data_type -> "Integer" | "String" | "Float" | "Boolean";
-start_declaration -> "start" block;
-return_statement -> "return" expression?;
-structure_declaration -> "class" IDENTIFIER class_block;
-class_block -> "{" property* "}";
-property -> data_type IDENTIFIER ";";
+literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER (. IDENTIFIER)* | call | "(" expression ")";
+call -> (IDENTIFIER ":")? IDENTIFIER "(" expression ("," expression)* ")";
 ```

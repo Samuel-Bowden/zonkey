@@ -1,43 +1,30 @@
 use std::sync::mpsc::Sender;
 
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
-use crate::{environment::Environment, parser::Parser, tree_walker::TreeWalker};
-use callable::Callable;
+use crate::{parser::Parser, tree_walker::TreeWalker};
+use ast::AST;
 use event::Event;
-use stmt::Stmt;
 
-mod assignment_operator;
-mod callable;
-mod comparison;
+mod ast;
 mod debugger;
-mod declaration;
-mod environment;
 pub mod err;
 pub mod event;
 mod expr;
 mod lexer;
 mod native_function;
-mod operator;
 mod parser;
-pub mod return_type;
-mod start;
 mod stmt;
 pub mod token;
 mod tree_walker;
-mod unary_operator;
-mod value;
-pub mod value_type;
 
 pub fn run(source: &Vec<&str>, sender: Sender<Event>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");
 
     let tokens = run_lexer(source)?;
 
-    let (start, functions) = run_parser(tokens)?;
+    let ast = run_parser(tokens)?;
 
-    run_tree_walker(start, functions, sender)?;
-
-    Ok(())
+    run_tree_walker(ast, sender)
 }
 
 fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
@@ -54,28 +41,22 @@ fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
     }
 }
 
-fn run_parser(tokens: Vec<Token>) -> Result<(Stmt, Vec<Callable>), InterpreterErr> {
+fn run_parser(tokens: Vec<Token>) -> Result<AST, InterpreterErr> {
     interpreter_debug!("Starting parser");
 
     match Parser::new(tokens).run() {
-        Ok((start, callables)) => {
+        Ok(ast) => {
             interpreter_debug!("Parser completed successfully");
-            Ok((start, callables))
+            Ok(ast)
         }
         Err(e) => Err(InterpreterErr::ParserFailed(e)),
     }
 }
 
-fn run_tree_walker(
-    start: Stmt,
-    callables: Vec<Callable>,
-    sender: Sender<Event>,
-) -> Result<(), InterpreterErr> {
+fn run_tree_walker(ast: AST, sender: Sender<Event>) -> Result<(), InterpreterErr> {
     interpreter_debug!("Starting tree walker");
 
-    let environment = Environment::new();
-
-    match TreeWalker::new(&callables, environment, sender).interpret(&start) {
+    match TreeWalker::run(ast, sender) {
         Ok(_) => Ok(()),
         Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
     }

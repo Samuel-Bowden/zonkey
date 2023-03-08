@@ -1,4 +1,4 @@
-use self::{
+pub use self::{
     cli_api::{CliFunctionNone, CliFunctionString},
     gui_api::GuiFunctionNone,
 };

@@ -4,5 +4,5 @@ pub enum TreeWalkerErr {
     FailedStringToIntegerCast,
     FailedStringToFloatCast,
     FailedStringToBooleanCast,
-    InvalidButtonColour,
+    FailedToSendEventToBrowser,
 }

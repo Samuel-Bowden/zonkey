@@ -1,4 +1,4 @@
-use crate::{return_type::ReturnType, token::Token, value_type::ValueType};
+use crate::{parser::value::ValueType, token::Token};
 
 pub struct ParserErr {
     pub errors: Vec<ParserErrType>,
@@ -41,7 +41,7 @@ pub enum ParserErrType {
     // Call errors
     CallExpectedCommaOrRightParen(Token, Option<Token>),
     CallIncorrectArgumentsNum(Token, usize, usize, String),
-    CallArgumentIncorrectType(Token, usize, ReturnType, String),
+    CallArgumentIncorrectType(Token, usize, Option<ValueType>, String),
     CallModuleFunctionNotFound(Token, String, String),
     CallModuleNotFound(Token, String),
     CallFunctionNotFound(Token, String),
@@ -70,11 +70,11 @@ pub enum ParserErrType {
     FunctionDeclarationExpectedParameterType(Token, Option<Token>),
     FunctionDeclarationExpectedCommaOrRightParen(Token, Option<Token>),
     FunctionDeclarationExpectedReturnType(Token, Option<Token>),
-    FunctionDeclarationInvalidReturnExpressionType(Token, ReturnType, ReturnType),
+    FunctionDeclarationInvalidReturnExpressionType(Token, Option<ValueType>, Option<ValueType>),
 
     // Operator errors
     InvalidAssignmentOperator(Token, ValueType),
-    UnmatchingTypesAssignmentOperatator(Token, ReturnType, ReturnType),
+    UnmatchingTypesAssignmentOperatator(Token, Option<ValueType>, Option<ValueType>),
 
     // Variable declaration errors
     VariableDeclarationExpectedName(Token, Option<Token>),
@@ -83,12 +83,12 @@ pub enum ParserErrType {
     VariableDeclarationExprEvalNone(usize, usize),
 
     // Comparision errors
-    ComparisionUnmatchingTypes(Token, ReturnType, ReturnType),
-    ComparisionInvalidForType(Token, ReturnType),
+    ComparisionUnmatchingTypes(Token, Option<ValueType>, Option<ValueType>),
+    ComparisionInvalidForType(Token, Option<ValueType>),
 
     // Operator errors
-    OperatorUnmatchingTypes(Token, ReturnType, ReturnType),
-    OperatorInvalidForType(Token, ReturnType),
+    OperatorUnmatchingTypes(Token, Option<ValueType>, Option<ValueType>),
+    OperatorInvalidForType(Token, Option<ValueType>),
 
     // Module errors
     ModuleExpectedIdentifier(Token, Option<Token>),
@@ -98,11 +98,11 @@ pub enum ParserErrType {
     GroupingExpectedRightParen(Token, Option<Token>),
 
     // Unary operator errors
-    UnaryOperatorInvalidForType(Token, ReturnType),
+    UnaryOperatorInvalidForType(Token, Option<ValueType>),
 
     // Casting errors
-    CastNotPossible(Token, ReturnType, ReturnType),
-    CastPointless(Token, ReturnType),
+    CastNotPossible(Token, Option<ValueType>, Option<ValueType>),
+    CastPointless(Token, Option<ValueType>),
 
     // Class declaration errors
     ClassDeclarationExpectedName(Token, Option<Token>),

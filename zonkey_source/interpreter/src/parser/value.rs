@@ -9,6 +9,15 @@ pub enum Value {
     Object(Object),
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValueType {
+    Integer,
+    Float,
+    String,
+    Boolean,
+    Class(String),
+}
+
 #[derive(Debug, Clone)]
 pub struct Object {
     pub class_declaration: String,

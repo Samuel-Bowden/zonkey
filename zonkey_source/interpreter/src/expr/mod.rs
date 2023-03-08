@@ -1,9 +1,4 @@
-use crate::{
-    comparison::{BooleanComparision, NumericComparision, StringComparision},
-    native_function::{NativeFunctionNone, NativeFunctionString},
-    operator::{NumericOperator, StringOperator},
-    unary_operator::{BooleanUnaryOperator, NumericUnaryOperator},
-};
+use crate::native_function::{NativeFunctionNone, NativeFunctionString};
 
 #[derive(Debug)]
 pub enum Expr {
@@ -98,4 +93,71 @@ pub enum BooleanExpr {
 pub enum NoneExpr {
     NativeCall(NativeFunctionNone),
     Call(usize, Vec<Expr>),
+}
+
+#[derive(Debug, Clone)]
+pub enum NumericOperator {
+    Add,
+    Subtract,
+    Divide,
+    Multiply,
+}
+
+#[derive(Debug, Clone)]
+pub enum StringOperator {
+    Add,
+}
+
+#[derive(Debug)]
+pub enum NumericUnaryOperator {
+    Minus,
+}
+
+#[derive(Debug)]
+pub enum BooleanUnaryOperator {
+    Bang,
+}
+
+#[derive(Debug)]
+pub enum NumericAssignmentOperator {
+    Equal,
+    PlusEqual,
+    MinusEqual,
+    SlashEqual,
+    StarEqual,
+}
+
+#[derive(Debug)]
+pub enum StringAssignmentOperator {
+    Equal,
+    PlusEqual,
+}
+
+#[derive(Debug)]
+pub enum BooleanAssignmentOperator {
+    Equal,
+}
+
+#[derive(Debug, Clone)]
+pub enum NumericComparision {
+    Equal,
+    Inequal,
+    MoreEqual,
+    More,
+    LessEqual,
+    Less,
+}
+
+#[derive(Debug, Clone)]
+pub enum StringComparision {
+    Equal,
+    Inequal,
+}
+
+#[derive(Debug, Clone)]
+pub enum BooleanComparision {
+    Equal,
+    Inequal,
+    And,
+    Or,
 }
