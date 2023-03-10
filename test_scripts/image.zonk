@@ -1,4 +1,4 @@
 start {
-	gui:add_paragraph("A picture of a zonkey");
-	gui:add_image("/home/sam/pictures/zonkey.webp");
+	add_paragraph("A picture of a zonkey");
+	add_image("/home/sam/pictures/zonkey.webp");
 }

@@ -7,6 +7,7 @@ use crate::{
     expr::Expr,
     parser::{production::prelude::*, value::ValueType},
 };
+use std::rc::Rc;
 
 impl Parser {
     pub fn program(&mut self) {
@@ -50,7 +51,7 @@ impl Parser {
             Expr::String(_) => Some(ValueType::String),
             Expr::Boolean(_) => Some(ValueType::Boolean),
             Expr::None(_) => None,
-            Expr::Object(type_name, ..) => Some(ValueType::Class(type_name.to_string())),
+            Expr::Object(type_name, ..) => Some(ValueType::Class(Rc::clone(type_name))),
         }
     }
 
@@ -60,6 +61,15 @@ impl Parser {
 
     fn current_token_type(&self) -> Option<&TokenType> {
         if let Some(t) = self.tokens.get(self.current) {
+            Some(&t.token_type)
+        } else {
+            None
+        }
+    }
+
+    fn consume_token_type(&mut self) -> Option<&TokenType> {
+        self.current += 1;
+        if let Some(t) = self.tokens.get(self.current - 1) {
             Some(&t.token_type)
         } else {
             None

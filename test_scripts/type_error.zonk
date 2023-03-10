@@ -8,6 +8,6 @@ start {
 	let a = 0;
 
 	if (num_plus_one(a)) {
-		cli:println("Successful");
+		println("Successful");
 	}
 }

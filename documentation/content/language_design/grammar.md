@@ -15,11 +15,13 @@ data_type -> "Integer" | "String" | "Float" | "Boolean" | IDENTIFIER;
 # Definitions
 start -> "start" block;
 
-function -> "function" IDENTIFIER "(" parameters? ")" ("->" data_type)? block;
+function -> "function" IDENTIFIER "(" parameters? ")" return_type block;
 parameters -> data_type IDENTIFIER ("," data_type IDENTIFIER)*;
+return_type -> ("->" data_type)?;
 
-class -> "class" IDENTIFIER "{" property* "}";
+class -> "class" IDENTIFIER "{" property* method*"}";
 property -> data_type IDENTIFIER ";";
+method -> IDENTIFIER "(" parameters? ")" return_type block;
 
 # Statements
 statement -> terminated_statement | block | if_statement | while_statement | loop_statement | for_statement;
@@ -44,5 +46,5 @@ addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 unary -> ("-" | "!") unary | literal;
 literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER (. IDENTIFIER)* | call | "(" expression ")";
-call -> (IDENTIFIER ":")? IDENTIFIER "(" expression ("," expression)* ")";
+call -> IDENTIFIER (. IDENTIFIER)* "(" expression ("," expression)* ")";
 ```

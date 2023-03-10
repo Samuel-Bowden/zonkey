@@ -5,9 +5,9 @@ start {
 
 	loop {
 		let a = 2;
-		cli:println("Inner scope should print 2: " + (String a));
+		println("Inner scope should print 2: " + (String a));
 		break;
 	}
 
-	cli:println("Outer scope should print 1: " + (String a));
+	println("Outer scope should print 1: " + (String a));
 }

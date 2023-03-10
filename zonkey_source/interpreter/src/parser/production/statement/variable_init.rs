@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     parser::production::statement::prelude::*,
     parser::value::{Object, Value, ValueType},
@@ -14,7 +16,7 @@ impl Parser {
             Some(Token {
                 token_type: TokenType::Identifier(name),
                 ..
-            }) => name.clone(),
+            }) => Rc::clone(name),
             t => {
                 self.error
                     .add(ParserErrType::VariableDeclarationExpectedName(
@@ -30,7 +32,7 @@ impl Parser {
             self.error
                 .add(ParserErrType::VariableDeclarationAlreadyDeclared(
                     self.tokens[self.current - 1].clone(),
-                    name,
+                    name.to_string(),
                 ));
             return Err(ParserStatus::Unwind);
         }
@@ -79,7 +81,7 @@ impl Parser {
                     self.value_stack
                         .last_mut()
                         .unwrap()
-                        .insert(name.clone(), Value::Integer(id));
+                        .insert(name, Value::Integer(id));
                     Ok(Stmt::IntegerVariableInitialisation(val))
                 }
                 Expr::Float(val) => {
@@ -88,7 +90,7 @@ impl Parser {
                     self.value_stack
                         .last_mut()
                         .unwrap()
-                        .insert(name.clone(), Value::Float(id));
+                        .insert(name, Value::Float(id));
                     Ok(Stmt::FloatVariableInitialisation(val))
                 }
                 Expr::String(val) => {
@@ -97,7 +99,7 @@ impl Parser {
                     self.value_stack
                         .last_mut()
                         .unwrap()
-                        .insert(name.clone(), Value::String(id));
+                        .insert(name, Value::String(id));
                     Ok(Stmt::StringVariableInitialisation(val))
                 }
                 Expr::Boolean(val) => {
@@ -106,7 +108,7 @@ impl Parser {
                     self.value_stack
                         .last_mut()
                         .unwrap()
-                        .insert(name.clone(), Value::Boolean(id));
+                        .insert(name, Value::Boolean(id));
                     Ok(Stmt::BooleanVariableInitialisation(val))
                 }
                 Expr::None(_) => {
@@ -126,12 +128,17 @@ impl Parser {
 
     fn create_object(
         &mut self,
-        class_name: String,
+        class_name: Rc<String>,
     ) -> Result<(Object, Vec<ConstructionType>), ParserStatus> {
         let declaration = match self.class_declarations.get(&class_name) {
             Some(declaration) => declaration,
             None => {
-                panic!("Class not declared")
+                self.error.add(ParserErrType::ClassNotFound(
+                    self.tokens[self.current - 1].clone(),
+                    class_name.to_string(),
+                ));
+
+                return Err(ParserStatus::Unwind);
             }
         };
 
@@ -147,31 +154,32 @@ impl Parser {
                 ValueType::Integer => {
                     object
                         .properties
-                        .insert(name.to_string(), Value::Integer(self.integer_next_id));
+                        .insert(name, Value::Integer(self.integer_next_id));
                     self.integer_next_id += 1;
                     types.push(ConstructionType::Integer);
                 }
                 ValueType::Float => {
                     object
                         .properties
-                        .insert(name.to_string(), Value::Float(self.float_next_id));
+                        .insert(name, Value::Float(self.float_next_id));
                     self.float_next_id += 1;
                     types.push(ConstructionType::Float);
                 }
                 ValueType::String => {
                     object
                         .properties
-                        .insert(name.to_string(), Value::String(self.string_next_id));
+                        .insert(name, Value::String(self.string_next_id));
                     self.string_next_id += 1;
                     types.push(ConstructionType::String);
                 }
                 ValueType::Boolean => {
                     object
                         .properties
-                        .insert(name.to_string(), Value::Boolean(self.boolean_next_id));
+                        .insert(name, Value::Boolean(self.boolean_next_id));
                     self.boolean_next_id += 1;
                     types.push(ConstructionType::Boolean);
                 }
+                ValueType::Any => unreachable!("Zonkey code cannot use the Any type"),
                 ValueType::Class(class_type) => {
                     let (this_object, these_types) = self.create_object(class_type)?;
                     types.push(ConstructionType::Class(these_types));

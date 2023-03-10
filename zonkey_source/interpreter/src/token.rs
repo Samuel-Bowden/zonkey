@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Token {
@@ -41,11 +41,11 @@ pub enum TokenType {
     SlashEqual,
 
     // Literals
-    String(String),
+    String(Rc<String>),
     Integer(i64),
     Float(f64),
     Boolean(bool),
-    Identifier(String),
+    Identifier(Rc<String>),
 
     // Keywords
     Start,
@@ -65,6 +65,7 @@ pub enum TokenType {
     Let,
     Class,
     New,
+    Method,
 }
 
 impl Display for TokenType {
@@ -119,6 +120,7 @@ impl Display for TokenType {
             Self::Let => f.write_str("let"),
             Self::Class => f.write_str("class"),
             Self::New => f.write_str("new"),
+            Self::Method => f.write_str("method"),
         }
     }
 }

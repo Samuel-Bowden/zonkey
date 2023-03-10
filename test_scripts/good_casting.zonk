@@ -1,47 +1,47 @@
 # Script to test all casts available in Zonkey
 
 function expected_integer(Integer expected, Integer value) {
-	cli:print("Expected integer " + (String expected) + ", got integer " + (String value));
+	print("Expected integer " + (String expected) + ", got integer " + (String value));
 
 	if (expected == value) {
-		cli:println(" - Passed");
+		println(" - Passed");
 	} else {
-		cli:println(" - Failed");
+		println(" - Failed");
 	}
 }
 
 function expected_float(Float expected, Float value) {
-	cli:print("Expected float " + (String expected) + ", got float " + (String value));
+	print("Expected float " + (String expected) + ", got float " + (String value));
 
 	if (expected == value) {
-		cli:println(" - Passed");
+		println(" - Passed");
 	} else {
-		cli:println(" - Failed");
+		println(" - Failed");
 	}
 }
 
 function expected_boolean(Boolean expected, Boolean value) {
-	cli:print("Expected boolean " + (String expected) + ", got boolean " + (String value));
+	print("Expected boolean " + (String expected) + ", got boolean " + (String value));
 
 	if (expected == value) {
-		cli:println(" - Passed");
+		println(" - Passed");
 	} else {
-		cli:println(" - Failed");
+		println(" - Failed");
 	}
 }
 
 function expected_string(String expected, String value) {
-	cli:print("Expected string " + expected + ", got string " + value);
+	print("Expected string " + expected + ", got string " + value);
 
 	if (expected == value) {
-		cli:println(" - Passed");
+		println(" - Passed");
 	} else {
-		cli:println(" - Failed");
+		println(" - Failed");
 	}
 }
 
 function integer_casts() {
-	cli:println("-----Integer casts-----");
+	println("-----Integer casts-----");
 
 	# Integer -> Float
 	expected_float(657.0, (Float 657));
@@ -56,7 +56,7 @@ function integer_casts() {
 }
 
 function float_casts() {
-	cli:println("-----Float casts-----");
+	println("-----Float casts-----");
 
 	# Float -> Integer (drop after decimal place)
 	expected_integer(7548, (Integer 7548.123));
@@ -73,7 +73,7 @@ function float_casts() {
 }
 
 function string_casts() {
-	cli:println("-----String casts-----");
+	println("-----String casts-----");
 
 	# String -> Integer (potential for error)
 	expected_integer(15, (Integer "15"));
@@ -86,7 +86,7 @@ function string_casts() {
 }
 
 function boolean_casts() {
-	cli:println("-----Boolean casts-----");
+	println("-----Boolean casts-----");
 
 	# Boolean -> Integer
 	expected_integer(1, (Integer true));

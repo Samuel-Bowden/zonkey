@@ -3,14 +3,14 @@
 function bad_for_loop() {
 	# Bad 'for' call
 	for (let i = 0, i < 10) {
-		cli:println(i);
+		println(i);
 	}
 
-	cli:println("End");
+	println("End");
 
 	# variable i is not in scope, but won't be detected as the parser should abort this function
 	# after error is detected in for loop (hard to synchronise when block has been added for parameters)
-	cli:println("Finished with i = " + (String i));
+	println("Finished with i = " + (String i));
 }
 
 # Return type should be integer
@@ -21,9 +21,9 @@ function plus_one(Integer val) -> Boolean {
 start {
 	# Pointless cast as return type of function should be integer
 	if (Boolean plus_one(0)) {
-		cli:println("Hello");
+		println("Hello");
 	} else {
-		cli:println("Bye");
+		println("Bye");
 	}
 
 	# Call to non-existent function
@@ -42,7 +42,7 @@ start {
 	}
 
 	# Forgot semi-colon to end statement
-	cli:println("hello")
+	println("hello")
 
 	let a = 1;
 
@@ -55,5 +55,5 @@ start {
 
 # Invalid code in the global scope
 while (true) {
-	cli:println("true");
+	println("true");
 }

@@ -1,10 +1,10 @@
 # This script won't run as it intentionally contains parser errors
 
 function impossible_casts() {
-	let a = Integer cli:println("Hello");
-	let b = Float cli:println("Hello");
-	let c = String cli:println("Hello");
-	let d = Boolean cli:println("Hello");
+	let a = Integer println("Hello");
+	let b = Float println("Hello");
+	let c = String println("Hello");
+	let d = Boolean println("Hello");
 }
 
 function pointless_casts() {

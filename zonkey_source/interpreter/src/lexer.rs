@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use super::token::{Token, TokenType};
 use crate::{err::lexer::LexerErr, lexer_debug};
 
@@ -191,7 +193,7 @@ impl<'a> Lexer<'a> {
             literal.push_str(self.graphemes[i]);
         }
 
-        self.add_token(TokenType::String(literal));
+        self.add_token(TokenType::String(Rc::new(literal)));
 
         Ok(())
     }
@@ -279,7 +281,8 @@ impl<'a> Lexer<'a> {
             "let" => self.add_token(TokenType::Let),
             "class" => self.add_token(TokenType::Class),
             "new" => self.add_token(TokenType::New),
-            _ => self.add_token(TokenType::Identifier(literal)),
+            "method" => self.add_token(TokenType::Method),
+            _ => self.add_token(TokenType::Identifier(Rc::new(literal))),
         }
 
         Ok(())

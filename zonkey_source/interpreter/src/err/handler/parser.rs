@@ -618,6 +618,12 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
             }
+            // Class use errors
+            ParserErrType::ClassNotFound(token, name) => {
+                err_reporter
+                    .writeln(format!("Class with name {name} has not been declared.",).as_str());
+                err_reporter.report_token(token);
+            }
         }
         err_reporter.newln();
     }

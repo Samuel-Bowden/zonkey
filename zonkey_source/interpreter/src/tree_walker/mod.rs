@@ -1,13 +1,14 @@
+use numtoa::NumToA;
+
 use self::{environment::Environment, status::TreeWalkerStatus};
 use crate::{
     ast::AST,
     err::tree_walker::TreeWalkerErr,
     event::Event,
     expr::*,
-    native_function::*,
+    prelude::*,
     stmt::{ConstructionType, Stmt},
 };
-use numtoa::NumToA;
 use std::{
     io::{stdout, BufWriter, StdoutLock, Write},
     sync::mpsc::Sender,
@@ -265,8 +266,7 @@ impl<'a> TreeWalker<'a> {
                 StringOperator::Add => Ok(self.eval_string(left)? + &self.eval_string(right)?),
             },
             StringExpr::Variable(id) => Ok(self.environment.get_string(*id)),
-            StringExpr::Literal(val) => Ok(val.clone()),
-            StringExpr::NativeCall(call) => self.native_call_string(call),
+            StringExpr::Literal(val) => Ok(val.to_string()),
             StringExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnString(v) => Ok(v),
                 _ => panic!("Call did not return correct type"),
@@ -274,6 +274,7 @@ impl<'a> TreeWalker<'a> {
             StringExpr::IntegerCast(expr) => Ok(self.eval_int(expr)?.to_string()),
             StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
             StringExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)?.to_string()),
+            StringExpr::NativeCall(call) => self.native_call_string(call),
         }
     }
 
@@ -365,105 +366,41 @@ impl<'a> TreeWalker<'a> {
 
     fn native_call_none(&mut self, call: &NativeFunctionNone) -> Result<(), TreeWalkerErr> {
         match call {
-            NativeFunctionNone::Cli(call) => self.cli_callable_none(call),
-            NativeFunctionNone::Gui(call) => self.gui_callable_none(call),
-        }
-    }
-
-    fn native_call_string(&mut self, call: &NativeFunctionString) -> Result<String, TreeWalkerErr> {
-        match call {
-            NativeFunctionString::Cli(call) => self.cli_callable_string(call),
-        }
-    }
-
-    fn cli_callable_none(&mut self, call: &CliFunctionNone) -> Result<(), TreeWalkerErr> {
-        match call {
-            CliFunctionNone::PrintLineInteger(expr) => {
-                let mut buffer = [0u8; 20];
-                let int = self.eval_int(expr)?.numtoa(10, &mut buffer);
-                self.stdout.write(int).unwrap();
-                self.stdout.write(b"\n").unwrap();
-            }
-            CliFunctionNone::PrintLineFloat(expr) => {
-                let mut buffer = ryu::Buffer::new();
-                let float = buffer.format(self.eval_float(expr)?).as_bytes();
-                self.stdout.write(float).unwrap();
-                self.stdout.write(b"\n").unwrap();
-            }
-            CliFunctionNone::PrintLineString(expr) => {
-                let string = self.eval_string(expr)?;
-                writeln!(self.stdout, "{}", string).unwrap()
-            }
-            CliFunctionNone::PrintLineBoolean(expr) => {
-                let boolean = self.eval_boolean(expr)?;
-                writeln!(self.stdout, "{}", boolean).unwrap()
-            }
-            CliFunctionNone::PrintInteger(expr) => {
-                let mut buffer = [0u8; 20];
-                let int = self.eval_int(expr)?.numtoa(10, &mut buffer);
-                self.stdout.write(int).unwrap();
-            }
-            CliFunctionNone::PrintFloat(expr) => {
-                let mut buffer = ryu::Buffer::new();
-                let float = buffer.format(self.eval_float(expr)?).as_bytes();
-                self.stdout.write(float).unwrap();
-            }
-            CliFunctionNone::PrintString(expr) => {
-                let string = self.eval_string(expr)?;
-                write!(self.stdout, "{}", string).unwrap()
-            }
-            CliFunctionNone::PrintBoolean(expr) => {
-                let boolean = self.eval_boolean(expr)?;
-                write!(self.stdout, "{}", boolean).unwrap()
-            }
+            NativeFunctionNone::Print(expr, line) => match &**expr {
+                Expr::Integer(expr) => {
+                    let mut buffer = [0u8; 20];
+                    let int = self.eval_int(expr)?.numtoa(10, &mut buffer);
+                    self.stdout.write(int).unwrap();
+                    if *line {
+                        self.stdout.write(b"\n").unwrap();
+                    }
+                }
+                Expr::Float(expr) => {
+                    let mut buffer = ryu::Buffer::new();
+                    let float = buffer.format(self.eval_float(expr)?).as_bytes();
+                    self.stdout.write(float).unwrap();
+                    if *line {
+                        self.stdout.write(b"\n").unwrap();
+                    }
+                }
+                Expr::String(expr) => {
+                    let string = self.eval_string(&expr)?;
+                    write!(self.stdout, "{}{}", string, if *line { "\n" } else { "" }).unwrap();
+                }
+                Expr::Boolean(expr) => {
+                    let boolean = self.eval_boolean(expr)?;
+                    write!(self.stdout, "{}{}", boolean, if *line { "\n" } else { "" }).unwrap();
+                }
+                _ => panic!("Unprintable type"),
+            },
         }
 
         Ok(())
     }
 
-    fn gui_callable_none(&mut self, call: &GuiFunctionNone) -> Result<(), TreeWalkerErr> {
+    fn native_call_string(&mut self, call: &NativeFunctionString) -> Result<String, TreeWalkerErr> {
         match call {
-            GuiFunctionNone::AddHeading(value) => {
-                let value = self.eval_string(value)?;
-
-                self.event(Event::AddHeading(value))?;
-
-                Ok(())
-            }
-            GuiFunctionNone::AddParagraph(value) => {
-                let value = self.eval_string(value)?;
-
-                self.event(Event::AddParagraph(value))?;
-
-                Ok(())
-            }
-            GuiFunctionNone::AddHyperlink(value) => {
-                let value = self.eval_string(value)?;
-
-                self.event(Event::AddHyperlink(value))?;
-
-                Ok(())
-            }
-            GuiFunctionNone::AddImage(value) => {
-                let value = self.eval_string(value)?;
-
-                self.event(Event::AddImage(value))?;
-
-                Ok(())
-            }
-            GuiFunctionNone::AddButton(name) => {
-                let name = self.eval_string(name)?;
-
-                self.event(Event::AddButton(name))?;
-
-                Ok(())
-            }
-        }
-    }
-
-    fn cli_callable_string(&mut self, call: &CliFunctionString) -> Result<String, TreeWalkerErr> {
-        match call {
-            CliFunctionString::Prompt(expr) => {
+            NativeFunctionString::Prompt(expr) => {
                 let prompt = self.eval_string(expr)?;
 
                 self.stdout.flush().unwrap();

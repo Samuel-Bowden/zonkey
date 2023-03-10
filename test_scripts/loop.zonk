@@ -7,11 +7,11 @@ start {
 	  	count += 1;
 
 		if (count == 10) {
-	    		break;
+	    	break;
 	  	} else if (count == 5) {
-	    		continue;
+	    	continue;
 	  	} else {
-	    		cli:println(count);
+	    	println(count);
 	  	}
 	}
 }

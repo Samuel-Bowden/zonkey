@@ -1,4 +1,5 @@
-use crate::native_function::{NativeFunctionNone, NativeFunctionString};
+use crate::prelude::*;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub enum Expr {
@@ -6,7 +7,7 @@ pub enum Expr {
     Float(FloatExpr),
     String(StringExpr),
     Boolean(BooleanExpr),
-    Object(String, String, Vec<Expr>),
+    Object(Rc<String>, Rc<String>, Vec<Expr>),
     None(NoneExpr),
 }
 
@@ -49,13 +50,13 @@ pub enum StringExpr {
         operator: StringOperator,
         right: Box<StringExpr>,
     },
-    Literal(String),
+    Literal(Rc<String>),
     Variable(usize),
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
-    NativeCall(NativeFunctionString),
     Call(usize, Vec<Expr>),
+    NativeCall(NativeFunctionString),
 }
 
 #[derive(Debug)]

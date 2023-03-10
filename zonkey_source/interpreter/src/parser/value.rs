@@ -1,4 +1,5 @@
 use indexmap::IndexMap;
+use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -15,11 +16,12 @@ pub enum ValueType {
     Float,
     String,
     Boolean,
-    Class(String),
+    Any,
+    Class(Rc<String>),
 }
 
 #[derive(Debug, Clone)]
 pub struct Object {
-    pub class_declaration: String,
-    pub properties: IndexMap<String, Value>,
+    pub class_declaration: Rc<String>,
+    pub properties: IndexMap<Rc<String>, Value>,
 }

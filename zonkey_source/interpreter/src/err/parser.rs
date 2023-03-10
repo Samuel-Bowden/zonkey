@@ -110,4 +110,7 @@ pub enum ParserErrType {
     ClassDeclarationExpectedRightBrace(Token, Token),
     ClassDeclarationExpectedPropertyName(Token, Option<Token>),
     ClassDeclarationUnterminatedProperty(Token, Option<Token>),
+
+    // Class use errors
+    ClassNotFound(Token, String),
 }

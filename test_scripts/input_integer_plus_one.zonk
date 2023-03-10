@@ -1,9 +1,9 @@
 start {
 	# Prompt returns the string the user entered
-	let input = cli:prompt("Enter an integer:");
+	let input = prompt("Enter an integer:");
 
 	# Casts the string input into an integer and adds 1
 	let integer = (Integer input) + 1;
 
-	cli:println("Your integer plus one is equal to " + (String integer));
+	println("Your integer plus one is equal to " + (String integer));
 }
