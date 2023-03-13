@@ -18,5 +18,5 @@ pub enum CallableType {
 #[derive(Debug)]
 pub struct ClassDeclaration {
     pub properties: FxHashMap<Rc<String>, ValueType>,
-    pub methods: FxHashMap<Rc<String>, CallableDeclaration>,
+    pub methods: FxHashMap<Rc<String>, Rc<CallableDeclaration>>,
 }

@@ -121,7 +121,7 @@ impl Parser {
                 initialiser_statement,
                 Stmt::While(test_statement, Box::new(block)),
             ],
-            (integer_point, float_point, string_point, boolean_point),
+            self.stack(),
         ))
     }
 }

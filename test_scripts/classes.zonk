@@ -1,17 +1,114 @@
+function print_split() {
+	println("------------");
+}
+
 class Pet {
+	String name;
+	String type;
 	Integer age;
 
-	method print_age() {
-		println(self.age);
+	method print() {
+		println("  Type: " + self.type);
+		println("  Name: " + self.name);
+		println("  Age: " + (String self.age));
+	}
+}
+
+class Profile {
+	String name;
+	Integer age;
+	Boolean public;
+	Integer views;
+
+	Pet pet;
+	Boolean owns_pet;
+
+	method view() {
+		if (self.public) {
+			self.views += 1;
+		}
 	}
 
-	method get_age_offset(Integer offset) -> Integer {
-		return self.age + offset;
+	method add_pet(String type, String name, Integer age) {
+		self.pet.type = type;
+		self.pet.name = name;
+		self.pet.age = age;
+		self.owns_pet = true;
+	}
+
+	method trending() -> String {
+		if (self.views > 100) {
+			return " (Trending):";
+		} else {
+			return ":";
+		}
+	}
+	
+	method show() {
+		self.view();
+
+		if (self.public) {
+			println(self.name + "'s Profile" + self.trending());
+			println(" Age: " + (String self.age));
+			println(" Views: " + (String self.views));
+			if (self.owns_pet) {
+				println(" Pet:");
+				self.pet.print();
+			} else {
+				println(" This profile has not added a pet yet.");
+			}
+		} else {
+			println("Sorry, but " + self.name + "'s profile is private!");
+		}
+
+		print_split();
+	}
+
+	method make(String name, Integer age, Boolean public) {
+		self.name = name;
+		self.age = age;
+		self.public = public;
+		self.owns_pet = false;
+	}
+}
+
+# A function which simulates n amount of people viewing the profile
+function simulate_profile_views(Profile p, Integer views) {
+	for (Integer i = 0, i < views, i += 1) {
+		p.view();
 	}
 }
 
 start {
-	let dog = new Pet;
+	println("Welcome to the social media platform for pet owners!");	
 
-	dog.print_age();
+	println("Current profiles:");
+	print_split();
+
+	# Create profiles
+	let sam = new Profile;
+	sam.make("Sam", 21, true);
+	sam.add_pet("Dog", "Jack", 5);
+
+	let steve = new Profile;
+	steve.make("Steve", 34, true);
+
+	let bert = new Profile;
+	bert.make("Bert", 54, false);
+
+	let sally = new Profile;
+	sally.make("Sally", 87, true);
+	sally.add_pet("Tortoise", "Shelly", 96);
+
+	# Make Sam's profile very popular
+	simulate_profile_views(sam, 123);
+
+	# Make Shelly's profile less popular
+	simulate_profile_views(sally, 53);
+
+	# Show profiles
+	sam.show();
+	steve.show();
+	bert.show();
+	sally.show();
 }

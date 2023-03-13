@@ -6,6 +6,7 @@ mod statement;
 use crate::{
     expr::Expr,
     parser::{production::prelude::*, value::ValueType},
+    stack::Stack,
 };
 use std::rc::Rc;
 
@@ -73,6 +74,16 @@ impl Parser {
             Some(&t.token_type)
         } else {
             None
+        }
+    }
+
+    fn stack(&self) -> Stack {
+        Stack {
+            integer: self.integer_next_id,
+            float: self.float_next_id,
+            string: self.string_next_id,
+            boolean: self.boolean_next_id,
+            object: self.object_next_id,
         }
     }
 }

@@ -7,7 +7,7 @@ pub enum Expr {
     Float(FloatExpr),
     String(StringExpr),
     Boolean(BooleanExpr),
-    Object(Rc<String>, Rc<String>, Vec<Expr>),
+    Object(Rc<String>, ObjectExpr),
     None(NoneExpr),
 }
 
@@ -20,6 +20,7 @@ pub enum IntegerExpr {
     },
     Literal(i64),
     Variable(usize),
+    Property(Vec<usize>, usize),
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
     StringCast(Box<StringExpr>),
@@ -36,6 +37,7 @@ pub enum FloatExpr {
     },
     Literal(f64),
     Variable(usize),
+    Property(Vec<usize>, usize),
     IntegerCast(Box<IntegerExpr>),
     BooleanCast(Box<BooleanExpr>),
     StringCast(Box<StringExpr>),
@@ -52,6 +54,7 @@ pub enum StringExpr {
     },
     Literal(Rc<String>),
     Variable(usize),
+    Property(Vec<usize>, usize),
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
@@ -83,6 +86,7 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
+    Property(Vec<usize>, usize),
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     StringCast(Box<StringExpr>),
@@ -93,6 +97,13 @@ pub enum BooleanExpr {
 #[derive(Debug)]
 pub enum NoneExpr {
     NativeCall(NativeFunctionNone),
+    Call(usize, Vec<Expr>),
+}
+
+#[derive(Debug)]
+pub enum ObjectExpr {
+    Variable(usize),
+    Property(Vec<usize>, usize),
     Call(usize, Vec<Expr>),
 }
 
@@ -136,6 +147,11 @@ pub enum StringAssignmentOperator {
 
 #[derive(Debug)]
 pub enum BooleanAssignmentOperator {
+    Equal,
+}
+
+#[derive(Debug)]
+pub enum ObjectAssignmentOperator {
     Equal,
 }
 

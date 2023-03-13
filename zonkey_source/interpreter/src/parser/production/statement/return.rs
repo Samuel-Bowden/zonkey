@@ -18,6 +18,11 @@ impl Parser {
                 (Some(ValueType::Float), Some(Expr::Float(expr))) => Some(Expr::Float(expr)),
                 (Some(ValueType::String), Some(Expr::String(expr))) => Some(Expr::String(expr)),
                 (Some(ValueType::Boolean), Some(Expr::Boolean(expr))) => Some(Expr::Boolean(expr)),
+                (Some(ValueType::Class(class)), Some(Expr::Object(expr_class, expr)))
+                    if *class == expr_class =>
+                {
+                    Some(Expr::Object(expr_class, expr))
+                }
                 (None, Some(Expr::None(expr))) => Some(Expr::None(expr)),
                 (None, None) => None,
                 (ret_type, expr) => {

@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::{
     parser::declaration::ClassDeclaration,
     parser::{
@@ -9,6 +7,7 @@ use crate::{
     },
 };
 use rustc_hash::FxHashMap;
+use std::rc::Rc;
 
 impl Parser {
     pub fn class(&mut self) -> Result<(), ParserStatus> {
@@ -102,11 +101,11 @@ impl Parser {
                 &ValueType::Class(Rc::clone(&class_name)),
                 Rc::new("self".to_string()),
                 &mut method_scope,
-            );
+            )?;
             parameter_value_types.push(ValueType::Class(Rc::clone(&class_name)));
 
             for (value_type, name) in parameters {
-                self.add_scope_parameter(&value_type, name, &mut method_scope);
+                self.add_scope_parameter(&value_type, name, &mut method_scope)?;
                 parameter_value_types.push(value_type);
             }
 
@@ -122,7 +121,7 @@ impl Parser {
                 .get_mut(&class_name)
                 .unwrap()
                 .methods
-                .insert(Rc::clone(&method_name), method_declaration.clone());
+                .insert(Rc::clone(&method_name), Rc::new(method_declaration));
 
             self.current_return_type = return_type;
 
@@ -130,14 +129,16 @@ impl Parser {
 
             // Clean value stack after it has been parsed
             self.value_stack.clear();
+            self.objects.clear();
             self.integer_next_id = 0;
             self.float_next_id = 0;
             self.string_next_id = 0;
             self.boolean_next_id = 0;
+            self.object_next_id = 0;
 
             self.current_return_type = None;
 
-            self.callables.push(block);
+            self.callables.push(block.into());
         }
 
         match self.consume_token_type() {

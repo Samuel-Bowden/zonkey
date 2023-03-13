@@ -6,9 +6,7 @@ mod start;
 use std::rc::Rc;
 
 use crate::{
-    parser::production::definition::prelude::*,
-    parser::value::ValueType,
-    parser::value::{Object, Value},
+    parser::production::definition::prelude::*, parser::value::Value, parser::value::ValueType,
 };
 
 impl Parser {
@@ -121,7 +119,7 @@ impl Parser {
         value_type: &ValueType,
         name: Rc<String>,
         scope: &mut IndexMap<Rc<String>, Value>,
-    ) {
+    ) -> Result<(), ParserStatus> {
         match value_type {
             ValueType::Integer => {
                 scope.insert(name, Value::Integer(self.integer_next_id));
@@ -140,26 +138,18 @@ impl Parser {
                 self.boolean_next_id += 1;
             }
             ValueType::Any => unreachable!("Zonkey code cannot use the Any type"),
-            ValueType::Class(class_type) => match self.class_declarations.remove(class_type) {
-                Some(cd) => {
-                    let mut properties = IndexMap::new();
+            ValueType::Class(class) => {
+                let (object, _) = self.create_object(Rc::clone(&class))?;
 
-                    for (name, value_type) in &cd.properties {
-                        self.add_scope_parameter(value_type, Rc::clone(name), &mut properties);
-                    }
+                let object_id = self.object_next_id;
+                self.object_next_id += 1;
 
-                    self.class_declarations.insert(Rc::clone(class_type), cd);
+                self.objects.insert(object_id, Rc::new(object));
 
-                    scope.insert(
-                        name,
-                        Value::Object(Object {
-                            class_declaration: Rc::clone(class_type),
-                            properties,
-                        }),
-                    );
-                }
-                None => panic!("Function parameter of undefined class type"),
-            },
+                scope.insert(name, Value::Object(Rc::clone(&class), object_id));
+            }
         }
+
+        Ok(())
     }
 }

@@ -36,7 +36,7 @@ impl Parser {
 
         let mut parameter_value_types = vec![];
         for (value_type, name) in parameters {
-            self.add_scope_parameter(&value_type, name, &mut function_scope);
+            self.add_scope_parameter(&value_type, name, &mut function_scope)?;
             parameter_value_types.push(value_type);
         }
 
@@ -49,7 +49,7 @@ impl Parser {
         };
 
         self.function_declarations
-            .insert(function_name, function_declaration);
+            .insert(function_name, Rc::new(function_declaration));
 
         self.current_return_type = return_type;
 
@@ -58,15 +58,17 @@ impl Parser {
 
         // Clean value stack after it has been parsed
         self.value_stack.clear();
+        self.objects.clear();
         self.integer_next_id = 0;
         self.float_next_id = 0;
         self.string_next_id = 0;
         self.boolean_next_id = 0;
+        self.object_next_id = 0;
 
         self.current_return_type = None;
 
         // Finally add function to callables
-        self.callables.push(block);
+        self.callables.push(block.into());
 
         Ok(())
     }

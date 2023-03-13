@@ -39,10 +39,7 @@ impl Parser {
                     self.string_next_id = string_point;
                     self.boolean_next_id = boolean_point;
 
-                    return Ok(Stmt::Block(
-                        statements,
-                        (integer_point, float_point, string_point, boolean_point),
-                    ));
+                    return Ok(Stmt::Block(statements, self.stack()));
                 }
                 Some(_) => {
                     match self.statement() {

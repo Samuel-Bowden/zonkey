@@ -1,4 +1,4 @@
-use crate::expr::*;
+use crate::{expr::*, stack::Stack};
 
 #[derive(Debug)]
 pub enum Stmt {
@@ -8,11 +8,17 @@ pub enum Stmt {
     StringVariableInitialisation(StringExpr),
     BooleanVariableInitialisation(BooleanExpr),
     ClassVariableInitialisation(Vec<ConstructionType>),
+    ObjectVariableInitialisation(ObjectExpr),
     IntegerVariableAssignment(usize, IntegerExpr, NumericAssignmentOperator),
     FloatVariableAssignment(usize, FloatExpr, NumericAssignmentOperator),
     StringVariableAssignment(usize, StringExpr, StringAssignmentOperator),
     BooleanVariableAssignment(usize, BooleanExpr, BooleanAssignmentOperator),
-    Block(Vec<Stmt>, (usize, usize, usize, usize)),
+    IntegerPropertyAssignment(Vec<usize>, usize, IntegerExpr, NumericAssignmentOperator),
+    FloatPropertyAssignment(Vec<usize>, usize, FloatExpr, NumericAssignmentOperator),
+    StringPropertyAssignment(Vec<usize>, usize, StringExpr, StringAssignmentOperator),
+    BooleanPropertyAssignment(Vec<usize>, usize, BooleanExpr, BooleanAssignmentOperator),
+    ObjectPropertyAssignment(Vec<usize>, usize, ObjectExpr, ObjectAssignmentOperator),
+    Block(Vec<Stmt>, Stack),
     If(BooleanExpr, Box<Stmt>, Option<Box<Stmt>>),
     While(BooleanExpr, Box<Stmt>),
     Loop(Box<Stmt>),

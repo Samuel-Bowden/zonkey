@@ -13,6 +13,7 @@ mod expr;
 mod lexer;
 mod parser;
 mod prelude;
+mod stack;
 mod stmt;
 pub mod token;
 mod tree_walker;

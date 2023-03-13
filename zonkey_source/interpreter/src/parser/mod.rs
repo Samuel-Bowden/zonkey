@@ -1,9 +1,7 @@
-mod declaration;
+pub mod declaration;
 mod production;
 mod status;
 pub mod value;
-
-use std::rc::Rc;
 
 use crate::{
     ast::AST,
@@ -16,8 +14,12 @@ use crate::{
 };
 use indexmap::IndexMap;
 use rustc_hash::FxHashMap;
+use std::rc::Rc;
 
-use self::{declaration::CallableType, value::ValueType};
+use self::{
+    declaration::CallableType,
+    value::{Object, ValueType},
+};
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -26,10 +28,12 @@ pub struct Parser {
     float_next_id: usize,
     string_next_id: usize,
     boolean_next_id: usize,
-    function_declarations: FxHashMap<Rc<String>, CallableDeclaration>,
+    object_next_id: usize,
+    objects: FxHashMap<usize, Rc<Object>>,
+    function_declarations: FxHashMap<Rc<String>, Rc<CallableDeclaration>>,
     class_declarations: FxHashMap<Rc<String>, ClassDeclaration>,
     current_return_type: Option<ValueType>,
-    callables: Vec<Stmt>,
+    callables: Vec<Rc<Stmt>>,
     error: ParserErr,
     start_definition: Option<(Token, Option<Stmt>)>,
     current: usize,
@@ -44,6 +48,8 @@ impl Parser {
             float_next_id: 0,
             string_next_id: 0,
             boolean_next_id: 0,
+            object_next_id: 0,
+            objects: FxHashMap::default(),
             function_declarations: FxHashMap::default(),
             class_declarations: FxHashMap::default(),
             current_return_type: None,
@@ -86,29 +92,29 @@ impl Parser {
     fn add_prelude(&mut self) {
         self.function_declarations.insert(
             Rc::new("print".to_string()),
-            CallableDeclaration {
+            Rc::new(CallableDeclaration {
                 callable_type: CallableType::Native,
                 parameters: vec![ValueType::Any],
                 return_type: None,
-            },
+            }),
         );
 
         self.function_declarations.insert(
             Rc::new("println".to_string()),
-            CallableDeclaration {
+            Rc::new(CallableDeclaration {
                 callable_type: CallableType::Native,
                 parameters: vec![ValueType::Any],
                 return_type: None,
-            },
+            }),
         );
 
         self.function_declarations.insert(
             Rc::new("prompt".to_string()),
-            CallableDeclaration {
+            Rc::new(CallableDeclaration {
                 callable_type: CallableType::Native,
                 parameters: vec![ValueType::String],
                 return_type: Some(ValueType::String),
-            },
+            }),
         );
     }
 }

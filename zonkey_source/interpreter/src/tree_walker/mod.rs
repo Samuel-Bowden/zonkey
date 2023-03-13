@@ -10,7 +10,9 @@ use crate::{
     stmt::{ConstructionType, Stmt},
 };
 use std::{
+    cell::RefCell,
     io::{stdout, BufWriter, StdoutLock, Write},
+    rc::Rc,
     sync::mpsc::Sender,
 };
 
@@ -19,28 +21,26 @@ pub mod status;
 
 pub struct TreeWalker<'a> {
     environment: Environment,
-    callables: &'a Vec<Stmt>,
+    callables: Vec<Rc<Stmt>>,
     stdout: BufWriter<StdoutLock<'a>>,
     sender: Sender<Event>,
 }
 
 impl<'a> TreeWalker<'a> {
     pub fn run(ast: AST, sender: Sender<Event>) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        let environment = Environment::new();
-        TreeWalker::new(&ast.callable, environment, sender).interpret(&ast.start)
-    }
-
-    pub fn new(callables: &'a Vec<Stmt>, environment: Environment, sender: Sender<Event>) -> Self {
-        Self {
-            environment,
-            callables,
+        let mut tree_walker = Self {
+            environment: Environment::new(),
+            callables: ast.callable,
             stdout: BufWriter::new(stdout().lock()),
             sender,
-        }
+        };
+
+        tree_walker.interpret(&ast.start)
     }
 
     pub fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         match statement {
+            // Integer statements
             Stmt::IntegerVariableInitialisation(expr) => {
                 let int = self.eval_int(expr)?;
                 self.environment.push_int(int);
@@ -51,6 +51,22 @@ impl<'a> TreeWalker<'a> {
                 self.environment.assign_int(*id, int, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
+            Stmt::IntegerPropertyAssignment(
+                object_path,
+                property_id,
+                expr,
+                assignment_operator,
+            ) => {
+                let int = self.eval_int(expr)?;
+                self.get_object(object_path).borrow_mut().assign_int(
+                    *property_id,
+                    int,
+                    assignment_operator,
+                );
+                Ok(TreeWalkerStatus::Ok)
+            }
+
+            // Float statements
             Stmt::FloatVariableInitialisation(expr) => {
                 let float = self.eval_float(expr)?;
                 self.environment.push_float(float);
@@ -62,13 +78,20 @@ impl<'a> TreeWalker<'a> {
                     .assign_float(*id, float, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
+            Stmt::FloatPropertyAssignment(object_path, property_id, expr, assignment_operator) => {
+                let float = self.eval_float(expr)?;
+                self.get_object(object_path).borrow_mut().assign_float(
+                    *property_id,
+                    float,
+                    assignment_operator,
+                );
+                Ok(TreeWalkerStatus::Ok)
+            }
+
+            // String statements
             Stmt::StringVariableInitialisation(expr) => {
                 let string = self.eval_string(expr)?;
                 self.environment.push_string(string);
-                Ok(TreeWalkerStatus::Ok)
-            }
-            Stmt::ClassVariableInitialisation(types) => {
-                self.construct_class(types);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::StringVariableAssignment(id, expr, assignment_operator) => {
@@ -77,6 +100,17 @@ impl<'a> TreeWalker<'a> {
                     .assign_string(*id, string, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
+            Stmt::StringPropertyAssignment(object_path, property_id, expr, assignment_operator) => {
+                let string = self.eval_string(expr)?;
+                self.get_object(object_path).borrow_mut().assign_string(
+                    *property_id,
+                    string,
+                    assignment_operator,
+                );
+                Ok(TreeWalkerStatus::Ok)
+            }
+
+            // Boolean statements
             Stmt::BooleanVariableInitialisation(expr) => {
                 let boolean = self.eval_boolean(expr)?;
                 self.environment.push_boolean(boolean);
@@ -88,9 +122,45 @@ impl<'a> TreeWalker<'a> {
                     .assign_boolean(*id, boolean, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::Block(statements, block_start_points) => {
-                self.environment.push_stack();
+            Stmt::BooleanPropertyAssignment(
+                object_path,
+                property_id,
+                expr,
+                assignment_operator,
+            ) => {
+                let boolean = self.eval_boolean(expr)?;
+                self.get_object(object_path).borrow_mut().assign_boolean(
+                    *property_id,
+                    boolean,
+                    assignment_operator,
+                );
+                Ok(TreeWalkerStatus::Ok)
+            }
 
+            // Class statements
+            Stmt::ClassVariableInitialisation(types) => {
+                let mut object = Environment::new();
+                self.new_object(types, &mut object);
+                self.environment.push_object(Rc::new(RefCell::new(object)));
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::ObjectVariableInitialisation(expr) => {
+                let object = self.eval_object(expr)?;
+                self.environment.push_object(object);
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::ObjectPropertyAssignment(object_path, property_id, expr, assignment_operator) => {
+                let object = self.eval_object(expr)?;
+                self.get_object(object_path).borrow_mut().assign_object(
+                    *property_id,
+                    object,
+                    assignment_operator,
+                );
+                Ok(TreeWalkerStatus::Ok)
+            }
+
+            // Other statements
+            Stmt::Block(statements, stack) => {
                 let mut return_value = Ok(TreeWalkerStatus::Ok);
 
                 for statement in statements {
@@ -103,7 +173,7 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                self.environment.pop_stack(block_start_points);
+                self.environment.pop_stack(stack);
 
                 return_value
             }
@@ -179,8 +249,8 @@ impl<'a> TreeWalker<'a> {
                     self.eval_none(expr)?;
                     Ok(TreeWalkerStatus::ReturnNone)
                 }
-                Some(Expr::Object(..)) => {
-                    todo!()
+                Some(Expr::Object(_, expr)) => {
+                    Ok(TreeWalkerStatus::ReturnObject(self.eval_object(expr)?))
                 }
                 None => Ok(TreeWalkerStatus::ReturnNone),
             },
@@ -223,6 +293,10 @@ impl<'a> TreeWalker<'a> {
                 Err(_) => Err(TreeWalkerErr::FailedStringToIntegerCast),
                 Ok(val) => Ok(val),
             },
+            IntegerExpr::Property(object_path, property_id) => {
+                let int = self.get_object(object_path).borrow().get_int(*property_id);
+                Ok(int)
+            }
         }
     }
 
@@ -253,6 +327,13 @@ impl<'a> TreeWalker<'a> {
                 Err(_) => Err(TreeWalkerErr::FailedStringToFloatCast),
                 Ok(val) => Ok(val),
             },
+            FloatExpr::Property(object_path, property_id) => {
+                let float = self
+                    .get_object(object_path)
+                    .borrow()
+                    .get_float(*property_id);
+                Ok(float)
+            }
         }
     }
 
@@ -275,6 +356,13 @@ impl<'a> TreeWalker<'a> {
             StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
             StringExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)?.to_string()),
             StringExpr::NativeCall(call) => self.native_call_string(call),
+            StringExpr::Property(object_path, property_id) => {
+                let string = self
+                    .get_object(object_path)
+                    .borrow()
+                    .get_string(*property_id);
+                Ok(string)
+            }
         }
     }
 
@@ -351,6 +439,13 @@ impl<'a> TreeWalker<'a> {
                 Err(_) => Err(TreeWalkerErr::FailedStringToBooleanCast),
                 Ok(val) => Ok(val),
             },
+            BooleanExpr::Property(object_path, property_id) => {
+                let boolean = self
+                    .get_object(object_path)
+                    .borrow()
+                    .get_boolean(*property_id);
+                Ok(boolean)
+            }
         }
     }
 
@@ -361,6 +456,30 @@ impl<'a> TreeWalker<'a> {
                 TreeWalkerStatus::ReturnNone | TreeWalkerStatus::Ok => Ok(()),
                 _ => panic!("Call did not return correct type"),
             },
+        }
+    }
+
+    fn eval_object(
+        &mut self,
+        expression: &ObjectExpr,
+    ) -> Result<Rc<RefCell<Environment>>, TreeWalkerErr> {
+        match expression {
+            ObjectExpr::Variable(id) => Ok(self.environment.get_object(*id)),
+            ObjectExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
+                TreeWalkerStatus::ReturnObject(v) => Ok(v),
+                _ => panic!("Call did not return correct type"),
+            },
+            ObjectExpr::Property(object_path, property_id) => {
+                if object_path.len() == 0 {
+                    Ok(self.environment.get_object(*property_id))
+                } else {
+                    let object = self
+                        .get_object(object_path)
+                        .borrow()
+                        .get_object(*property_id);
+                    Ok(object)
+                }
+            }
         }
     }
 
@@ -423,52 +542,56 @@ impl<'a> TreeWalker<'a> {
         id: usize,
         expressions: &Vec<Expr>,
     ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        let callable = &self.callables[id];
-
         let mut environment = Environment::new();
 
-        for expression in expressions {
-            self.add_expr_to_environment(expression, &mut environment)?;
+        for expr in expressions {
+            match expr {
+                Expr::Integer(expr) => {
+                    let integer = self.eval_int(expr)?;
+                    environment.push_int(integer)
+                }
+                Expr::Float(expr) => {
+                    let float = self.eval_float(expr)?;
+                    environment.push_float(float)
+                }
+                Expr::String(expr) => {
+                    let string = self.eval_string(expr)?;
+                    environment.push_string(string)
+                }
+                Expr::Boolean(expr) => {
+                    let boolean = self.eval_boolean(expr)?;
+                    environment.push_boolean(boolean)
+                }
+                Expr::None(_) => panic!("Cannot pass none to a callable"),
+                Expr::Object(_, expr) => {
+                    environment.push_object(self.eval_object(expr)?);
+                }
+            }
         }
 
         std::mem::swap(&mut environment, &mut self.environment);
 
-        let result = self.interpret(&callable);
+        let callable = &self.callables[id];
+
+        let result = self.interpret(&Rc::clone(callable));
 
         std::mem::swap(&mut environment, &mut self.environment);
 
         result
     }
 
-    fn add_expr_to_environment(
-        &mut self,
-        expr: &Expr,
-        environment: &mut Environment,
-    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
-        match expr {
-            Expr::Integer(expr) => environment.push_int(self.eval_int(expr)?),
-            Expr::Float(expr) => environment.push_float(self.eval_float(expr)?),
-            Expr::String(expr) => environment.push_string(self.eval_string(expr)?),
-            Expr::Boolean(expr) => environment.push_boolean(self.eval_boolean(expr)?),
-            Expr::None(_) => panic!("Cannot pass none to a callable"),
-            Expr::Object(_, _, exprs) => {
-                for expr in exprs {
-                    self.add_expr_to_environment(expr, environment)?;
-                }
-            }
-        }
-
-        Ok(TreeWalkerStatus::Ok)
-    }
-
-    fn construct_class(&mut self, types: &Vec<ConstructionType>) {
+    fn new_object(&mut self, types: &Vec<ConstructionType>, environment: &mut Environment) {
         for value_type in types {
             match value_type {
-                ConstructionType::Integer => self.environment.push_int(0),
-                ConstructionType::Float => self.environment.push_float(0.),
-                ConstructionType::String => self.environment.push_string(String::new()),
-                ConstructionType::Boolean => self.environment.push_boolean(false),
-                ConstructionType::Class(types) => self.construct_class(types),
+                ConstructionType::Integer => environment.push_int(0),
+                ConstructionType::Float => environment.push_float(0.),
+                ConstructionType::String => environment.push_string(String::new()),
+                ConstructionType::Boolean => environment.push_boolean(false),
+                ConstructionType::Class(class_types) => {
+                    let mut object = Environment::new();
+                    self.new_object(class_types, &mut object);
+                    environment.push_object(Rc::new(RefCell::new(object)));
+                }
             }
         }
     }
@@ -478,5 +601,17 @@ impl<'a> TreeWalker<'a> {
             Ok(()) => Ok(()),
             Err(_) => Err(TreeWalkerErr::FailedToSendEventToBrowser),
         }
+    }
+
+    fn get_object(&self, object_path: &Vec<usize>) -> Rc<RefCell<Environment>> {
+        let mut iter = object_path.iter();
+        let mut objects = vec![self.environment.get_object(*iter.next().unwrap())];
+
+        for object_id in iter {
+            let object = objects.last().unwrap().borrow().get_object(*object_id);
+            objects.push(object);
+        }
+
+        Rc::clone(objects.last().unwrap())
     }
 }
