@@ -7,7 +7,7 @@ pub enum Stmt {
     FloatVariableInitialisation(FloatExpr),
     StringVariableInitialisation(StringExpr),
     BooleanVariableInitialisation(BooleanExpr),
-    ClassVariableInitialisation(Vec<ConstructionType>),
+    DefaultConstructor(Vec<ConstructionType>),
     ObjectVariableInitialisation(ObjectExpr),
     IntegerVariableAssignment(usize, IntegerExpr, NumericAssignmentOperator),
     FloatVariableAssignment(usize, FloatExpr, NumericAssignmentOperator),

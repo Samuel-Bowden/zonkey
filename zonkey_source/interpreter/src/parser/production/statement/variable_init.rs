@@ -53,87 +53,62 @@ impl Parser {
         };
         self.current += 1;
 
-        if let Some(TokenType::New) = self.current_token_type() {
-            self.current += 1;
+        let expr = self.expression()?;
 
-            match self.current_token_type().cloned() {
-                Some(TokenType::Identifier(class_name)) => {
-                    self.current += 1;
-                    let (object, types) = self.create_object(Rc::clone(&class_name))?;
-
-                    let object_id = self.object_next_id;
-                    self.object_next_id += 1;
-
-                    self.objects.insert(object_id, Rc::new(object));
-
-                    self.value_stack
-                        .last_mut()
-                        .unwrap()
-                        .insert(name, Value::Object(class_name, object_id));
-
-                    Ok(Stmt::ClassVariableInitialisation(types))
-                }
-                _ => {
-                    panic!("Expected identifier")
-                }
+        match expr {
+            Expr::Integer(val) => {
+                let id = self.integer_next_id;
+                self.integer_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name, Value::Integer(id));
+                Ok(Stmt::IntegerVariableInitialisation(val))
             }
-        } else {
-            let expr = self.expression()?;
-
-            match expr {
-                Expr::Integer(val) => {
-                    let id = self.integer_next_id;
-                    self.integer_next_id += 1;
-                    self.value_stack
-                        .last_mut()
-                        .unwrap()
-                        .insert(name, Value::Integer(id));
-                    Ok(Stmt::IntegerVariableInitialisation(val))
-                }
-                Expr::Float(val) => {
-                    let id = self.float_next_id;
-                    self.float_next_id += 1;
-                    self.value_stack
-                        .last_mut()
-                        .unwrap()
-                        .insert(name, Value::Float(id));
-                    Ok(Stmt::FloatVariableInitialisation(val))
-                }
-                Expr::String(val) => {
-                    let id = self.string_next_id;
-                    self.string_next_id += 1;
-                    self.value_stack
-                        .last_mut()
-                        .unwrap()
-                        .insert(name, Value::String(id));
-                    Ok(Stmt::StringVariableInitialisation(val))
-                }
-                Expr::Boolean(val) => {
-                    let id = self.boolean_next_id;
-                    self.boolean_next_id += 1;
-                    self.value_stack
-                        .last_mut()
-                        .unwrap()
-                        .insert(name, Value::Boolean(id));
-                    Ok(Stmt::BooleanVariableInitialisation(val))
-                }
-                Expr::None(_) => {
-                    self.error
-                        .add(ParserErrType::VariableDeclarationExprEvalNone(
-                            self.tokens[equal_pos].end,
-                            self.tokens[self.current].end,
-                        ));
-                    Err(ParserStatus::Unwind)
-                }
-                Expr::Object(class, val) => {
-                    let id = self.object_next_id;
-                    self.object_next_id += 1;
-                    self.value_stack
-                        .last_mut()
-                        .unwrap()
-                        .insert(name, Value::Object(Rc::clone(&class), id));
-                    Ok(Stmt::ObjectVariableInitialisation(val))
-                }
+            Expr::Float(val) => {
+                let id = self.float_next_id;
+                self.float_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name, Value::Float(id));
+                Ok(Stmt::FloatVariableInitialisation(val))
+            }
+            Expr::String(val) => {
+                let id = self.string_next_id;
+                self.string_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name, Value::String(id));
+                Ok(Stmt::StringVariableInitialisation(val))
+            }
+            Expr::Boolean(val) => {
+                let id = self.boolean_next_id;
+                self.boolean_next_id += 1;
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name, Value::Boolean(id));
+                Ok(Stmt::BooleanVariableInitialisation(val))
+            }
+            Expr::None(_) => {
+                self.error
+                    .add(ParserErrType::VariableDeclarationExprEvalNone(
+                        self.tokens[equal_pos].end,
+                        self.tokens[self.current].end,
+                    ));
+                Err(ParserStatus::Unwind)
+            }
+            Expr::Object(class, val) => {
+                let (object, _) = self.create_object(Rc::clone(&class))?;
+                self.objects.insert(self.object_next_id, Rc::new(object));
+                self.value_stack
+                    .last_mut()
+                    .unwrap()
+                    .insert(name, Value::Object(Rc::clone(&class), self.object_next_id));
+                self.object_next_id += 1;
+                Ok(Stmt::ObjectVariableInitialisation(val))
             }
         }
     }

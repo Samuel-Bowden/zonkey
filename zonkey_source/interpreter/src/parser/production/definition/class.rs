@@ -1,10 +1,12 @@
 use crate::{
+    expr::{Expr, ObjectExpr},
     parser::declaration::ClassDeclaration,
     parser::{
         declaration::{CallableDeclaration, CallableType},
         production::definition::prelude::*,
-        value::ValueType,
+        value::{Value, ValueType},
     },
+    stmt::Stmt,
 };
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
@@ -78,6 +80,69 @@ impl Parser {
 
         self.class_declarations
             .insert(Rc::clone(&class_name), class_declaration);
+
+        // Parse constructor
+        if let Some(TokenType::Constructor) = self.current_token_type() {
+            self.current += 1;
+
+            let parameters = self.parameters(self.current - 1)?;
+            let mut parameter_value_types = vec![];
+
+            let mut constructor_scope = IndexMap::new();
+
+            let (object, types) = self.create_object(Rc::clone(&class_name))?;
+            self.objects.insert(self.object_next_id, Rc::new(object));
+            constructor_scope.insert(
+                Rc::new("self".to_string()),
+                Value::Object(Rc::clone(&class_name), self.object_next_id),
+            );
+            self.object_next_id += 1;
+
+            for (value_type, name) in parameters {
+                self.add_scope_parameter(&value_type, name, &mut constructor_scope)?;
+                parameter_value_types.push(value_type);
+            }
+
+            self.value_stack.push(constructor_scope);
+
+            let return_type = Some(ValueType::Class(Rc::clone(&class_name)));
+
+            let constructor_declaration = CallableDeclaration {
+                callable_type: CallableType::Zonkey(self.callables.len()),
+                parameters: parameter_value_types,
+                return_type: return_type.clone(),
+            };
+
+            self.function_declarations
+                .insert(Rc::clone(&class_name), Rc::new(constructor_declaration));
+
+            self.current_return_type = return_type;
+
+            let block = self.block()?;
+
+            // Clean value stack after it has been parsed
+            self.value_stack.clear();
+            self.objects.clear();
+            self.integer_next_id = 0;
+            self.float_next_id = 0;
+            self.string_next_id = 0;
+            self.boolean_next_id = 0;
+            self.object_next_id = 0;
+
+            self.current_return_type = None;
+
+            self.callables.push(Rc::new(Stmt::Block(
+                vec![
+                    Stmt::DefaultConstructor(types),
+                    block,
+                    Stmt::Return(Some(Expr::Object(
+                        Rc::clone(&class_name),
+                        ObjectExpr::Variable(0),
+                    ))),
+                ],
+                self.stack(),
+            )))
+        }
 
         // Parse methods
         while let Some(TokenType::Method) = self.current_token_type() {

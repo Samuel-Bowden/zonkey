@@ -138,7 +138,7 @@ impl<'a> TreeWalker<'a> {
             }
 
             // Class statements
-            Stmt::ClassVariableInitialisation(types) => {
+            Stmt::DefaultConstructor(types) => {
                 let mut object = Environment::new();
                 self.new_object(types, &mut object);
                 self.environment.push_object(Rc::new(RefCell::new(object)));

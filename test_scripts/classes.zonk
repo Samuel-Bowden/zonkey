@@ -23,6 +23,13 @@ class Profile {
 	Pet pet;
 	Boolean owns_pet;
 
+	constructor(String name, Integer age, Boolean public) {
+		self.name = name;
+		self.age = age;
+		self.public = public;
+		self.owns_pet = false;
+	}
+
 	method view() {
 		if (self.public) {
 			self.views += 1;
@@ -63,13 +70,6 @@ class Profile {
 
 		print_split();
 	}
-
-	method make(String name, Integer age, Boolean public) {
-		self.name = name;
-		self.age = age;
-		self.public = public;
-		self.owns_pet = false;
-	}
 }
 
 # A function which simulates n amount of people viewing the profile
@@ -86,18 +86,14 @@ start {
 	print_split();
 
 	# Create profiles
-	let sam = new Profile;
-	sam.make("Sam", 21, true);
+	let sam = Profile("Sam", 21, true);
 	sam.add_pet("Dog", "Jack", 5);
 
-	let steve = new Profile;
-	steve.make("Steve", 34, true);
+	let steve = Profile("Steve", 34, true);
 
-	let bert = new Profile;
-	bert.make("Bert", 54, false);
+	let bert = Profile("Bert", 54, false);
 
-	let sally = new Profile;
-	sally.make("Sally", 87, true);
+	let sally = Profile("Sally", 87, true);
 	sally.add_pet("Tortoise", "Shelly", 96);
 
 	# Make Sam's profile very popular

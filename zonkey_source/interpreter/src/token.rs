@@ -64,8 +64,8 @@ pub enum TokenType {
     BooleanType,
     Let,
     Class,
-    New,
     Method,
+    Constructor,
 }
 
 impl Display for TokenType {
@@ -119,8 +119,8 @@ impl Display for TokenType {
             Self::BooleanType => f.write_str("Boolean"),
             Self::Let => f.write_str("let"),
             Self::Class => f.write_str("class"),
-            Self::New => f.write_str("new"),
             Self::Method => f.write_str("method"),
+            Self::Constructor => f.write_str("constructor"),
         }
     }
 }
