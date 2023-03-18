@@ -2,8 +2,6 @@ mod component;
 mod message;
 mod zonkey_app;
 
-use std::{fs::read_to_string, path::PathBuf, sync::mpsc, thread};
-
 use directories::ProjectDirs;
 use iced::{
     executor, subscription,
@@ -11,15 +9,22 @@ use iced::{
     widget::{Column, Container},
     Application, Color, Command, Element, Length, Settings, Theme,
 };
+use interpreter::event::{BrowserEvent, InterpreterEvent};
 use message::Message;
+use std::env::args;
+use std::sync::mpsc::{Receiver, Sender};
+use std::{fs::read_to_string, path::PathBuf, sync::mpsc, thread};
 use unicode_segmentation::UnicodeSegmentation;
+use zonkey_app::element::ElementType;
 use zonkey_app::ZonkeyApp;
 
 pub struct ZonkeyBrowser {
     app: Option<ZonkeyApp>,
     directories: ProjectDirs,
     address: String,
-    sender: Option<mpsc::Sender<String>>,
+    sender: Option<Sender<String>>,
+    interpreter_sender: Option<Sender<BrowserEvent>>,
+    next_app: Option<(PathBuf, String)>,
 }
 
 impl Application for ZonkeyBrowser {
@@ -38,6 +43,8 @@ impl Application for ZonkeyBrowser {
                 directories,
                 address: String::from(""),
                 sender: None,
+                interpreter_sender: None,
+                next_app: None,
             },
             Command::none(),
         )
@@ -89,20 +96,58 @@ impl Application for ZonkeyBrowser {
             }
             Message::Ready(sender) => {
                 self.sender = Some(sender);
+                let next_app = std::mem::replace(&mut self.next_app, None);
+                if let Some((path, name)) = next_app {
+                    self.app(path, name);
+                }
                 Command::none()
             }
             Message::BootComplete(sender) => {
                 self.sender = Some(sender);
-                self.home_app();
-                self.address = String::from("zonkey:home");
+                if let Some(file) = args().skip(1).next() {
+                    self.open_address(file);
+                } else {
+                    self.home_app();
+                    self.address = String::from("zonkey:home");
+                }
                 Command::none()
             }
-            Message::PageButtonPressed => {
-                eprintln!("Cannot react to button clicks yet");
+            Message::PageButtonPressed(id) => {
+                if let Some(sender) = &self.interpreter_sender {
+                    sender.send(BrowserEvent::ButtonPress(id)).unwrap();
+                }
                 Command::none()
             }
             Message::Hyperlink(location) => {
                 self.open_address(location);
+                Command::none()
+            }
+            Message::SetSender(sender) => {
+                self.interpreter_sender = Some(sender);
+                Command::none()
+            }
+            Message::InputChanged(value, id) => {
+                if let Some(app) = &mut self.app {
+                    if let ElementType::Page(elements) = &mut app.root {
+                        if let ElementType::Input(_, _, text) = &mut elements[id as usize] {
+                            *text = value;
+                        }
+                    }
+                }
+                Command::none()
+            }
+            Message::InputSubmit(id) => {
+                if let Some(app) = &mut self.app {
+                    if let ElementType::Page(elements) = &mut app.root {
+                        if let ElementType::Input(_, _, text) = &mut elements[id as usize] {
+                            if let Some(sender) = &self.interpreter_sender {
+                                sender
+                                    .send(BrowserEvent::InputConfirmed(text.to_string(), id))
+                                    .unwrap();
+                            }
+                        }
+                    }
+                }
                 Command::none()
             }
         }
@@ -154,13 +199,15 @@ impl Application for ZonkeyBrowser {
                         return (None, SubscriptionState::Finished);
                     };
 
+                    let (interpreter_sender, browser_receiver) = mpsc::channel();
                     let (browser_sender, interpreter_receiver) = mpsc::channel();
 
                     thread::spawn(move || {
                         let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true)
                             .collect::<Vec<&str>>();
 
-                        match interpreter::run(&graphemes, browser_sender) {
+                        match interpreter::run(&graphemes, interpreter_sender, interpreter_receiver)
+                        {
                             Ok(_) => (),
                             Err(e) => {
                                 interpreter::err::handler::run(e, &graphemes);
@@ -168,7 +215,10 @@ impl Application for ZonkeyBrowser {
                         }
                     });
 
-                    (None, SubscriptionState::Running(interpreter_receiver))
+                    (
+                        Some(Message::SetSender(browser_sender)),
+                        SubscriptionState::Running(browser_receiver),
+                    )
                 }
                 SubscriptionState::Running(receiver) => match receiver.recv() {
                     Ok(event) => (
@@ -186,8 +236,8 @@ impl Application for ZonkeyBrowser {
 enum SubscriptionState {
     Boot,
     Starting,
-    Ready(mpsc::Receiver<String>),
-    Running(mpsc::Receiver<interpreter::event::Event>),
+    Ready(Receiver<String>),
+    Running(Receiver<InterpreterEvent>),
     Finished,
 }
 
@@ -231,7 +281,8 @@ impl ZonkeyBrowser {
 
             self.app = Some(ZonkeyApp::new_from_file(name))
         } else {
-            eprintln!("App is still executing.");
+            self.interpreter_sender = None;
+            self.next_app = Some((path, name));
         }
     }
 

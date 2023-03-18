@@ -102,7 +102,9 @@ impl Parser {
                                                 Rc::clone(&call),
                                             );
                                         }
-                                        None => panic!("Method does not exist"),
+                                        None => panic!(
+                                            "Method {property_or_method_name} does not exist"
+                                        ),
                                     }
                                 }
                                 Some(tt) => {

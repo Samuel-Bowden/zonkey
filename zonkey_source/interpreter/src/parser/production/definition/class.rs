@@ -90,13 +90,14 @@ impl Parser {
 
             let mut constructor_scope = IndexMap::new();
 
+            let id = self.object_next_id;
+            self.object_next_id += 1;
             let (object, types) = self.create_object(Rc::clone(&class_name))?;
-            self.objects.insert(self.object_next_id, Rc::new(object));
+            self.objects.insert(id, Rc::new(object));
             constructor_scope.insert(
                 Rc::new("self".to_string()),
-                Value::Object(Rc::clone(&class_name), self.object_next_id),
+                Value::Object(Rc::clone(&class_name), id),
             );
-            self.object_next_id += 1;
 
             for (value_type, name) in parameters {
                 self.add_scope_parameter(&value_type, name, &mut constructor_scope)?;

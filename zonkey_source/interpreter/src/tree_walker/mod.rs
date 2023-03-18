@@ -1,10 +1,11 @@
 use numtoa::NumToA;
+use rustc_hash::FxHashMap;
 
 use self::{environment::Environment, status::TreeWalkerStatus};
 use crate::{
     ast::AST,
     err::tree_walker::TreeWalkerErr,
-    event::Event,
+    event::{BrowserEvent, InterpreterEvent},
     expr::*,
     prelude::*,
     stmt::{ConstructionType, Stmt},
@@ -13,26 +14,39 @@ use std::{
     cell::RefCell,
     io::{stdout, BufWriter, StdoutLock, Write},
     rc::Rc,
+    sync::mpsc::Receiver,
     sync::mpsc::Sender,
 };
 
 mod environment;
 pub mod status;
 
+type Object = Rc<RefCell<Environment>>;
+
 pub struct TreeWalker<'a> {
     environment: Environment,
     callables: Vec<Rc<Stmt>>,
     stdout: BufWriter<StdoutLock<'a>>,
-    sender: Sender<Event>,
+    sender: Sender<InterpreterEvent>,
+    receiver: Receiver<BrowserEvent>,
+    ui_elements: FxHashMap<i64, Object>,
+    next_id_ui: i64,
 }
 
 impl<'a> TreeWalker<'a> {
-    pub fn run(ast: AST, sender: Sender<Event>) -> Result<TreeWalkerStatus, TreeWalkerErr> {
+    pub fn run(
+        ast: AST,
+        sender: Sender<InterpreterEvent>,
+        receiver: Receiver<BrowserEvent>,
+    ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         let mut tree_walker = Self {
             environment: Environment::new(),
             callables: ast.callable,
             stdout: BufWriter::new(stdout().lock()),
             sender,
+            receiver,
+            ui_elements: FxHashMap::default(),
+            next_id_ui: 0,
         };
 
         tree_walker.interpret(&ast.start)
@@ -294,7 +308,10 @@ impl<'a> TreeWalker<'a> {
                 Ok(val) => Ok(val),
             },
             IntegerExpr::Property(object_path, property_id) => {
-                let int = self.get_object(object_path).borrow().get_int(*property_id);
+                let int = self
+                    .get_object(object_path)
+                    .borrow_mut()
+                    .get_int(*property_id);
                 Ok(int)
             }
         }
@@ -446,6 +463,7 @@ impl<'a> TreeWalker<'a> {
                     .get_boolean(*property_id);
                 Ok(boolean)
             }
+            BooleanExpr::NativeCall(call) => self.native_call_boolean(call),
         }
     }
 
@@ -459,10 +477,7 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn eval_object(
-        &mut self,
-        expression: &ObjectExpr,
-    ) -> Result<Rc<RefCell<Environment>>, TreeWalkerErr> {
+    fn eval_object(&mut self, expression: &ObjectExpr) -> Result<Object, TreeWalkerErr> {
         match expression {
             ObjectExpr::Variable(id) => Ok(self.environment.get_object(*id)),
             ObjectExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
@@ -480,6 +495,7 @@ impl<'a> TreeWalker<'a> {
                     Ok(object)
                 }
             }
+            ObjectExpr::NativeCall(call) => self.native_call_object(call),
         }
     }
 
@@ -512,6 +528,62 @@ impl<'a> TreeWalker<'a> {
                 }
                 _ => panic!("Unprintable type"),
             },
+
+            NativeFunctionNone::AddButton(button) => {
+                let button = self.eval_object(button)?;
+
+                let text = button.borrow_mut().get_string(0);
+                let id = button.borrow_mut().get_int(0);
+
+                self.event(InterpreterEvent::AddButton(text, id))?;
+            }
+            NativeFunctionNone::ButtonText(button, text) => {
+                let text = self.eval_string(text)?;
+                let object = self.eval_object(button)?;
+
+                object.borrow_mut().assign_string(
+                    0,
+                    text.to_string(),
+                    &StringAssignmentOperator::Equal,
+                );
+
+                let id = object.borrow_mut().get_int(0);
+
+                self.event(InterpreterEvent::ChangeButtonText(text, id))?;
+            }
+            NativeFunctionNone::AddHeading(heading) => {
+                let heading = self.eval_object(heading)?;
+
+                let text = heading.borrow_mut().get_string(0);
+                let id = heading.borrow_mut().get_int(0);
+
+                self.event(InterpreterEvent::AddHeading(text, id))?;
+            }
+            NativeFunctionNone::AddParagraph(paragraph) => {
+                let paragraph = self.eval_object(paragraph)?;
+
+                let text = paragraph.borrow_mut().get_string(0);
+                let id = paragraph.borrow_mut().get_int(0);
+
+                self.event(InterpreterEvent::AddParagraph(text, id))?;
+            }
+            NativeFunctionNone::AddHyperlink(hyperlink) => {
+                let hyperlink = self.eval_object(hyperlink)?;
+
+                let link = hyperlink.borrow_mut().get_string(0);
+                let text = hyperlink.borrow_mut().get_string(1);
+                let id = hyperlink.borrow_mut().get_int(0);
+
+                self.event(InterpreterEvent::AddHyperlink(text, link, id))?;
+            }
+            NativeFunctionNone::AddInput(input) => {
+                let input = self.eval_object(input)?;
+
+                let text = input.borrow_mut().get_string(0);
+                let id = input.borrow_mut().get_int(0);
+
+                self.event(InterpreterEvent::AddInput(text, id))?;
+            }
         }
 
         Ok(())
@@ -533,6 +605,130 @@ impl<'a> TreeWalker<'a> {
                 std::io::stdin().read_line(&mut input).unwrap();
 
                 Ok(input.trim().to_string())
+            }
+        }
+    }
+
+    fn native_call_boolean(&mut self, call: &NativeFunctionBoolean) -> Result<bool, TreeWalkerErr> {
+        match call {
+            NativeFunctionBoolean::WaitForEvent => match self.receiver.recv() {
+                Ok(BrowserEvent::ButtonPress(id)) => {
+                    self.ui_elements
+                        .get(&id)
+                        .unwrap()
+                        .borrow_mut()
+                        .assign_boolean(0, true, &BooleanAssignmentOperator::Equal);
+                    Ok(false)
+                }
+                Ok(BrowserEvent::InputConfirmed(value, id)) => {
+                    self.ui_elements
+                        .get(&id)
+                        .unwrap()
+                        .borrow_mut()
+                        .assign_boolean(0, true, &BooleanAssignmentOperator::Equal);
+                    self.ui_elements
+                        .get(&id)
+                        .unwrap()
+                        .borrow_mut()
+                        .assign_string(0, value, &StringAssignmentOperator::Equal);
+                    Ok(false)
+                }
+                Err(_) => Ok(true),
+            },
+            NativeFunctionBoolean::ButtonClicked(button) => {
+                let button = self.eval_object(button)?;
+
+                let clicked = button.borrow().get_boolean(0);
+
+                if clicked {
+                    button
+                        .borrow_mut()
+                        .assign_boolean(0, false, &BooleanAssignmentOperator::Equal);
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+        }
+    }
+
+    fn native_call_object(&mut self, call: &NativeFunctionObject) -> Result<Object, TreeWalkerErr> {
+        match call {
+            NativeFunctionObject::ButtonConstructor(text) => {
+                let mut button = Environment::new();
+
+                let text = self.eval_string(text)?;
+                button.push_string(text);
+
+                let id = self.next_id_ui;
+                button.push_int(id);
+                self.next_id_ui += 1;
+
+                button.push_boolean(false);
+
+                let object = Rc::new(RefCell::new(button));
+
+                self.ui_elements.insert(id, Rc::clone(&object));
+
+                Ok(object)
+            }
+
+            NativeFunctionObject::HeadingConstructor(text) => {
+                let mut button = Environment::new();
+
+                let text = self.eval_string(text)?;
+                button.push_string(text);
+
+                button.push_int(self.next_id_ui);
+                self.next_id_ui += 1;
+
+                Ok(Rc::new(RefCell::new(button)))
+            }
+
+            NativeFunctionObject::ParagraphConstructor(text) => {
+                let mut button = Environment::new();
+
+                let text = self.eval_string(text)?;
+                button.push_string(text);
+
+                button.push_int(self.next_id_ui);
+                self.next_id_ui += 1;
+
+                Ok(Rc::new(RefCell::new(button)))
+            }
+
+            NativeFunctionObject::HyperlinkConstructor(text, link) => {
+                let mut hyperlink = Environment::new();
+
+                let link = self.eval_string(link)?;
+                hyperlink.push_string(link);
+
+                let text = self.eval_string(text)?;
+                hyperlink.push_string(text);
+
+                hyperlink.push_int(self.next_id_ui);
+                self.next_id_ui += 1;
+
+                Ok(Rc::new(RefCell::new(hyperlink)))
+            }
+
+            NativeFunctionObject::InputConstructor(text) => {
+                let mut input = Environment::new();
+
+                let text = self.eval_string(text)?;
+                input.push_string(text);
+
+                let id = self.next_id_ui;
+                input.push_int(id);
+                self.next_id_ui += 1;
+
+                input.push_boolean(false);
+
+                let object = Rc::new(RefCell::new(input));
+
+                self.ui_elements.insert(id, Rc::clone(&object));
+
+                Ok(object)
             }
         }
     }
@@ -596,19 +792,19 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn event(&mut self, event: Event) -> Result<(), TreeWalkerErr> {
+    fn event(&mut self, event: InterpreterEvent) -> Result<(), TreeWalkerErr> {
         match self.sender.send(event) {
             Ok(()) => Ok(()),
             Err(_) => Err(TreeWalkerErr::FailedToSendEventToBrowser),
         }
     }
 
-    fn get_object(&self, object_path: &Vec<usize>) -> Rc<RefCell<Environment>> {
+    fn get_object(&self, object_path: &Vec<usize>) -> Object {
         let mut iter = object_path.iter();
         let mut objects = vec![self.environment.get_object(*iter.next().unwrap())];
 
         for object_id in iter {
-            let object = objects.last().unwrap().borrow().get_object(*object_id);
+            let object = objects.last().unwrap().borrow_mut().get_object(*object_id);
             objects.push(object);
         }
 

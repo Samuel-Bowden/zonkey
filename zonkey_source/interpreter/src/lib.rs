@@ -1,9 +1,9 @@
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Receiver, Sender};
 
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
 use crate::{parser::Parser, tree_walker::TreeWalker};
 use ast::AST;
-use event::Event;
+use event::*;
 
 mod ast;
 mod debugger;
@@ -18,14 +18,18 @@ mod stmt;
 pub mod token;
 mod tree_walker;
 
-pub fn run(source: &Vec<&str>, sender: Sender<Event>) -> Result<(), InterpreterErr> {
+pub fn run(
+    source: &Vec<&str>,
+    sender: Sender<InterpreterEvent>,
+    receiver: Receiver<BrowserEvent>,
+) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");
 
     let tokens = run_lexer(source)?;
 
     let ast = run_parser(tokens)?;
 
-    run_tree_walker(ast, sender)
+    run_tree_walker(ast, sender, receiver)
 }
 
 fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
@@ -54,10 +58,14 @@ fn run_parser(tokens: Vec<Token>) -> Result<AST, InterpreterErr> {
     }
 }
 
-fn run_tree_walker(ast: AST, sender: Sender<Event>) -> Result<(), InterpreterErr> {
+fn run_tree_walker(
+    ast: AST,
+    sender: Sender<InterpreterEvent>,
+    receiver: Receiver<BrowserEvent>,
+) -> Result<(), InterpreterErr> {
     interpreter_debug!("Starting tree walker");
 
-    match TreeWalker::run(ast, sender) {
+    match TreeWalker::run(ast, sender, receiver) {
         Ok(_) => Ok(()),
         Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
     }

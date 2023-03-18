@@ -1,5 +1,0 @@
-start {
-	add_paragraph("Tests creating a button, cannot emit events to calling code yet, only prints message on CLI.");
-
-	add_button("Hello");
-}

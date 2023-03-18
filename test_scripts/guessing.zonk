@@ -1,0 +1,31 @@
+class Guessing {
+	Input password;
+
+	constructor() {
+		add_heading(Heading("Guess the password"));
+
+		self.password = Input("Enter password");
+		add_input(self.password);
+	}
+
+	method run() {
+		loop {
+			let exit = wait_for_event();
+
+			if (self.password.confirmed()) {
+				if (self.password.text == "password1234") {
+					add_paragraph(Paragraph("You got the correct password"));
+				}
+			}
+
+			if (exit) {
+				break;
+			}
+		}
+	}
+}
+
+start {
+	let guessing = Guessing();
+	guessing.run();
+}

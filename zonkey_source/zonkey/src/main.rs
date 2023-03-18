@@ -24,8 +24,9 @@ fn run(file: String) -> ExitCode {
     let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
     let (sender, _) = mpsc::channel();
+    let (_, receiver) = mpsc::channel();
 
-    match interpreter::run(&graphemes, sender) {
+    match interpreter::run(&graphemes, sender, receiver) {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
             err::handler::run(e, &graphemes);

@@ -1,5 +1,5 @@
 start {
-	gui:add_heading("Invalid Page");
+	add_heading(Heading("Invalid page"));
 
-	gui:add_paragraph("The entered page does not exist.");
+	add_paragraph(Paragraph("The entered page could not be found."));
 }

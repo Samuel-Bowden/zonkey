@@ -77,6 +77,146 @@ impl Parser {
                         unreachable!("Already tested type")
                     }
                 }
+                "wait_for_event" => Ok(Expr::Boolean(BooleanExpr::NativeCall(
+                    NativeFunctionBoolean::WaitForEvent,
+                ))),
+                "add_button" => {
+                    if let Expr::Object(_, button) = arguments.remove(0) {
+                        Ok(Expr::None(NoneExpr::NativeCall(
+                            NativeFunctionNone::AddButton(button),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "add_heading" => {
+                    if let Expr::Object(_, heading) = arguments.remove(0) {
+                        Ok(Expr::None(NoneExpr::NativeCall(
+                            NativeFunctionNone::AddHeading(heading),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "add_paragraph" => {
+                    if let Expr::Object(_, paragraph) = arguments.remove(0) {
+                        Ok(Expr::None(NoneExpr::NativeCall(
+                            NativeFunctionNone::AddParagraph(paragraph),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "add_hyperlink" => {
+                    if let Expr::Object(_, hyperlink) = arguments.remove(0) {
+                        Ok(Expr::None(NoneExpr::NativeCall(
+                            NativeFunctionNone::AddHyperlink(hyperlink),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "add_input" => {
+                    if let Expr::Object(_, input) = arguments.remove(0) {
+                        Ok(Expr::None(NoneExpr::NativeCall(
+                            NativeFunctionNone::AddInput(input),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "text" => {
+                    if let (Expr::Object(_, button), Expr::String(text)) =
+                        (arguments.remove(0), arguments.remove(0))
+                    {
+                        Ok(Expr::None(NoneExpr::NativeCall(
+                            NativeFunctionNone::ButtonText(button, Box::new(text)),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "clicked" => {
+                    if let Expr::Object(_, button) = arguments.remove(0) {
+                        Ok(Expr::Boolean(BooleanExpr::NativeCall(
+                            NativeFunctionBoolean::ButtonClicked(button),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "confirmed" => {
+                    if let Expr::Object(_, button) = arguments.remove(0) {
+                        Ok(Expr::Boolean(BooleanExpr::NativeCall(
+                            NativeFunctionBoolean::ButtonClicked(button),
+                        )))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "Button" => {
+                    if let Expr::String(text) = arguments.remove(0) {
+                        Ok(Expr::Object(
+                            Rc::new("Button".to_string()),
+                            ObjectExpr::NativeCall(NativeFunctionObject::ButtonConstructor(
+                                Box::new(text),
+                            )),
+                        ))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "Heading" => {
+                    if let Expr::String(text) = arguments.remove(0) {
+                        Ok(Expr::Object(
+                            Rc::new("Heading".to_string()),
+                            ObjectExpr::NativeCall(NativeFunctionObject::HeadingConstructor(
+                                Box::new(text),
+                            )),
+                        ))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "Paragraph" => {
+                    if let Expr::String(text) = arguments.remove(0) {
+                        Ok(Expr::Object(
+                            Rc::new("Paragraph".to_string()),
+                            ObjectExpr::NativeCall(NativeFunctionObject::ParagraphConstructor(
+                                Box::new(text),
+                            )),
+                        ))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "Hyperlink" => {
+                    if let (Expr::String(text), Expr::String(link)) =
+                        (arguments.remove(0), arguments.remove(0))
+                    {
+                        Ok(Expr::Object(
+                            Rc::new("Hyperlink".to_string()),
+                            ObjectExpr::NativeCall(NativeFunctionObject::HyperlinkConstructor(
+                                Box::new(text),
+                                Box::new(link),
+                            )),
+                        ))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
+                "Input" => {
+                    if let Expr::String(text) = arguments.remove(0) {
+                        Ok(Expr::Object(
+                            Rc::new("Input".to_string()),
+                            ObjectExpr::NativeCall(NativeFunctionObject::InputConstructor(
+                                Box::new(text),
+                            )),
+                        ))
+                    } else {
+                        unreachable!("Already tested type")
+                    }
+                }
                 _ => todo!(),
             },
             CallableType::Zonkey(id) => {

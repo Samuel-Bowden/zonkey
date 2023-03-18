@@ -1,4 +1,6 @@
-use self::element::{Element, ElementType};
+use interpreter::event::InterpreterEvent;
+
+use self::element::ElementType;
 
 pub mod element;
 
@@ -15,38 +17,28 @@ impl ZonkeyApp {
         }
     }
 
-    pub fn update(&mut self, event: interpreter::event::Event) {
-        if let ElementType::Page(column) = &mut self.root {
+    pub fn update(&mut self, event: InterpreterEvent) {
+        if let ElementType::Page(elements) = &mut self.root {
             match event {
-                interpreter::event::Event::AddHeading(value) => {
-                    column.push(Element {
-                        id: None,
-                        element_type: ElementType::Heading(value),
-                    });
+                InterpreterEvent::AddHeading(text, _) => {
+                    elements.push(ElementType::Heading(text));
                 }
-                interpreter::event::Event::AddParagraph(value) => {
-                    column.push(Element {
-                        id: None,
-                        element_type: ElementType::Paragraph(value),
-                    });
+                InterpreterEvent::AddParagraph(text, _) => {
+                    elements.push(ElementType::Paragraph(text));
                 }
-                interpreter::event::Event::AddButton(name) => {
-                    column.push(Element {
-                        id: None,
-                        element_type: ElementType::Button(name),
-                    });
+                InterpreterEvent::AddButton(text, id) => {
+                    elements.push(ElementType::Button(id, text));
                 }
-                interpreter::event::Event::AddHyperlink(location) => {
-                    column.push(Element {
-                        id: None,
-                        element_type: ElementType::Hyperlink(location),
-                    });
+                InterpreterEvent::AddHyperlink(text, link, _) => {
+                    elements.push(ElementType::Hyperlink(text, link));
                 }
-                interpreter::event::Event::AddImage(location) => {
-                    column.push(Element {
-                        id: None,
-                        element_type: ElementType::Image(location),
-                    });
+                InterpreterEvent::ChangeButtonText(new_text, id) => {
+                    if let ElementType::Button(_, button_text) = &mut elements[id as usize] {
+                        *button_text = new_text;
+                    }
+                }
+                InterpreterEvent::AddInput(text, id) => {
+                    elements.push(ElementType::Input(id, text, "".to_string()))
                 }
             }
         }

@@ -139,10 +139,10 @@ impl Parser {
             }
             ValueType::Any => unreachable!("Zonkey code cannot use the Any type"),
             ValueType::Class(class) => {
-                let (object, _) = self.create_object(Rc::clone(&class))?;
-
                 let object_id = self.object_next_id;
                 self.object_next_id += 1;
+
+                let (object, _) = self.create_object(Rc::clone(&class))?;
 
                 self.objects.insert(object_id, Rc::new(object));
 

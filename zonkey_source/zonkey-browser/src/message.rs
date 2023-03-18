@@ -1,4 +1,5 @@
-use std::sync::mpsc;
+use interpreter::event::{BrowserEvent, InterpreterEvent};
+use std::sync::mpsc::{self, Sender};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -6,9 +7,12 @@ pub enum Message {
     AddressConfirmed,
     SettingsPressed,
     HomePressed,
-    Event(interpreter::event::Event),
+    Event(InterpreterEvent),
     Ready(mpsc::Sender<String>),
     BootComplete(mpsc::Sender<String>),
-    PageButtonPressed,
+    SetSender(Sender<BrowserEvent>),
+    PageButtonPressed(i64),
     Hyperlink(String),
+    InputChanged(String, i64),
+    InputSubmit(i64),
 }

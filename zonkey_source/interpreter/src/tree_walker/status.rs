@@ -1,6 +1,5 @@
-use std::{cell::RefCell, rc::Rc};
-
 use super::environment::Environment;
+use std::{cell::RefCell, rc::Rc};
 
 #[derive(Debug)]
 pub enum TreeWalkerStatus {

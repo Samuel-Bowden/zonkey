@@ -91,6 +91,7 @@ pub enum BooleanExpr {
     FloatCast(Box<FloatExpr>),
     StringCast(Box<StringExpr>),
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
+    NativeCall(NativeFunctionBoolean),
     Call(usize, Vec<Expr>),
 }
 
@@ -105,6 +106,7 @@ pub enum ObjectExpr {
     Variable(usize),
     Property(Vec<usize>, usize),
     Call(usize, Vec<Expr>),
+    NativeCall(NativeFunctionObject),
 }
 
 #[derive(Debug, Clone)]

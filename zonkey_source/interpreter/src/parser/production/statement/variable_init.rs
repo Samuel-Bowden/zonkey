@@ -101,13 +101,14 @@ impl Parser {
                 Err(ParserStatus::Unwind)
             }
             Expr::Object(class, val) => {
+                let id = self.object_next_id;
+                self.object_next_id += 1;
                 let (object, _) = self.create_object(Rc::clone(&class))?;
-                self.objects.insert(self.object_next_id, Rc::new(object));
+                self.objects.insert(id, Rc::new(object));
                 self.value_stack
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::Object(Rc::clone(&class), self.object_next_id));
-                self.object_next_id += 1;
+                    .insert(name, Value::Object(Rc::clone(&class), id));
                 Ok(Stmt::ObjectVariableInitialisation(val))
             }
         }
@@ -173,15 +174,12 @@ impl Parser {
                 }
                 ValueType::Any => unreachable!("Zonkey code cannot use the Any type"),
                 ValueType::Class(class) => {
+                    let id = object.object_next_id;
+                    object.object_next_id += 1;
                     let (new_object, new_types) = self.create_object(Rc::clone(&class))?;
 
-                    object
-                        .properties
-                        .insert(name, Value::Object(class, object.object_next_id));
-                    object
-                        .objects
-                        .insert(self.object_next_id, Rc::new(new_object));
-                    object.object_next_id += 1;
+                    object.properties.insert(name, Value::Object(class, id));
+                    object.objects.insert(id, Rc::new(new_object));
                     types.push(ConstructionType::Class(new_types));
                 }
             }

@@ -1,6 +1,6 @@
 use crate::{message::Message, zonkey_app::element::ElementType};
 use iced::{
-    widget::{Button, Column, Image, Scrollable, Text},
+    widget::{Button, Column, Scrollable, Text, TextInput},
     Alignment, Element, Length,
 };
 
@@ -16,17 +16,23 @@ pub fn build(element_type: &ElementType) -> Element<Message> {
             let mut page_content = vec![];
 
             for element in elements {
-                page_content.push(build(&element.element_type));
+                page_content.push(build(element));
             }
 
             Scrollable::new(Column::with_children(page_content).padding(30).spacing(20)).into()
         }
-        ElementType::Button(name) => Button::new(Text::new(name))
-            .on_press(Message::PageButtonPressed)
+        ElementType::Button(id, text) => Button::new(Text::new(text))
+            .on_press(Message::PageButtonPressed(*id))
             .into(),
-        ElementType::Hyperlink(location) => Button::new(Text::new(location))
-            .on_press(Message::Hyperlink(location.to_string()))
+        ElementType::Hyperlink(text, link) => Button::new(Text::new(text))
+            .on_press(Message::Hyperlink(link.to_string()))
             .into(),
-        ElementType::Image(location) => Image::new(location).into(),
+        ElementType::Input(id, placeholder, text) => {
+            TextInput::new(placeholder, text, |new_value| -> Message {
+                Message::InputChanged(new_value, *id)
+            })
+            .on_submit(Message::InputSubmit(*id))
+            .into()
+        }
     }
 }

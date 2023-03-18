@@ -1,11 +1,11 @@
 start {
-	gui:add_heading("Home");
+	add_heading(Heading("Home Page"));
 
-	gui:add_paragraph("Welcome to the Zonkey Browser. Use the address bar to open your first app.");
+	add_paragraph(Paragraph("Welcome to the Zonkey Browser. Use the address bar to open your first app."));
 
-	gui:add_paragraph("Some test apps:");
+	add_paragraph(Paragraph("Here are some example apps that I have made:"));
 
-	gui:add_hyperlink("file:../test_scripts/long_page.zonk");
-	gui:add_hyperlink("file:../test_scripts/button.zonk");
-	gui:add_hyperlink("file:../test_scripts/image.zonk");
+	add_hyperlink(Hyperlink("A simple counter", "file:../test_scripts/counter.zonk"));
+
+	add_hyperlink(Hyperlink("A guessing game", "file:../test_scripts/guessing.zonk"));
 }

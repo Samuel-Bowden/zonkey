@@ -1,0 +1,41 @@
+class CounterApp {
+	Button counter_btn;
+	Button reset_btn;
+	Integer counter;
+
+	constructor() {
+		add_heading(Heading("A simple counter"));
+		add_paragraph(Paragraph("Click the button to increase the counter"));
+
+		self.counter_btn = Button("Counter: 0");
+		add_button(self.counter_btn);
+
+		self.reset_btn = Button("Reset");
+		add_button(self.reset_btn);
+	}
+
+	method run() {
+		loop {
+			let exit = wait_for_event();
+
+			if (self.counter_btn.clicked()) {
+				self.counter += 1;
+			}
+
+			if (self.reset_btn.clicked()) {
+				self.counter = 0;
+			}
+
+			if (exit) {
+				break;
+			}
+
+			self.counter_btn.text("Counter: " + (String self.counter));
+		}
+	}
+}
+
+start {
+	let app = CounterApp();
+	app.run();
+}

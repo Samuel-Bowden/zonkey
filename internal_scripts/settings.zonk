@@ -1,5 +1,5 @@
 start {
-	gui:add_heading("Settings");
+	add_heading(Heading("Settings"));
 
-	gui:add_paragraph("There are no settings to change at the moment.");
+	add_paragraph(Paragraph("There are no settings to change at the moment."));
 }
