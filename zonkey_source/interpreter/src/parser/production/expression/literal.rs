@@ -29,131 +29,85 @@ impl Parser {
             Some(TokenType::Float(val)) => Ok(Expr::Float(FloatExpr::Literal(*val))),
             Some(TokenType::String(val)) => Ok(Expr::String(StringExpr::Literal(Rc::clone(val)))),
             Some(TokenType::Boolean(val)) => Ok(Expr::Boolean(BooleanExpr::Literal(*val))),
-            Some(TokenType::LeftParen) => {
-                let left_paren_pos = self.current - 1;
+            Some(TokenType::LeftParen) => self.grouping(),
+            // Getting a property
+            Some(TokenType::At) => match self.find_value("self".to_string().into()) {
+                Some(Value::Object(class, obj_id)) => {
+                    let property_name = match self.consume_token_type() {
+                        Some(TokenType::Identifier(name)) => Rc::clone(name),
+                        _ => panic!("Expected method name"),
+                    };
 
-                let expression = self.expression()?;
+                    let result = match self
+                        .class_declarations
+                        .get(&class)
+                        .unwrap()
+                        .properties
+                        .get(&property_name)
+                    {
+                        Some(Value::Integer(id)) => {
+                            Ok(Expr::Integer(IntegerExpr::Property(obj_id, *id)))
+                        }
+                        Some(Value::Float(id)) => Ok(Expr::Float(FloatExpr::Property(obj_id, *id))),
+                        Some(Value::String(id)) => {
+                            Ok(Expr::String(StringExpr::Property(obj_id, *id)))
+                        }
+                        Some(Value::Boolean(id)) => {
+                            Ok(Expr::Boolean(BooleanExpr::Property(obj_id, *id)))
+                        }
+                        Some(Value::Object(class, id)) => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::Property(obj_id, *id),
+                        )),
+                        _ => panic!("Property does not exist"),
+                    };
 
-                match self.consume_token_type() {
-                    Some(TokenType::RightParen) => Ok(expression),
-                    _ => {
-                        self.error.add(ParserErrType::GroupingExpectedRightParen(
-                            self.tokens[left_paren_pos].clone(),
-                            self.tokens.get(self.current - 1).cloned(),
-                        ));
-                        return Err(ParserStatus::Unwind);
+                    if let Some(TokenType::Dot) = self.current_token_type() {
+                        if let Ok(Expr::Object(class, expr)) = result {
+                            self.method_call(class, expr)
+                        } else {
+                            panic!("Cannot call method of a property that is not an object");
+                        }
+                    } else {
+                        result
                     }
                 }
-            }
+                v => {
+                    panic!("Self must be an object, but was {:?}", v);
+                }
+            },
             Some(TokenType::Identifier(name)) => {
-                let name = Rc::clone(name);
+                let name = Rc::clone(&name);
                 match self.current_token_type() {
+                    // Calling a function
                     Some(TokenType::LeftParen) => {
-                        self.current += 1;
-                        if let Some(call) = self.function_declarations.get(&name) {
-                            self.call(None, name, Rc::clone(call))
-                        } else {
-                            self.error.add(ParserErrType::CallFunctionNotFound(
-                                self.tokens[self.current - 1].clone(),
-                                name.to_string(),
-                            ));
-                            Err(ParserStatus::Unwind)
-                        }
-                    }
-                    Some(TokenType::Dot) => {
-                        // Retrieve object to find method or property in
-                        let (mut current_class, object_id) = match self.find_value(Rc::clone(&name))
-                        {
-                            Some(Value::Object(class, id)) => (class, id),
-                            _ => {
-                                panic!("Value {name} is not an object");
-                            }
-                        };
+                        let result = self.function_call(name);
 
-                        let mut id_path = vec![object_id];
-                        let mut current_object = Rc::clone(&self.objects[&object_id]);
-
-                        loop {
-                            self.current += 1;
-
-                            let property_or_method_name = if let Some(TokenType::Identifier(nm)) =
-                                self.consume_token_type()
-                            {
-                                Rc::clone(nm)
+                        // Calling a method on a function result
+                        if let Some(TokenType::Dot) = self.current_token_type() {
+                            if let Ok(Expr::Object(class, expr)) = result {
+                                self.method_call(class, expr)
                             } else {
-                                panic!("Expected identifier for property or method name")
-                            };
-
-                            match self.current_token_type() {
-                                Some(TokenType::LeftParen) => {
-                                    match self.class_declarations[&current_class]
-                                        .methods
-                                        .get(&property_or_method_name)
-                                    {
-                                        Some(call) => {
-                                            self.current += 1;
-                                            let last_id = id_path.pop().unwrap();
-                                            return self.call(
-                                                Some(Expr::Object(
-                                                    Rc::clone(&current_class),
-                                                    ObjectExpr::Property(id_path, last_id),
-                                                )),
-                                                property_or_method_name,
-                                                Rc::clone(&call),
-                                            );
-                                        }
-                                        None => panic!(
-                                            "Method {property_or_method_name} does not exist"
-                                        ),
-                                    }
-                                }
-                                Some(tt) => {
-                                    match (
-                                        current_object.properties.get(&property_or_method_name),
-                                        tt,
-                                    ) {
-                                        (Some(Value::Object(class, id)), TokenType::Dot) => {
-                                            id_path.push(*id);
-                                            current_class = Rc::clone(class);
-                                            current_object = Rc::clone(&current_object.objects[id]);
-                                        }
-                                        (Some(Value::Object(class, id)), _) => {
-                                            return Ok(Expr::Object(
-                                                Rc::clone(class),
-                                                ObjectExpr::Property(id_path, *id),
-                                            ))
-                                        }
-                                        (Some(Value::Integer(id)), _) => {
-                                            return Ok(Expr::Integer(IntegerExpr::Property(
-                                                id_path, *id,
-                                            )))
-                                        }
-                                        (Some(Value::Float(id)), _) => {
-                                            return Ok(Expr::Float(FloatExpr::Property(
-                                                id_path, *id,
-                                            )))
-                                        }
-                                        (Some(Value::String(id)), _) => {
-                                            return Ok(Expr::String(StringExpr::Property(
-                                                id_path, *id,
-                                            )))
-                                        }
-                                        (Some(Value::Boolean(id)), _) => {
-                                            return Ok(Expr::Boolean(BooleanExpr::Property(
-                                                id_path, *id,
-                                            )))
-                                        }
-                                        t => panic!("Found value {:?}", t),
-                                    }
-                                }
-                                _ => panic!("Property {property_or_method_name} does not exist"),
+                                panic!("Function did not return an object");
                             }
+                        } else {
+                            result
                         }
                     }
+                    // Calling a method of an object variable
+                    Some(TokenType::Dot) => match self.find_value(Rc::clone(&name)) {
+                        Some(Value::Object(class, id)) => {
+                            self.method_call(class, ObjectExpr::Variable(id))
+                        }
+                        _ => {
+                            panic!("Variable {} is not an object", name);
+                        }
+                    },
+                    // Getting a variable
                     _ => match self.find_value(Rc::clone(&name)) {
                         Some(value) => Ok(self.get_variable_expr(&value)),
                         None => {
-                            panic!("Value {name} not found");
+                            panic!("Value {} not found", name);
                         }
                     },
                 }

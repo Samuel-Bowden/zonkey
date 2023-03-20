@@ -1,3 +1,4 @@
+use super::Object;
 use crate::{
     expr::{
         BooleanAssignmentOperator, NumericAssignmentOperator, ObjectAssignmentOperator,
@@ -14,7 +15,7 @@ pub struct Environment {
     float_stack: Vec<f64>,
     string_stack: Vec<String>,
     boolean_stack: Vec<bool>,
-    object_stack: Vec<Rc<RefCell<Environment>>>,
+    object_stack: Vec<Object>,
 }
 
 impl Environment {

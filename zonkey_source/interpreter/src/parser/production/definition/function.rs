@@ -49,7 +49,7 @@ impl Parser {
         };
 
         self.function_declarations
-            .insert(function_name, Rc::new(function_declaration));
+            .insert(function_name, function_declaration);
 
         self.current_return_type = return_type;
 
@@ -58,7 +58,6 @@ impl Parser {
 
         // Clean value stack after it has been parsed
         self.value_stack.clear();
-        self.objects.clear();
         self.integer_next_id = 0;
         self.float_next_id = 0;
         self.string_next_id = 0;

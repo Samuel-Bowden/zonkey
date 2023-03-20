@@ -1,31 +1,29 @@
-class Guessing {
-	Input password;
+start {
+	let page = Page();
 
-	constructor() {
-		add_heading(Heading("Guess the password"));
+	page.add(Text("Password Guessing Game").set_size(75.));
 
-		self.password = Input("Enter password");
-		add_input(self.password);
-	}
+	let password = Input("Guess the password");
+	page.add(password);
 
-	method run() {
-		loop {
-			let exit = wait_for_event();
+	let text = Text("No password entered yet");
+	page.add(text);
 
-			if (self.password.confirmed()) {
-				if (self.password.text == "password1234") {
-					add_paragraph(Paragraph("You got the correct password"));
-				}
-			}
+	loop {
+		let exit = wait_for_event();
 
-			if (exit) {
-				break;
+		if (password.confirmed()) {
+			if (password.get_text() == "password1234") {
+				text
+					.set_value("You guessed the correct password!")
+					.set_colour(0., 1., 0.);
+			} else {
+				text
+					.set_value("That wasn't the right password")
+					.set_colour(1., 0., 0.);
 			}
 		}
-	}
-}
 
-start {
-	let guessing = Guessing();
-	guessing.run();
+		if (exit) { break; }
+	}
 }

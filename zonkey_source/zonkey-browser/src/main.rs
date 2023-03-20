@@ -114,7 +114,10 @@ impl Application for ZonkeyBrowser {
             }
             Message::PageButtonPressed(id) => {
                 if let Some(sender) = &self.interpreter_sender {
-                    sender.send(BrowserEvent::ButtonPress(id)).unwrap();
+                    if let Ok(()) = sender.send(BrowserEvent::ButtonPress(id)) {
+                    } else {
+                        println!("Interpreter ended");
+                    }
                 }
                 Command::none()
             }
@@ -141,9 +144,11 @@ impl Application for ZonkeyBrowser {
                     if let ElementType::Page(elements) = &mut app.root {
                         if let ElementType::Input(_, _, text) = &mut elements[id as usize] {
                             if let Some(sender) = &self.interpreter_sender {
-                                sender
-                                    .send(BrowserEvent::InputConfirmed(text.to_string(), id))
-                                    .unwrap();
+                                if let Err(_) =
+                                    sender.send(BrowserEvent::InputConfirmed(text.to_string(), id))
+                                {
+                                    println!("Interpreter has ended");
+                                }
                             }
                         }
                     }

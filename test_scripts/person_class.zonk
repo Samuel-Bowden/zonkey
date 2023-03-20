@@ -1,9 +1,3 @@
----
-title: "Classes"
-weight: 13
----
-
-```zonkey
 class Person {
 	Integer age;
 	String name;
@@ -44,10 +38,3 @@ start {
 		}
 	}
 }
-```
-
-Classes in Zonkey have the following properties:
-- Properties cannot not be modified or accessed from outside the object, e.g. `Person("Sam", 10).name` would be invalid.
-- Properties are accessed inside methods and constructors using `@<property_name>`
-- Methods can be called on an object using `<obj>.<method>`
-- Self is placed in the local scope of methods and constructors, allowing the class to call its own methods or return a reference to itself.

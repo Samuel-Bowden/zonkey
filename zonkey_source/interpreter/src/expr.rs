@@ -1,7 +1,7 @@
-use crate::prelude::*;
+use crate::prelude::calls::*;
 use std::rc::Rc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
     Integer(IntegerExpr),
     Float(FloatExpr),
@@ -11,7 +11,25 @@ pub enum Expr {
     None(NoneExpr),
 }
 
-#[derive(Debug)]
+impl Expr {
+    pub fn to_string_expr(self) -> StringExpr {
+        if let Expr::String(expr) = self {
+            expr
+        } else {
+            panic!("Not a string expression")
+        }
+    }
+
+    pub fn to_float_expr(self) -> FloatExpr {
+        if let Expr::Float(expr) = self {
+            expr
+        } else {
+            panic!("Not a float expression")
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum IntegerExpr {
     Binary {
         left: Box<IntegerExpr>,
@@ -20,7 +38,7 @@ pub enum IntegerExpr {
     },
     Literal(i64),
     Variable(usize),
-    Property(Vec<usize>, usize),
+    Property(usize, usize),
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
     StringCast(Box<StringExpr>),
@@ -28,7 +46,7 @@ pub enum IntegerExpr {
     Call(usize, Vec<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FloatExpr {
     Binary {
         left: Box<FloatExpr>,
@@ -37,7 +55,7 @@ pub enum FloatExpr {
     },
     Literal(f64),
     Variable(usize),
-    Property(Vec<usize>, usize),
+    Property(usize, usize),
     IntegerCast(Box<IntegerExpr>),
     BooleanCast(Box<BooleanExpr>),
     StringCast(Box<StringExpr>),
@@ -45,7 +63,7 @@ pub enum FloatExpr {
     Call(usize, Vec<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum StringExpr {
     Binary {
         left: Box<StringExpr>,
@@ -54,15 +72,15 @@ pub enum StringExpr {
     },
     Literal(Rc<String>),
     Variable(usize),
-    Property(Vec<usize>, usize),
+    Property(usize, usize),
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
     Call(usize, Vec<Expr>),
-    NativeCall(NativeFunctionString),
+    NativeCall(NativeCallString),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BooleanExpr {
     IntegerBinary {
         left: Box<IntegerExpr>,
@@ -86,27 +104,28 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
-    Property(Vec<usize>, usize),
+    Property(usize, usize),
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     StringCast(Box<StringExpr>),
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
-    NativeCall(NativeFunctionBoolean),
+    NativeCall(NativeCallBoolean),
     Call(usize, Vec<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum NoneExpr {
-    NativeCall(NativeFunctionNone),
+    NativeCall(NativeCallNone),
     Call(usize, Vec<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ObjectExpr {
     Variable(usize),
-    Property(Vec<usize>, usize),
+    Property(usize, usize),
     Call(usize, Vec<Expr>),
-    NativeCall(NativeFunctionObject),
+    Constructor(Vec<Expr>),
+    NativeCall(NativeCallObject),
 }
 
 #[derive(Debug, Clone)]
@@ -122,17 +141,17 @@ pub enum StringOperator {
     Add,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum NumericUnaryOperator {
     Minus,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BooleanUnaryOperator {
     Bang,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum NumericAssignmentOperator {
     Equal,
     PlusEqual,
@@ -141,18 +160,18 @@ pub enum NumericAssignmentOperator {
     StarEqual,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum StringAssignmentOperator {
     Equal,
     PlusEqual,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BooleanAssignmentOperator {
     Equal,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ObjectAssignmentOperator {
     Equal,
 }

@@ -1,5 +1,6 @@
 start {
-	add_heading(Heading("Invalid page"));
-
-	add_paragraph(Paragraph("The entered page could not be found."));
+	let page = Page();
+	
+	page.add(Text("Invalid page").set_size(100.));
+	page.add(Text("The entered page could not be found."));
 }

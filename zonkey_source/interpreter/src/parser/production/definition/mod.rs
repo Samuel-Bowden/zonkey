@@ -137,16 +137,12 @@ impl Parser {
                 scope.insert(name, Value::Boolean(self.boolean_next_id));
                 self.boolean_next_id += 1;
             }
-            ValueType::Any => unreachable!("Zonkey code cannot use the Any type"),
             ValueType::Class(class) => {
-                let object_id = self.object_next_id;
+                scope.insert(name, Value::Object(Rc::clone(class), self.object_next_id));
                 self.object_next_id += 1;
-
-                let (object, _) = self.create_object(Rc::clone(&class))?;
-
-                self.objects.insert(object_id, Rc::new(object));
-
-                scope.insert(name, Value::Object(Rc::clone(&class), object_id));
+            }
+            ValueType::Any | ValueType::Element => {
+                unreachable!("Zonkey code cannot use these types")
             }
         }
 

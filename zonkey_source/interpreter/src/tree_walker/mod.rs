@@ -5,10 +5,10 @@ use self::{environment::Environment, status::TreeWalkerStatus};
 use crate::{
     ast::AST,
     err::tree_walker::TreeWalkerErr,
-    event::{BrowserEvent, InterpreterEvent},
+    event::{BrowserEvent, Button, InterpreterEvent, Text},
     expr::*,
-    prelude::*,
-    stmt::{ConstructionType, Stmt},
+    prelude::calls::*,
+    stmt::Stmt,
 };
 use std::{
     cell::RefCell,
@@ -65,18 +65,12 @@ impl<'a> TreeWalker<'a> {
                 self.environment.assign_int(*id, int, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::IntegerPropertyAssignment(
-                object_path,
-                property_id,
-                expr,
-                assignment_operator,
-            ) => {
+            Stmt::IntegerPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let int = self.eval_int(expr)?;
-                self.get_object(object_path).borrow_mut().assign_int(
-                    *property_id,
-                    int,
-                    assignment_operator,
-                );
+                self.environment
+                    .get_object(*obj_id)
+                    .borrow_mut()
+                    .assign_int(*id, int, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
 
@@ -92,13 +86,12 @@ impl<'a> TreeWalker<'a> {
                     .assign_float(*id, float, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::FloatPropertyAssignment(object_path, property_id, expr, assignment_operator) => {
+            Stmt::FloatPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let float = self.eval_float(expr)?;
-                self.get_object(object_path).borrow_mut().assign_float(
-                    *property_id,
-                    float,
-                    assignment_operator,
-                );
+                self.environment
+                    .get_object(*obj_id)
+                    .borrow_mut()
+                    .assign_float(*id, float, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
 
@@ -114,13 +107,12 @@ impl<'a> TreeWalker<'a> {
                     .assign_string(*id, string, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::StringPropertyAssignment(object_path, property_id, expr, assignment_operator) => {
+            Stmt::StringPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let string = self.eval_string(expr)?;
-                self.get_object(object_path).borrow_mut().assign_string(
-                    *property_id,
-                    string,
-                    assignment_operator,
-                );
+                self.environment
+                    .get_object(*obj_id)
+                    .borrow_mut()
+                    .assign_string(*id, string, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
 
@@ -136,40 +128,33 @@ impl<'a> TreeWalker<'a> {
                     .assign_boolean(*id, boolean, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::BooleanPropertyAssignment(
-                object_path,
-                property_id,
-                expr,
-                assignment_operator,
-            ) => {
+            Stmt::BooleanPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let boolean = self.eval_boolean(expr)?;
-                self.get_object(object_path).borrow_mut().assign_boolean(
-                    *property_id,
-                    boolean,
-                    assignment_operator,
-                );
+                self.environment
+                    .get_object(*obj_id)
+                    .borrow_mut()
+                    .assign_boolean(*id, boolean, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
 
             // Class statements
-            Stmt::DefaultConstructor(types) => {
-                let mut object = Environment::new();
-                self.new_object(types, &mut object);
-                self.environment.push_object(Rc::new(RefCell::new(object)));
-                Ok(TreeWalkerStatus::Ok)
-            }
             Stmt::ObjectVariableInitialisation(expr) => {
                 let object = self.eval_object(expr)?;
                 self.environment.push_object(object);
                 Ok(TreeWalkerStatus::Ok)
             }
-            Stmt::ObjectPropertyAssignment(object_path, property_id, expr, assignment_operator) => {
+            Stmt::ObjectVariableAssignment(id, expr, assignment_operator) => {
                 let object = self.eval_object(expr)?;
-                self.get_object(object_path).borrow_mut().assign_object(
-                    *property_id,
-                    object,
-                    assignment_operator,
-                );
+                self.environment
+                    .assign_object(*id, object, assignment_operator);
+                Ok(TreeWalkerStatus::Ok)
+            }
+            Stmt::ObjectPropertyAssignment(obj_id, id, expr, assignment_operator) => {
+                let object = self.eval_object(expr)?;
+                self.environment
+                    .get_object(*obj_id)
+                    .borrow_mut()
+                    .assign_object(*id, object, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
 
@@ -217,7 +202,9 @@ impl<'a> TreeWalker<'a> {
                     Expr::None(expr) => {
                         self.eval_none(expr)?;
                     }
-                    Expr::Object(..) => {}
+                    Expr::Object(_, expr) => {
+                        self.eval_object(expr)?;
+                    }
                 }
 
                 Ok(TreeWalkerStatus::Ok)
@@ -307,13 +294,11 @@ impl<'a> TreeWalker<'a> {
                 Err(_) => Err(TreeWalkerErr::FailedStringToIntegerCast),
                 Ok(val) => Ok(val),
             },
-            IntegerExpr::Property(object_path, property_id) => {
-                let int = self
-                    .get_object(object_path)
-                    .borrow_mut()
-                    .get_int(*property_id);
-                Ok(int)
-            }
+            IntegerExpr::Property(obj_id, id) => Ok(self
+                .environment
+                .get_object(*obj_id)
+                .borrow_mut()
+                .get_int(*id)),
         }
     }
 
@@ -344,13 +329,11 @@ impl<'a> TreeWalker<'a> {
                 Err(_) => Err(TreeWalkerErr::FailedStringToFloatCast),
                 Ok(val) => Ok(val),
             },
-            FloatExpr::Property(object_path, property_id) => {
-                let float = self
-                    .get_object(object_path)
-                    .borrow()
-                    .get_float(*property_id);
-                Ok(float)
-            }
+            FloatExpr::Property(obj_id, id) => Ok(self
+                .environment
+                .get_object(*obj_id)
+                .borrow_mut()
+                .get_float(*id)),
         }
     }
 
@@ -373,13 +356,11 @@ impl<'a> TreeWalker<'a> {
             StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
             StringExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)?.to_string()),
             StringExpr::NativeCall(call) => self.native_call_string(call),
-            StringExpr::Property(object_path, property_id) => {
-                let string = self
-                    .get_object(object_path)
-                    .borrow()
-                    .get_string(*property_id);
-                Ok(string)
-            }
+            StringExpr::Property(obj_id, id) => Ok(self
+                .environment
+                .get_object(*obj_id)
+                .borrow_mut()
+                .get_string(*id)),
         }
     }
 
@@ -456,14 +437,12 @@ impl<'a> TreeWalker<'a> {
                 Err(_) => Err(TreeWalkerErr::FailedStringToBooleanCast),
                 Ok(val) => Ok(val),
             },
-            BooleanExpr::Property(object_path, property_id) => {
-                let boolean = self
-                    .get_object(object_path)
-                    .borrow()
-                    .get_boolean(*property_id);
-                Ok(boolean)
-            }
             BooleanExpr::NativeCall(call) => self.native_call_boolean(call),
+            BooleanExpr::Property(obj_id, id) => Ok(self
+                .environment
+                .get_object(*obj_id)
+                .borrow_mut()
+                .get_boolean(*id)),
         }
     }
 
@@ -482,26 +461,36 @@ impl<'a> TreeWalker<'a> {
             ObjectExpr::Variable(id) => Ok(self.environment.get_object(*id)),
             ObjectExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnObject(v) => Ok(v),
-                _ => panic!("Call did not return correct type"),
+                v => panic!("Call did not return correct type - {:?} was returned", v),
             },
-            ObjectExpr::Property(object_path, property_id) => {
-                if object_path.len() == 0 {
-                    Ok(self.environment.get_object(*property_id))
-                } else {
-                    let object = self
-                        .get_object(object_path)
-                        .borrow()
-                        .get_object(*property_id);
-                    Ok(object)
-                }
-            }
             ObjectExpr::NativeCall(call) => self.native_call_object(call),
+            ObjectExpr::Constructor(properties) => {
+                let mut object = Environment::new();
+
+                for property in properties {
+                    match property {
+                        Expr::Integer(expr) => object.push_int(self.eval_int(expr)?),
+                        Expr::Float(expr) => object.push_float(self.eval_float(expr)?),
+                        Expr::String(expr) => object.push_string(self.eval_string(expr)?),
+                        Expr::Boolean(expr) => object.push_boolean(self.eval_boolean(expr)?),
+                        Expr::Object(_, expr) => object.push_object(self.eval_object(expr)?),
+                        _ => panic!("Unsupported type"),
+                    }
+                }
+
+                Ok(Rc::new(RefCell::new(object)))
+            }
+            ObjectExpr::Property(obj_id, id) => Ok(self
+                .environment
+                .get_object(*obj_id)
+                .borrow_mut()
+                .get_object(*id)),
         }
     }
 
-    fn native_call_none(&mut self, call: &NativeFunctionNone) -> Result<(), TreeWalkerErr> {
+    fn native_call_none(&mut self, call: &NativeCallNone) -> Result<(), TreeWalkerErr> {
         match call {
-            NativeFunctionNone::Print(expr, line) => match &**expr {
+            NativeCallNone::Print(expr, line) => match &**expr {
                 Expr::Integer(expr) => {
                     let mut buffer = [0u8; 20];
                     let int = self.eval_int(expr)?.numtoa(10, &mut buffer);
@@ -529,69 +518,82 @@ impl<'a> TreeWalker<'a> {
                 _ => panic!("Unprintable type"),
             },
 
-            NativeFunctionNone::AddButton(button) => {
-                let button = self.eval_object(button)?;
-
-                let text = button.borrow_mut().get_string(0);
-                let id = button.borrow_mut().get_int(0);
-
-                self.event(InterpreterEvent::AddButton(text, id))?;
+            NativeCallNone::AddButton(_, element) => {
+                let element = self.eval_object(element)?;
+                let text = element.borrow_mut().get_string(0);
+                let red = element.borrow().get_float(0) as f32;
+                let green = element.borrow().get_float(1) as f32;
+                let blue = element.borrow().get_float(2) as f32;
+                let id = self.next_id_ui;
+                self.next_id_ui += 1;
+                element
+                    .borrow_mut()
+                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
+                self.ui_elements.insert(id, Rc::clone(&element));
+                self.event(InterpreterEvent::AddButton(Button {
+                    id,
+                    text,
+                    red,
+                    green,
+                    blue,
+                }))?;
             }
-            NativeFunctionNone::ButtonText(button, text) => {
-                let text = self.eval_string(text)?;
-                let object = self.eval_object(button)?;
 
-                object.borrow_mut().assign_string(
-                    0,
-                    text.to_string(),
-                    &StringAssignmentOperator::Equal,
-                );
-
-                let id = object.borrow_mut().get_int(0);
-
-                self.event(InterpreterEvent::ChangeButtonText(text, id))?;
+            NativeCallNone::AddText(_, element) => {
+                let element = self.eval_object(element)?;
+                let text = element.borrow().get_string(0);
+                let size = element.borrow().get_float(0) as f32;
+                let red = element.borrow().get_float(1) as f32;
+                let green = element.borrow().get_float(2) as f32;
+                let blue = element.borrow().get_float(3) as f32;
+                let id = self.next_id_ui;
+                self.next_id_ui += 1;
+                element
+                    .borrow_mut()
+                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
+                self.ui_elements.insert(id, Rc::clone(&element));
+                self.event(InterpreterEvent::AddText(Text {
+                    id,
+                    size,
+                    value: text,
+                    red,
+                    green,
+                    blue,
+                }))?;
             }
-            NativeFunctionNone::AddHeading(heading) => {
-                let heading = self.eval_object(heading)?;
 
-                let text = heading.borrow_mut().get_string(0);
-                let id = heading.borrow_mut().get_int(0);
-
-                self.event(InterpreterEvent::AddHeading(text, id))?;
-            }
-            NativeFunctionNone::AddParagraph(paragraph) => {
-                let paragraph = self.eval_object(paragraph)?;
-
-                let text = paragraph.borrow_mut().get_string(0);
-                let id = paragraph.borrow_mut().get_int(0);
-
-                self.event(InterpreterEvent::AddParagraph(text, id))?;
-            }
-            NativeFunctionNone::AddHyperlink(hyperlink) => {
-                let hyperlink = self.eval_object(hyperlink)?;
-
-                let link = hyperlink.borrow_mut().get_string(0);
-                let text = hyperlink.borrow_mut().get_string(1);
-                let id = hyperlink.borrow_mut().get_int(0);
-
+            NativeCallNone::AddHyperlink(_, element) => {
+                let element = self.eval_object(element)?;
+                let text = element.borrow_mut().get_string(0);
+                let link = element.borrow_mut().get_string(1);
+                let id = self.next_id_ui;
+                self.next_id_ui += 1;
+                element
+                    .borrow_mut()
+                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
+                self.ui_elements.insert(id, Rc::clone(&element));
                 self.event(InterpreterEvent::AddHyperlink(text, link, id))?;
             }
-            NativeFunctionNone::AddInput(input) => {
-                let input = self.eval_object(input)?;
 
-                let text = input.borrow_mut().get_string(0);
-                let id = input.borrow_mut().get_int(0);
-
-                self.event(InterpreterEvent::AddInput(text, id))?;
+            NativeCallNone::AddInput(_, element) => {
+                let element = self.eval_object(element)?;
+                let placeholder = element.borrow_mut().get_string(0);
+                let id = self.next_id_ui;
+                self.next_id_ui += 1;
+                element
+                    .borrow_mut()
+                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
+                self.ui_elements.insert(id, Rc::clone(&element));
+                self.event(InterpreterEvent::AddInput(placeholder, id))?;
             }
         }
 
         Ok(())
     }
 
-    fn native_call_string(&mut self, call: &NativeFunctionString) -> Result<String, TreeWalkerErr> {
+    fn native_call_string(&mut self, call: &NativeCallString) -> Result<String, TreeWalkerErr> {
         match call {
-            NativeFunctionString::Prompt(expr) => {
+            NativeCallString::Prompt(expr) => {
                 let prompt = self.eval_string(expr)?;
 
                 self.stdout.flush().unwrap();
@@ -606,12 +608,17 @@ impl<'a> TreeWalker<'a> {
 
                 Ok(input.trim().to_string())
             }
+            NativeCallString::GetInputText(input) => {
+                let input = self.eval_object(input)?;
+                let text = input.borrow_mut().get_string(1);
+                Ok(text)
+            }
         }
     }
 
-    fn native_call_boolean(&mut self, call: &NativeFunctionBoolean) -> Result<bool, TreeWalkerErr> {
+    fn native_call_boolean(&mut self, call: &NativeCallBoolean) -> Result<bool, TreeWalkerErr> {
         match call {
-            NativeFunctionBoolean::WaitForEvent => match self.receiver.recv() {
+            NativeCallBoolean::WaitForEvent => match self.receiver.recv() {
                 Ok(BrowserEvent::ButtonPress(id)) => {
                     self.ui_elements
                         .get(&id)
@@ -630,18 +637,30 @@ impl<'a> TreeWalker<'a> {
                         .get(&id)
                         .unwrap()
                         .borrow_mut()
-                        .assign_string(0, value, &StringAssignmentOperator::Equal);
+                        .assign_string(1, value, &StringAssignmentOperator::Equal);
                     Ok(false)
                 }
                 Err(_) => Ok(true),
             },
-            NativeFunctionBoolean::ButtonClicked(button) => {
+
+            NativeCallBoolean::ButtonClicked(button) => {
                 let button = self.eval_object(button)?;
-
                 let clicked = button.borrow().get_boolean(0);
-
                 if clicked {
                     button
+                        .borrow_mut()
+                        .assign_boolean(0, false, &BooleanAssignmentOperator::Equal);
+                    Ok(true)
+                } else {
+                    Ok(false)
+                }
+            }
+
+            NativeCallBoolean::InputConfirmed(input) => {
+                let input = self.eval_object(input)?;
+                let clicked = input.borrow().get_boolean(0);
+                if clicked {
+                    input
                         .borrow_mut()
                         .assign_boolean(0, false, &BooleanAssignmentOperator::Equal);
                     Ok(true)
@@ -652,82 +671,162 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
-    fn native_call_object(&mut self, call: &NativeFunctionObject) -> Result<Object, TreeWalkerErr> {
+    fn native_call_object(&mut self, call: &NativeCallObject) -> Result<Object, TreeWalkerErr> {
         match call {
-            NativeFunctionObject::ButtonConstructor(text) => {
+            NativeCallObject::ButtonConstructor(text) => {
                 let mut button = Environment::new();
-
                 let text = self.eval_string(text)?;
                 button.push_string(text);
-
-                let id = self.next_id_ui;
-                button.push_int(id);
-                self.next_id_ui += 1;
-
+                button.push_int(0);
                 button.push_boolean(false);
+                button.push_float(0.5);
+                button.push_float(0.5);
+                button.push_float(0.5);
+                Ok(Rc::new(RefCell::new(button)))
+            }
 
-                let object = Rc::new(RefCell::new(button));
+            NativeCallObject::SetButtonText(object, text) => {
+                let object = self.eval_object(object)?;
+                let text = self.eval_string(text)?;
 
-                self.ui_elements.insert(id, Rc::clone(&object));
+                object.borrow_mut().assign_string(
+                    0,
+                    text.to_string(),
+                    &StringAssignmentOperator::Equal,
+                );
+
+                let id = object.borrow_mut().get_int(0);
+
+                if id != 0 {
+                    self.event(InterpreterEvent::SetButtonText(text, id))?;
+                }
 
                 Ok(object)
             }
 
-            NativeFunctionObject::HeadingConstructor(text) => {
-                let mut button = Environment::new();
-
-                let text = self.eval_string(text)?;
-                button.push_string(text);
-
-                button.push_int(self.next_id_ui);
-                self.next_id_ui += 1;
-
-                Ok(Rc::new(RefCell::new(button)))
+            NativeCallObject::PageConstructor => {
+                let button = Environment::new();
+                let object = Rc::new(RefCell::new(button));
+                Ok(object)
             }
 
-            NativeFunctionObject::ParagraphConstructor(text) => {
-                let mut button = Environment::new();
-
+            NativeCallObject::TextConstructor(text) => {
+                let mut heading = Environment::new();
                 let text = self.eval_string(text)?;
-                button.push_string(text);
-
-                button.push_int(self.next_id_ui);
-                self.next_id_ui += 1;
-
-                Ok(Rc::new(RefCell::new(button)))
+                heading.push_string(text);
+                heading.push_int(0);
+                heading.push_float(20.);
+                heading.push_float(0.5);
+                heading.push_float(0.5);
+                heading.push_float(0.5);
+                Ok(Rc::new(RefCell::new(heading)))
             }
 
-            NativeFunctionObject::HyperlinkConstructor(text, link) => {
+            NativeCallObject::SetTextValue(object, text) => {
+                let object = self.eval_object(object)?;
+                let text = self.eval_string(text)?;
+
+                object.borrow_mut().assign_string(
+                    0,
+                    text.to_string(),
+                    &StringAssignmentOperator::Equal,
+                );
+
+                let id = object.borrow_mut().get_int(0);
+
+                if id != 0 {
+                    self.event(InterpreterEvent::SetTextValue(text, id))?;
+                }
+
+                Ok(object)
+            }
+
+            NativeCallObject::HyperlinkConstructor(text, link) => {
                 let mut hyperlink = Environment::new();
-
-                let link = self.eval_string(link)?;
-                hyperlink.push_string(link);
-
                 let text = self.eval_string(text)?;
+                let link = self.eval_string(link)?;
                 hyperlink.push_string(text);
-
-                hyperlink.push_int(self.next_id_ui);
-                self.next_id_ui += 1;
-
+                hyperlink.push_string(link);
+                hyperlink.push_int(0);
                 Ok(Rc::new(RefCell::new(hyperlink)))
             }
 
-            NativeFunctionObject::InputConstructor(text) => {
+            NativeCallObject::InputConstructor(placeholder) => {
                 let mut input = Environment::new();
-
-                let text = self.eval_string(text)?;
-                input.push_string(text);
-
-                let id = self.next_id_ui;
-                input.push_int(id);
-                self.next_id_ui += 1;
-
+                let placeholder = self.eval_string(placeholder)?;
+                input.push_string(placeholder);
+                input.push_string("".to_string());
+                input.push_int(0);
                 input.push_boolean(false);
+                Ok(Rc::new(RefCell::new(input)))
+            }
 
-                let object = Rc::new(RefCell::new(input));
+            NativeCallObject::SetTextSize(object, size) => {
+                let object = self.eval_object(object)?;
+                let size = self.eval_float(size)?;
 
-                self.ui_elements.insert(id, Rc::clone(&object));
+                object
+                    .borrow_mut()
+                    .assign_float(0, size, &NumericAssignmentOperator::Equal);
 
+                let id = object.borrow_mut().get_int(0);
+
+                if id != 0 {
+                    self.event(InterpreterEvent::SetTextSize(size as f32, id))?;
+                }
+
+                Ok(object)
+            }
+
+            NativeCallObject::SetTextColour(object, red, green, blue) => {
+                let object = self.eval_object(object)?;
+                let red = self.eval_float(red)?;
+                let green = self.eval_float(green)?;
+                let blue = self.eval_float(blue)?;
+                object
+                    .borrow_mut()
+                    .assign_float(1, red, &NumericAssignmentOperator::Equal);
+                object
+                    .borrow_mut()
+                    .assign_float(2, green, &NumericAssignmentOperator::Equal);
+                object
+                    .borrow_mut()
+                    .assign_float(3, blue, &NumericAssignmentOperator::Equal);
+                let id = object.borrow_mut().get_int(0);
+                if id != 0 {
+                    self.event(InterpreterEvent::SetTextColour(
+                        red as f32,
+                        green as f32,
+                        blue as f32,
+                        id,
+                    ))?;
+                }
+                Ok(object)
+            }
+
+            NativeCallObject::SetButtonBackgroundColour(object, red, green, blue) => {
+                let object = self.eval_object(object)?;
+                let red = self.eval_float(red)?;
+                let green = self.eval_float(green)?;
+                let blue = self.eval_float(blue)?;
+                object
+                    .borrow_mut()
+                    .assign_float(0, red, &NumericAssignmentOperator::Equal);
+                object
+                    .borrow_mut()
+                    .assign_float(1, green, &NumericAssignmentOperator::Equal);
+                object
+                    .borrow_mut()
+                    .assign_float(2, blue, &NumericAssignmentOperator::Equal);
+                let id = object.borrow_mut().get_int(0);
+                if id != 0 {
+                    self.event(InterpreterEvent::SetButtonBackgroundColour(
+                        red as f32,
+                        green as f32,
+                        blue as f32,
+                        id,
+                    ))?;
+                }
                 Ok(object)
             }
         }
@@ -776,38 +875,10 @@ impl<'a> TreeWalker<'a> {
         result
     }
 
-    fn new_object(&mut self, types: &Vec<ConstructionType>, environment: &mut Environment) {
-        for value_type in types {
-            match value_type {
-                ConstructionType::Integer => environment.push_int(0),
-                ConstructionType::Float => environment.push_float(0.),
-                ConstructionType::String => environment.push_string(String::new()),
-                ConstructionType::Boolean => environment.push_boolean(false),
-                ConstructionType::Class(class_types) => {
-                    let mut object = Environment::new();
-                    self.new_object(class_types, &mut object);
-                    environment.push_object(Rc::new(RefCell::new(object)));
-                }
-            }
-        }
-    }
-
     fn event(&mut self, event: InterpreterEvent) -> Result<(), TreeWalkerErr> {
         match self.sender.send(event) {
             Ok(()) => Ok(()),
             Err(_) => Err(TreeWalkerErr::FailedToSendEventToBrowser),
         }
-    }
-
-    fn get_object(&self, object_path: &Vec<usize>) -> Object {
-        let mut iter = object_path.iter();
-        let mut objects = vec![self.environment.get_object(*iter.next().unwrap())];
-
-        for object_id in iter {
-            let object = objects.last().unwrap().borrow_mut().get_object(*object_id);
-            objects.push(object);
-        }
-
-        Rc::clone(objects.last().unwrap())
     }
 }

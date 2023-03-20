@@ -1,4 +1,3 @@
-use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -17,16 +16,6 @@ pub enum ValueType {
     String,
     Boolean,
     Any,
+    Element,
     Class(Rc<String>),
-}
-
-#[derive(Debug, Clone)]
-pub struct Object {
-    pub properties: FxHashMap<Rc<String>, Value>,
-    pub objects: FxHashMap<usize, Rc<Object>>,
-    pub integer_next_id: usize,
-    pub float_next_id: usize,
-    pub string_next_id: usize,
-    pub boolean_next_id: usize,
-    pub object_next_id: usize,
 }

@@ -1,11 +1,10 @@
 start {
-	add_heading(Heading("Home Page"));
+	let page = Page();
 
-	add_paragraph(Paragraph("Welcome to the Zonkey Browser. Use the address bar to open your first app."));
-
-	add_paragraph(Paragraph("Here are some example apps that I have made:"));
-
-	add_hyperlink(Hyperlink("A simple counter", "file:../test_scripts/counter.zonk"));
-
-	add_hyperlink(Hyperlink("A guessing game", "file:../test_scripts/guessing.zonk"));
+	page.add(Text("Home Page").set_size(100.));
+	page.add(Text("Welcome to the Zonkey Browser. Use the address bar to open your first app."));
+	page.add(Text("Here are some hyperlinks to example apps that I have made:"));
+	page.add(Hyperlink("A simple counter", "file:../test_scripts/counter.zonk"));
+	page.add(Hyperlink("A long page", "file:../test_scripts/long_page.zonk"));
+	page.add(Hyperlink("A guessing game", "file:../test_scripts/guessing.zonk"));
 }

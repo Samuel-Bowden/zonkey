@@ -1,10 +1,12 @@
 mod addsub;
 mod and;
-mod call;
 mod cast;
 mod comparison;
 mod equality;
+mod function_call;
+mod grouping;
 mod literal;
+mod method_call;
 mod multdiv;
 mod or;
 mod prelude;

@@ -1,41 +1,33 @@
-class CounterApp {
-	Button counter_btn;
-	Button reset_btn;
-	Integer counter;
+start {
+	let page = Page();
 
-	constructor() {
-		add_heading(Heading("A simple counter"));
-		add_paragraph(Paragraph("Click the button to increase the counter"));
+	let counter_btn = Button("");
 
-		self.counter_btn = Button("Counter: 0");
-		add_button(self.counter_btn);
+	let reset_btn = Button("Reset")
+		.set_background_colour(1., 0., 0.);
 
-		self.reset_btn = Button("Reset");
-		add_button(self.reset_btn);
-	}
+	# Add elements to the page
+	page.add(Text("A simple counter").set_size(50.));
+	page.add(Text("Click the button to increase the counter"));
+	page.add(counter_btn);
+	page.add(reset_btn);
 
-	method run() {
-		loop {
-			let exit = wait_for_event();
+	let counter = 0;
 
-			if (self.counter_btn.clicked()) {
-				self.counter += 1;
-			}
+	let exit = false;
 
-			if (self.reset_btn.clicked()) {
-				self.counter = 0;
-			}
+	while (!exit) {
+		counter_btn.set_text("Counter: " + (String counter));
 
-			if (exit) {
-				break;
-			}
+		exit = wait_for_event();
 
-			self.counter_btn.text("Counter: " + (String self.counter));
+		# React to events
+		if (counter_btn.clicked()) {
+			counter += 1;
+		}
+
+		if (reset_btn.clicked()) {
+			counter = 0;
 		}
 	}
-}
-
-start {
-	let app = CounterApp();
-	app.run();
 }

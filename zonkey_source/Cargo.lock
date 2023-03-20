@@ -3149,6 +3149,7 @@ version = "0.1.0"
 dependencies = [
  "directories",
  "iced",
+ "iced_native",
  "interpreter",
  "unicode-segmentation",
 ]

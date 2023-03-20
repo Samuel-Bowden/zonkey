@@ -1,5 +1,6 @@
 start {
-	add_heading(Heading("Settings"));
+	let page = Page();
 
-	add_paragraph(Paragraph("There are no settings to change at the moment."));
+	page.add(Text("Settings").set_size(100.));
+	page.add(Text("There are no settings to change at the moment."));
 }

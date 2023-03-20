@@ -1,11 +1,5 @@
+use crate::{parser::production::statement::prelude::*, parser::value::Value};
 use std::rc::Rc;
-
-use crate::{
-    parser::production::statement::prelude::*,
-    parser::value::{Object, Value, ValueType},
-    stmt::ConstructionType,
-};
-use rustc_hash::FxHashMap;
 
 impl Parser {
     pub fn variable_init(&mut self) -> Result<Stmt, ParserStatus> {
@@ -103,88 +97,12 @@ impl Parser {
             Expr::Object(class, val) => {
                 let id = self.object_next_id;
                 self.object_next_id += 1;
-                let (object, _) = self.create_object(Rc::clone(&class))?;
-                self.objects.insert(id, Rc::new(object));
                 self.value_stack
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::Object(Rc::clone(&class), id));
+                    .insert(name, Value::Object(class, id));
                 Ok(Stmt::ObjectVariableInitialisation(val))
             }
         }
-    }
-
-    pub fn create_object(
-        &mut self,
-        class_name: Rc<String>,
-    ) -> Result<(Object, Vec<ConstructionType>), ParserStatus> {
-        let declaration = match self.class_declarations.get(&class_name) {
-            Some(declaration) => declaration,
-            None => {
-                self.error.add(ParserErrType::ClassNotFound(
-                    self.tokens[self.current - 1].clone(),
-                    class_name.to_string(),
-                ));
-
-                return Err(ParserStatus::Unwind);
-            }
-        };
-
-        let mut object = Object {
-            properties: FxHashMap::default(),
-            objects: FxHashMap::default(),
-            integer_next_id: 0,
-            float_next_id: 0,
-            string_next_id: 0,
-            boolean_next_id: 0,
-            object_next_id: 0,
-        };
-
-        let mut types = vec![];
-
-        for (name, value_type) in declaration.properties.clone() {
-            match value_type {
-                ValueType::Integer => {
-                    object
-                        .properties
-                        .insert(name, Value::Integer(object.integer_next_id));
-                    object.integer_next_id += 1;
-                    types.push(ConstructionType::Integer);
-                }
-                ValueType::Float => {
-                    object
-                        .properties
-                        .insert(name, Value::Float(object.float_next_id));
-                    object.float_next_id += 1;
-                    types.push(ConstructionType::Float);
-                }
-                ValueType::String => {
-                    object
-                        .properties
-                        .insert(name, Value::String(object.string_next_id));
-                    object.string_next_id += 1;
-                    types.push(ConstructionType::String);
-                }
-                ValueType::Boolean => {
-                    object
-                        .properties
-                        .insert(name, Value::Boolean(object.boolean_next_id));
-                    object.boolean_next_id += 1;
-                    types.push(ConstructionType::Boolean);
-                }
-                ValueType::Any => unreachable!("Zonkey code cannot use the Any type"),
-                ValueType::Class(class) => {
-                    let id = object.object_next_id;
-                    object.object_next_id += 1;
-                    let (new_object, new_types) = self.create_object(Rc::clone(&class))?;
-
-                    object.properties.insert(name, Value::Object(class, id));
-                    object.objects.insert(id, Rc::new(new_object));
-                    types.push(ConstructionType::Class(new_types));
-                }
-            }
-        }
-
-        Ok((object, types))
     }
 }

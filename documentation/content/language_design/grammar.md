@@ -19,7 +19,7 @@ function -> "function" IDENTIFIER "(" parameters? ")" return_type block;
 parameters -> data_type IDENTIFIER ("," data_type IDENTIFIER)*;
 return_type -> ("->" data_type)?;
 
-class -> "class" IDENTIFIER "{" property* constructor method* "}";
+class -> "class" IDENTIFIER "{" (variable_init ";")* method* "}";
 property -> data_type IDENTIFIER ";";
 constructor -> "constructor" "(" parameters? ")" block;
 method -> "method" IDENTIFIER "(" parameters? ")" return_type block;
@@ -28,12 +28,12 @@ method -> "method" IDENTIFIER "(" parameters? ")" return_type block;
 statement -> terminated_statement | block | if_statement | while_statement | loop_statement | for_statement;
 terminated_statement -> (expression_statement | return_statement | variable_init | "break" | "continue") ";";
 expression_statement -> (IDENTIFIER ("=" | "+=" | "-=" | "/=" | "*="))? expression;
-variable_init = "let" IDENTIFIER "=" (expression | new IDENTIFIER); 
+variable_init = "let" IDENTIFIER "=" expression; 
 if_statement -> "if" "(" expression ")" block ("else" block)?; 
 loop_statement -> "loop" block;
 while_statement -> "while" "(" expression ")" block;
 for_statement -> "for" "(" variable_init "," expression "," expression_statement ")" block;
-block -> "{" statement* "}"
+block -> "{" statement* "}";
 return_statement -> "return" expression?;
 
 # Expressions
@@ -46,6 +46,9 @@ comparision -> addsub ((">=" | "<=" | "<" | ">") addsub)*;
 addsub -> multdiv (("-" | "+") multdiv)*;
 multdiv -> literal (("/" | "*") literal)*;
 unary -> ("-" | "!") unary | literal;
-literal -> INTEGER | FLOAT | STRING | BOOLEAN | IDENTIFIER (. IDENTIFIER)* | call | "(" expression ")";
-call -> IDENTIFIER (. IDENTIFIER)* "(" expression ("," expression)* ")";
+literal -> INTEGER | FLOAT | STRING | BOOLEAN | grouping | IDENTIFIER (method_call)? | function_call | property_accessor;
+grouping -> "(" expression ")";
+function_call -> IDENTIFIER "(" expression ("," expression)* ")" (method_call)?;
+method_call -> "." IDENTIFIER "(" expression ("," expression)* ")" (method_call)?;
+property_accessor -> "@" IDENTIFIER (method_call)?; 
 ```

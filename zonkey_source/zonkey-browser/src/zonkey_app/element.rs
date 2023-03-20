@@ -1,8 +1,9 @@
+use interpreter::event::{Button, Text};
+
 pub enum ElementType {
-    Heading(String),
-    Paragraph(String),
+    Text(Text),
     Hyperlink(String, String),
     Page(Vec<ElementType>),
-    Button(i64, String),
+    Button(Button),
     Input(i64, String, String),
 }

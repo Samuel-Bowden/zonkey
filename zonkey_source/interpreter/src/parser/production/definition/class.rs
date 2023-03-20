@@ -1,14 +1,14 @@
+use rustc_hash::FxHashMap;
+
 use crate::{
-    expr::{Expr, ObjectExpr},
-    parser::declaration::ClassDeclaration,
+    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr},
     parser::{
-        declaration::{CallableDeclaration, CallableType},
+        declaration::{CallableDeclaration, CallableType, ClassDeclaration},
         production::definition::prelude::*,
         value::{Value, ValueType},
     },
     stmt::Stmt,
 };
-use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
 impl Parser {
@@ -41,22 +41,71 @@ impl Parser {
             }
         };
 
-        // Parse properties
         let mut properties = FxHashMap::default();
+        let mut class_integer_next_id = 0;
+        let mut class_float_next_id = 0;
+        let mut class_string_next_id = 0;
+        let mut class_boolean_next_id = 0;
+        let mut class_object_next_id = 0;
+        let mut property_default_expressions = vec![];
+
         while let Ok(dt) = self.data_type() {
             self.current += 1;
 
-            match self.consume_token_type() {
-                Some(TokenType::Identifier(name)) => properties.insert(Rc::clone(name), dt),
+            let property_name = match self.consume_token_type() {
+                Some(TokenType::Identifier(name)) => Rc::clone(name),
                 _ => {
-                    self.error
-                        .add(ParserErrType::ClassDeclarationExpectedPropertyName(
-                            self.tokens[self.current - 2].clone(),
-                            self.tokens.get(self.current - 1).cloned(),
-                        ));
-                    return Err(ParserStatus::Unwind);
+                    panic!("Expected property name");
                 }
             };
+
+            if let Some(_) = properties.get(&property_name) {
+                panic!("Property already declared");
+            }
+
+            match dt {
+                ValueType::Integer => {
+                    properties.insert(property_name, Value::Integer(class_integer_next_id));
+                    class_integer_next_id += 1;
+                    property_default_expressions.push(Expr::Integer(IntegerExpr::Literal(0)));
+                }
+                ValueType::Float => {
+                    properties.insert(property_name, Value::Float(class_float_next_id));
+                    class_float_next_id += 1;
+                    property_default_expressions.push(Expr::Float(FloatExpr::Literal(0.)));
+                }
+                ValueType::String => {
+                    properties.insert(property_name, Value::String(class_string_next_id));
+                    class_string_next_id += 1;
+                    property_default_expressions
+                        .push(Expr::String(StringExpr::Literal("".to_string().into())));
+                }
+                ValueType::Boolean => {
+                    properties.insert(property_name, Value::Boolean(class_boolean_next_id));
+                    class_boolean_next_id += 1;
+                    property_default_expressions.push(Expr::Boolean(BooleanExpr::Literal(false)));
+                }
+                ValueType::Class(class) => {
+                    properties.insert(
+                        property_name,
+                        Value::Object(Rc::clone(&class), class_object_next_id),
+                    );
+                    class_object_next_id += 1;
+                    property_default_expressions.push(Expr::Object(
+                        Rc::clone(&class),
+                        ObjectExpr::Constructor(
+                            self.class_declarations
+                                .get(&class)
+                                .expect("Class has not been declared")
+                                .property_default_expressions
+                                .clone(),
+                        ),
+                    ));
+                }
+                ValueType::Any | ValueType::Element => {
+                    unreachable!("Zonkey code cannot use this type")
+                }
+            }
 
             match self.consume_token_type() {
                 Some(TokenType::SemiColon) => (),
@@ -76,12 +125,12 @@ impl Parser {
         let class_declaration = ClassDeclaration {
             properties,
             methods,
+            property_default_expressions: property_default_expressions.clone(),
         };
 
         self.class_declarations
             .insert(Rc::clone(&class_name), class_declaration);
 
-        // Parse constructor
         if let Some(TokenType::Constructor) = self.current_token_type() {
             self.current += 1;
 
@@ -90,40 +139,35 @@ impl Parser {
 
             let mut constructor_scope = IndexMap::new();
 
-            let id = self.object_next_id;
-            self.object_next_id += 1;
-            let (object, types) = self.create_object(Rc::clone(&class_name))?;
-            self.objects.insert(id, Rc::new(object));
             constructor_scope.insert(
                 Rc::new("self".to_string()),
-                Value::Object(Rc::clone(&class_name), id),
+                Value::Object(Rc::clone(&class_name), self.object_next_id),
             );
+            self.object_next_id += 1;
 
             for (value_type, name) in parameters {
                 self.add_scope_parameter(&value_type, name, &mut constructor_scope)?;
                 parameter_value_types.push(value_type);
             }
-
             self.value_stack.push(constructor_scope);
-
-            let return_type = Some(ValueType::Class(Rc::clone(&class_name)));
 
             let constructor_declaration = CallableDeclaration {
                 callable_type: CallableType::Zonkey(self.callables.len()),
                 parameters: parameter_value_types,
-                return_type: return_type.clone(),
+                return_type: Some(ValueType::Class(Rc::clone(&class_name))),
             };
 
             self.function_declarations
-                .insert(Rc::clone(&class_name), Rc::new(constructor_declaration));
+                .insert(Rc::clone(&class_name), constructor_declaration);
 
-            self.current_return_type = return_type;
+            // The newly constructed object is returned automatically, the user cannot return it in
+            // a constructor
+            self.current_return_type = None;
 
             let block = self.block()?;
 
             // Clean value stack after it has been parsed
             self.value_stack.clear();
-            self.objects.clear();
             self.integer_next_id = 0;
             self.float_next_id = 0;
             self.string_next_id = 0;
@@ -134,7 +178,9 @@ impl Parser {
 
             self.callables.push(Rc::new(Stmt::Block(
                 vec![
-                    Stmt::DefaultConstructor(types),
+                    Stmt::ObjectVariableInitialisation(ObjectExpr::Constructor(
+                        property_default_expressions,
+                    )),
                     block,
                     Stmt::Return(Some(Expr::Object(
                         Rc::clone(&class_name),
@@ -145,7 +191,6 @@ impl Parser {
             )))
         }
 
-        // Parse methods
         while let Some(TokenType::Method) = self.current_token_type() {
             self.current += 1;
 
@@ -162,13 +207,11 @@ impl Parser {
             let mut method_scope = IndexMap::new();
             let mut parameter_value_types = vec![];
 
-            // Add self as parameter
-            self.add_scope_parameter(
-                &ValueType::Class(Rc::clone(&class_name)),
+            method_scope.insert(
                 Rc::new("self".to_string()),
-                &mut method_scope,
-            )?;
-            parameter_value_types.push(ValueType::Class(Rc::clone(&class_name)));
+                Value::Object(Rc::clone(&class_name), self.object_next_id),
+            );
+            self.object_next_id += 1;
 
             for (value_type, name) in parameters {
                 self.add_scope_parameter(&value_type, name, &mut method_scope)?;
@@ -195,7 +238,6 @@ impl Parser {
 
             // Clean value stack after it has been parsed
             self.value_stack.clear();
-            self.objects.clear();
             self.integer_next_id = 0;
             self.float_next_id = 0;
             self.string_next_id = 0;

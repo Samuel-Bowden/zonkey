@@ -66,6 +66,7 @@ pub enum TokenType {
     Class,
     Method,
     Constructor,
+    At,
 }
 
 impl Display for TokenType {
@@ -121,6 +122,7 @@ impl Display for TokenType {
             Self::Class => f.write_str("class"),
             Self::Method => f.write_str("method"),
             Self::Constructor => f.write_str("constructor"),
+            Self::At => f.write_str("@"),
         }
     }
 }
