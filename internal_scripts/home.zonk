@@ -1,10 +1,11 @@
 start {
-	let page = Page();
-
-	page.add(Text("Home Page").set_size(100.));
-	page.add(Text("Welcome to the Zonkey Browser. Use the address bar to open your first app."));
-	page.add(Text("Here are some hyperlinks to example apps that I have made:"));
-	page.add(Hyperlink("A simple counter", "file:../test_scripts/counter.zonk"));
-	page.add(Hyperlink("A long page", "file:../test_scripts/long_page.zonk"));
-	page.add(Hyperlink("A guessing game", "file:../test_scripts/guessing.zonk"));
+	Page()
+		.set_title("Home")
+		.add(Text("Home Page").set_size(100.))
+		.add(Text("Welcome to the Zonkey Browser. Use the address bar to open your first app."))
+		.add(Text("Here are some hyperlinks to example apps that I have made:"))
+		.add(Hyperlink("Calculator", "file:../test_scripts/calculator.zonk"))
+		.add(Hyperlink("Twigville Local News", "file:../test_scripts/news.zonk"))
+		.add(Hyperlink("Simple counter", "file:../test_scripts/counter.zonk"))
+		.add(Hyperlink("Guessing game", "file:../test_scripts/guessing.zonk"));
 }

@@ -23,6 +23,8 @@ impl ParserErr {
 }
 
 pub enum ParserErrType {
+    TempErrType(String),
+
     // Miscellaneous/Global errors
     UnterminatedStatement(Token, Option<Token>),
     UnexpectedTokenInGlobal(Token),

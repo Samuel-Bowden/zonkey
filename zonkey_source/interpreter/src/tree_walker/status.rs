@@ -1,5 +1,4 @@
-use super::environment::Environment;
-use std::{cell::RefCell, rc::Rc};
+use super::object::Object;
 
 #[derive(Debug)]
 pub enum TreeWalkerStatus {
@@ -9,7 +8,7 @@ pub enum TreeWalkerStatus {
     ReturnFloat(f64),
     ReturnString(String),
     ReturnBoolean(bool),
-    ReturnObject(Rc<RefCell<Environment>>),
+    ReturnObject(Object),
     ReturnNone,
     Break,
 }

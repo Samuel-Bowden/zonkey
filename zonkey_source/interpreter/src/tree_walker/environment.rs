@@ -7,7 +7,6 @@ use crate::{
     interpreter_debug,
     stack::Stack,
 };
-use std::{cell::RefCell, rc::Rc};
 
 #[derive(Debug)]
 pub struct Environment {
@@ -88,7 +87,7 @@ impl Environment {
         self.boolean_stack.push(boolean);
     }
 
-    pub fn push_object(&mut self, object: Rc<RefCell<Environment>>) {
+    pub fn push_object(&mut self, object: Object) {
         self.object_stack.push(object);
     }
 
@@ -156,7 +155,7 @@ impl Environment {
     pub fn assign_object(
         &mut self,
         id: usize,
-        val: Rc<RefCell<Environment>>,
+        val: Object,
         assignment_operator: &ObjectAssignmentOperator,
     ) {
         let current_val = &mut self.object_stack[id];
@@ -182,7 +181,7 @@ impl Environment {
         self.boolean_stack[id]
     }
 
-    pub fn get_object(&self, id: usize) -> Rc<RefCell<Environment>> {
-        Rc::clone(&self.object_stack[id])
+    pub fn get_object(&self, id: usize) -> Object {
+        self.object_stack[id].clone()
     }
 }

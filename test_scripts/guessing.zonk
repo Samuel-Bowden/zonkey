@@ -1,29 +1,26 @@
 start {
-	let page = Page();
-
-	page.add(Text("Password Guessing Game").set_size(75.));
-
 	let password = Input("Guess the password");
-	page.add(password);
+	let status = Text("No password entered yet");
 
-	let text = Text("No password entered yet");
-	page.add(text);
+	let title = "Password Guessing Game";
 
-	loop {
-		let exit = wait_for_event();
+	Page()	
+		.set_title(title)
+		.add(Text(title).set_size(75.))
+		.add(status)
+		.add(password);
 
+	while (wait_for_event()) {
 		if (password.confirmed()) {
 			if (password.get_text() == "password1234") {
-				text
+				status	
 					.set_value("You guessed the correct password!")
-					.set_colour(0., 1., 0.);
+					.set_colour(0., 0.7, 0.);
 			} else {
-				text
+				status	
 					.set_value("That wasn't the right password")
 					.set_colour(1., 0., 0.);
 			}
 		}
-
-		if (exit) { break; }
 	}
 }

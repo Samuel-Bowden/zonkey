@@ -1,4 +1,4 @@
-use crate::prelude::calls::*;
+use crate::standard_prelude::calls::*;
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -124,7 +124,7 @@ pub enum ObjectExpr {
     Variable(usize),
     Property(usize, usize),
     Call(usize, Vec<Expr>),
-    Constructor(Vec<Expr>),
+    Constructor(Rc<Vec<Expr>>),
     NativeCall(NativeCallObject),
 }
 

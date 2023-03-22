@@ -3,10 +3,11 @@ use rustc_hash::FxHashMap;
 use crate::{
     expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr},
     parser::{
-        declaration::{CallableDeclaration, CallableType, ClassDeclaration},
+        declaration::{CallableDeclaration, CallableType, ClassDeclaration, ClassType},
         production::definition::prelude::*,
         value::{Value, ValueType},
     },
+    standard_prelude::calls::NativeCallObject,
     stmt::Stmt,
 };
 use std::rc::Rc;
@@ -55,12 +56,20 @@ impl Parser {
             let property_name = match self.consume_token_type() {
                 Some(TokenType::Identifier(name)) => Rc::clone(name),
                 _ => {
-                    panic!("Expected property name");
+                    self.error.add(ParserErrType::TempErrType(format!(
+                        "Expected property name in class {}",
+                        class_name,
+                    )));
+                    return Err(ParserStatus::End);
                 }
             };
 
             if let Some(_) = properties.get(&property_name) {
-                panic!("Property already declared");
+                self.error.add(ParserErrType::TempErrType(format!(
+                    "Property {} already declared",
+                    property_name,
+                )));
+                return Err(ParserStatus::End);
             }
 
             match dt {
@@ -93,13 +102,31 @@ impl Parser {
                     class_object_next_id += 1;
                     property_default_expressions.push(Expr::Object(
                         Rc::clone(&class),
-                        ObjectExpr::Constructor(
-                            self.class_declarations
-                                .get(&class)
-                                .expect("Class has not been declared")
-                                .property_default_expressions
-                                .clone(),
-                        ),
+                        match &self
+                            .class_declarations
+                            .get(&class)
+                            .expect("Class not declared")
+                            .class_type
+                        {
+                            ClassType::Native => ObjectExpr::NativeCall(match class.as_str() {
+                                "Page" => NativeCallObject::PageConstructor,
+                                "Button" => NativeCallObject::ButtonConstructor(Box::new(
+                                    StringExpr::Literal("".to_string().into()),
+                                )),
+                                "Text" => NativeCallObject::TextConstructor(Box::new(
+                                    StringExpr::Literal("".to_string().into()),
+                                )),
+                                "Input" => NativeCallObject::InputConstructor(Box::new(
+                                    StringExpr::Literal("".to_string().into()),
+                                )),
+                                "Hyperlink" => NativeCallObject::HyperlinkConstructor(
+                                    Box::new(StringExpr::Literal("".to_string().into())),
+                                    Box::new(StringExpr::Literal("".to_string().into())),
+                                ),
+                                _ => unreachable!(),
+                            }),
+                            ClassType::Zonkey(exprs) => ObjectExpr::Constructor(Rc::clone(&exprs)),
+                        },
                     ));
                 }
                 ValueType::Any | ValueType::Element => {
@@ -122,132 +149,153 @@ impl Parser {
 
         let methods = FxHashMap::default();
 
+        let property_default_expressions = Rc::new(property_default_expressions);
+
         let class_declaration = ClassDeclaration {
-            properties,
+            class_type: ClassType::Zonkey(Rc::clone(&property_default_expressions)),
             methods,
-            property_default_expressions: property_default_expressions.clone(),
         };
+
+        self.current_properties = Some(properties);
 
         self.class_declarations
             .insert(Rc::clone(&class_name), class_declaration);
 
-        if let Some(TokenType::Constructor) = self.current_token_type() {
-            self.current += 1;
+        let mut constructor_declared = false;
 
-            let parameters = self.parameters(self.current - 1)?;
-            let mut parameter_value_types = vec![];
-
-            let mut constructor_scope = IndexMap::new();
-
-            constructor_scope.insert(
-                Rc::new("self".to_string()),
-                Value::Object(Rc::clone(&class_name), self.object_next_id),
-            );
-            self.object_next_id += 1;
-
-            for (value_type, name) in parameters {
-                self.add_scope_parameter(&value_type, name, &mut constructor_scope)?;
-                parameter_value_types.push(value_type);
-            }
-            self.value_stack.push(constructor_scope);
-
-            let constructor_declaration = CallableDeclaration {
-                callable_type: CallableType::Zonkey(self.callables.len()),
-                parameters: parameter_value_types,
-                return_type: Some(ValueType::Class(Rc::clone(&class_name))),
-            };
-
-            self.function_declarations
-                .insert(Rc::clone(&class_name), constructor_declaration);
-
-            // The newly constructed object is returned automatically, the user cannot return it in
-            // a constructor
-            self.current_return_type = None;
-
-            let block = self.block()?;
-
-            // Clean value stack after it has been parsed
-            self.value_stack.clear();
-            self.integer_next_id = 0;
-            self.float_next_id = 0;
-            self.string_next_id = 0;
-            self.boolean_next_id = 0;
-            self.object_next_id = 0;
-
-            self.current_return_type = None;
-
-            self.callables.push(Rc::new(Stmt::Block(
-                vec![
-                    Stmt::ObjectVariableInitialisation(ObjectExpr::Constructor(
-                        property_default_expressions,
-                    )),
-                    block,
-                    Stmt::Return(Some(Expr::Object(
-                        Rc::clone(&class_name),
-                        ObjectExpr::Variable(0),
-                    ))),
-                ],
-                self.stack(),
-            )))
-        }
-
-        while let Some(TokenType::Method) = self.current_token_type() {
-            self.current += 1;
-
-            let method_name = match self.consume_token_type() {
-                Some(TokenType::Identifier(name)) => Rc::clone(name),
-                _ => {
-                    panic!("Expected class name")
+        while let Some(TokenType::Constructor | TokenType::Method) = self.current_token_type() {
+            if let Some(TokenType::Constructor) = self.current_token_type() {
+                if constructor_declared {
+                    self.error.add(ParserErrType::TempErrType(format!(
+                        "Constructor has already been declared for class {}",
+                        class_name,
+                    )));
+                    return Err(ParserStatus::End);
                 }
-            };
 
-            let parameters = self.parameters(self.current - 1)?;
-            let return_type = self.return_type()?;
+                constructor_declared = true;
 
-            let mut method_scope = IndexMap::new();
-            let mut parameter_value_types = vec![];
+                self.current += 1;
 
-            method_scope.insert(
-                Rc::new("self".to_string()),
-                Value::Object(Rc::clone(&class_name), self.object_next_id),
-            );
-            self.object_next_id += 1;
+                let parameters = self.parameters(self.current - 1)?;
+                let mut parameter_value_types = vec![];
 
-            for (value_type, name) in parameters {
-                self.add_scope_parameter(&value_type, name, &mut method_scope)?;
-                parameter_value_types.push(value_type);
+                let mut constructor_scope = IndexMap::new();
+
+                constructor_scope.insert(
+                    Rc::new("self".to_string()),
+                    Value::Object(Rc::clone(&class_name), self.object_next_id),
+                );
+                self.object_next_id += 1;
+
+                for (value_type, name) in parameters {
+                    self.add_scope_parameter(&value_type, name, &mut constructor_scope)?;
+                    parameter_value_types.push(value_type);
+                }
+                self.value_stack.push(constructor_scope);
+
+                let constructor_declaration = CallableDeclaration {
+                    callable_type: CallableType::Zonkey(self.callables.len()),
+                    parameters: parameter_value_types,
+                    return_type: Some(ValueType::Class(Rc::clone(&class_name))),
+                };
+
+                self.function_declarations
+                    .insert(Rc::clone(&class_name), constructor_declaration);
+
+                // The newly constructed object is returned automatically, the user cannot return it in
+                // a constructor
+                self.current_return_type = None;
+
+                let block = self.block()?;
+
+                // Clean value stack after it has been parsed
+                self.value_stack.clear();
+                self.integer_next_id = 0;
+                self.float_next_id = 0;
+                self.string_next_id = 0;
+                self.boolean_next_id = 0;
+                self.object_next_id = 0;
+
+                self.current_return_type = None;
+
+                self.callables.push(Rc::new(Stmt::Block(
+                    vec![
+                        Stmt::ObjectVariableInitialisation(ObjectExpr::Constructor(Rc::clone(
+                            &property_default_expressions,
+                        ))),
+                        block,
+                        Stmt::Return(Some(Expr::Object(
+                            Rc::clone(&class_name),
+                            ObjectExpr::Variable(0),
+                        ))),
+                    ],
+                    self.stack(),
+                )))
+            } else {
+                self.current += 1;
+
+                let method_name = match self.consume_token_type() {
+                    Some(TokenType::Identifier(name)) => Rc::clone(name),
+                    _ => {
+                        self.error.add(ParserErrType::TempErrType(format!(
+                            "Expected method name for class {}",
+                            class_name,
+                        )));
+                        return Err(ParserStatus::End);
+                    }
+                };
+
+                let parameters = self.parameters(self.current - 1)?;
+                let return_type = self.return_type()?;
+
+                let mut method_scope = IndexMap::new();
+                let mut parameter_value_types = vec![];
+
+                method_scope.insert(
+                    Rc::new("self".to_string()),
+                    Value::Object(Rc::clone(&class_name), self.object_next_id),
+                );
+                self.object_next_id += 1;
+
+                for (value_type, name) in parameters {
+                    self.add_scope_parameter(&value_type, name, &mut method_scope)?;
+                    parameter_value_types.push(value_type);
+                }
+
+                self.value_stack.push(method_scope);
+
+                let method_declaration = CallableDeclaration {
+                    callable_type: CallableType::Zonkey(self.callables.len()),
+                    parameters: parameter_value_types,
+                    return_type: return_type.clone(),
+                };
+
+                self.class_declarations
+                    .get_mut(&class_name)
+                    .unwrap()
+                    .methods
+                    .insert(Rc::clone(&method_name), Rc::new(method_declaration));
+
+                self.current_return_type = return_type;
+
+                let block = self.block()?;
+
+                // Clean value stack after it has been parsed
+                self.value_stack.clear();
+                self.integer_next_id = 0;
+                self.float_next_id = 0;
+                self.string_next_id = 0;
+                self.boolean_next_id = 0;
+                self.object_next_id = 0;
+
+                self.current_return_type = None;
+
+                self.callables.push(block.into());
             }
-
-            self.value_stack.push(method_scope);
-
-            let method_declaration = CallableDeclaration {
-                callable_type: CallableType::Zonkey(self.callables.len()),
-                parameters: parameter_value_types,
-                return_type: return_type.clone(),
-            };
-
-            self.class_declarations
-                .get_mut(&class_name)
-                .unwrap()
-                .methods
-                .insert(Rc::clone(&method_name), Rc::new(method_declaration));
-
-            self.current_return_type = return_type;
-
-            let block = self.block()?;
-
-            // Clean value stack after it has been parsed
-            self.value_stack.clear();
-            self.integer_next_id = 0;
-            self.float_next_id = 0;
-            self.string_next_id = 0;
-            self.boolean_next_id = 0;
-            self.object_next_id = 0;
-
-            self.current_return_type = None;
-
-            self.callables.push(block.into());
         }
+
+        self.current_properties = None;
 
         match self.consume_token_type() {
             Some(TokenType::RightBrace) => (),

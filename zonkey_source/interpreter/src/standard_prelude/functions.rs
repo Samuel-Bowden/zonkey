@@ -89,5 +89,23 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
         },
     );
 
+    functions.insert(
+        Rc::new("Row".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: Some(ValueType::Class(Rc::new("Row".to_string()))),
+        },
+    );
+
+    functions.insert(
+        Rc::new("Column".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: Some(ValueType::Class(Rc::new("Column".to_string()))),
+        },
+    );
+
     functions
 }

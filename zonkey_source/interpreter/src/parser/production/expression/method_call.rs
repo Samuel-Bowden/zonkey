@@ -1,7 +1,7 @@
 use crate::{
     parser::production::expression::prelude::*,
     parser::{declaration::CallableType, value::ValueType},
-    prelude::calls::*,
+    standard_prelude::calls::*,
 };
 use std::rc::Rc;
 
@@ -18,12 +18,23 @@ impl Parser {
 
         let name = match self.consume_token_type() {
             Some(TokenType::Identifier(name)) => Rc::clone(name),
-            _ => panic!("Expected method name"),
+            _ => {
+                self.error.add(ParserErrType::TempErrType(format!(
+                    "Expected method name after ."
+                )));
+                return Err(ParserStatus::End);
+            }
         };
 
         match self.consume_token_type() {
             Some(TokenType::LeftParen) => (),
-            _ => panic!("Expected left paren"),
+            _ => {
+                self.error.add(ParserErrType::TempErrType(format!(
+                    "Expected left paren after method name {}",
+                    name,
+                )));
+                return Err(ParserStatus::End);
+            }
         };
 
         let mut arguments = vec![];
@@ -68,6 +79,8 @@ impl Parser {
                 return Err(ParserStatus::Unwind);
             }
 
+            let mut failed = false;
+
             // Check arguments evaluate to the same type as parameters
             for i in 0..arguments.len() {
                 match (&arguments[i], &call.parameters[i]) {
@@ -77,10 +90,15 @@ impl Parser {
                     (Expr::Boolean(_), ValueType::Boolean) => (),
                     (_, ValueType::Any) => (),
                     (Expr::Object(class, _), ValueType::Element)
-                        if matches!(class.as_str(), "Button" | "Text" | "Hyperlink" | "Input") => {}
+                        if matches!(
+                            class.as_str(),
+                            "Button" | "Text" | "Hyperlink" | "Input" | "Row" | "Column"
+                        ) => {}
                     (Expr::Object(class, _), ValueType::Class(name)) if class == name => {}
                     (expr, _) => {
                         let expr_type = self.expr_type(expr);
+
+                        failed = true;
 
                         self.error.add(ParserErrType::CallArgumentIncorrectType(
                             self.tokens[token_pos - 1].clone(),
@@ -92,6 +110,10 @@ impl Parser {
                 }
             }
 
+            if failed {
+                return Err(ParserStatus::Unwind);
+            }
+
             let result = match call.callable_type {
                 CallableType::Native => match class.as_str() {
                     "Button" => match name.as_str() {
@@ -100,19 +122,33 @@ impl Parser {
                         ))),
                         "set_text" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(NativeCallObject::SetButtonText(
+                            ObjectExpr::NativeCall(NativeCallObject::ButtonSetText(
                                 Box::new(object),
                                 Box::new(arguments.remove(0).to_string_expr()),
                             )),
                         )),
                         "set_background_colour" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(NativeCallObject::SetButtonBackgroundColour(
+                            ObjectExpr::NativeCall(NativeCallObject::ButtonSetBackgroundColour(
                                 Box::new(object),
                                 arguments.remove(0).to_float_expr(),
                                 arguments.remove(0).to_float_expr(),
                                 arguments.remove(0).to_float_expr(),
                             )),
+                        )),
+                        "set_padding" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::ButtonSetPadding(
+                                Box::new(object),
+                                arguments.remove(0).to_float_expr(),
+                                arguments.remove(0).to_float_expr(),
+                            )),
+                        )),
+                        "set_width_fill" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::ButtonSetWidthFill(Box::new(
+                                object,
+                            ))),
                         )),
                         _ => unreachable!(),
                     },
@@ -128,21 +164,21 @@ impl Parser {
                     "Text" => match name.as_str() {
                         "set_value" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(NativeCallObject::SetTextValue(
+                            ObjectExpr::NativeCall(NativeCallObject::TextSetValue(
                                 Box::new(object),
                                 Box::new(arguments.remove(0).to_string_expr()),
                             )),
                         )),
                         "set_size" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(NativeCallObject::SetTextSize(
+                            ObjectExpr::NativeCall(NativeCallObject::TextSetSize(
                                 Box::new(object),
                                 Box::new(arguments.remove(0).to_float_expr()),
                             )),
                         )),
                         "set_colour" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(NativeCallObject::SetTextColour(
+                            ObjectExpr::NativeCall(NativeCallObject::TextSetColour(
                                 Box::new(object),
                                 arguments.remove(0).to_float_expr(),
                                 arguments.remove(0).to_float_expr(),
@@ -152,19 +188,78 @@ impl Parser {
                         _ => unreachable!(),
                     },
                     "Page" => match name.as_str() {
-                        "add" => Ok(Expr::None(NoneExpr::NativeCall(
-                            if let Expr::Object(class, expr) = arguments.remove(0) {
-                                match class.as_str() {
-                                    "Button" => NativeCallNone::AddButton(object, expr),
-                                    "Text" => NativeCallNone::AddText(object, expr),
-                                    "Hyperlink" => NativeCallNone::AddHyperlink(object, expr),
-                                    "Input" => NativeCallNone::AddInput(object, expr),
-                                    _ => unreachable!(),
-                                }
-                            } else {
-                                unreachable!()
-                            },
-                        ))),
+                        "set_title" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::PageSetTitle(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_string_expr()),
+                            )),
+                        )),
+                        "add" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(
+                                if let Expr::Object(_, expr) = arguments.remove(0) {
+                                    NativeCallObject::PageAddElement(
+                                        Box::new(object),
+                                        Box::new(expr),
+                                    )
+                                } else {
+                                    unreachable!()
+                                },
+                            ),
+                        )),
+                        "set_background_colour" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::PageSetBackgroundColour(
+                                Box::new(object),
+                                arguments.remove(0).to_float_expr(),
+                                arguments.remove(0).to_float_expr(),
+                                arguments.remove(0).to_float_expr(),
+                            )),
+                        )),
+                        _ => unreachable!(),
+                    },
+                    "Row" => match name.as_str() {
+                        "add" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(
+                                if let Expr::Object(_, expr) = arguments.remove(0) {
+                                    NativeCallObject::RowAddElement(
+                                        Box::new(object),
+                                        Box::new(expr),
+                                    )
+                                } else {
+                                    unreachable!()
+                                },
+                            ),
+                        )),
+                        "center" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::RowCenter(Box::new(object))),
+                        )),
+                        _ => unreachable!(),
+                    },
+                    "Column" => match name.as_str() {
+                        "add" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(
+                                if let Expr::Object(_, expr) = arguments.remove(0) {
+                                    NativeCallObject::ColumnAddElement(
+                                        Box::new(object),
+                                        Box::new(expr),
+                                    )
+                                } else {
+                                    unreachable!()
+                                },
+                            ),
+                        )),
+                        "set_max_width" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::ColumnSetMaxWidth(
+                                Box::new(object),
+                                arguments.remove(0).to_float_expr(),
+                            )),
+                        )),
                         _ => unreachable!(),
                     },
                     _ => todo!(),
@@ -200,7 +295,13 @@ impl Parser {
                 match result {
                     Ok(Expr::Object(class, expr)) => self.method_call(class, expr),
                     Err(_) => result,
-                    _ => panic!("Method did not return an object"),
+                    _ => {
+                        self.error.add(ParserErrType::TempErrType(format!(
+                            "Method {} did not return an object",
+                            name,
+                        )));
+                        return Err(ParserStatus::End);
+                    }
                 }
             } else {
                 result

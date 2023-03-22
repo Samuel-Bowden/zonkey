@@ -8,6 +8,8 @@ pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
         err_reporter.error_prefix();
 
         match error {
+            ParserErrType::TempErrType(msg) => err_reporter.writeln(&msg),
+
             // Miscellaneous/Global errors
             ParserErrType::UnterminatedStatement(before, after) => {
                 err_reporter.writeln(

@@ -1,6 +1,6 @@
 start {
-	let page = Page();
-
-	page.add(Text("Settings").set_size(100.));
-	page.add(Text("There are no settings to change at the moment."));
+	Page()
+		.set_title("Settings")
+		.add(Text("Settings").set_size(100.))
+		.add(Text("There are no settings to change at the moment."));
 }

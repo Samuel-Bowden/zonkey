@@ -1,4 +1,3 @@
-use super::value::Value;
 use crate::{expr::Expr, parser::value::ValueType};
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
@@ -18,7 +17,12 @@ pub enum CallableType {
 
 #[derive(Debug)]
 pub struct ClassDeclaration {
-    pub properties: FxHashMap<Rc<String>, Value>,
+    pub class_type: ClassType,
     pub methods: FxHashMap<Rc<String>, Rc<CallableDeclaration>>,
-    pub property_default_expressions: Vec<Expr>,
+}
+
+#[derive(Debug)]
+pub enum ClassType {
+    Native,
+    Zonkey(Rc<Vec<Expr>>),
 }

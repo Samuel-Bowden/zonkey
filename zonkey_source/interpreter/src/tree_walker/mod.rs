@@ -1,27 +1,29 @@
-use numtoa::NumToA;
-use rustc_hash::FxHashMap;
-
-use self::{environment::Environment, status::TreeWalkerStatus};
+use self::{
+    environment::Environment,
+    object::{NativeObject, Object},
+    status::TreeWalkerStatus,
+};
 use crate::{
     ast::AST,
+    element::{Button, Column, ElementType, Hyperlink, Input, Page, Row, Text},
     err::tree_walker::TreeWalkerErr,
-    event::{BrowserEvent, Button, InterpreterEvent, Text},
+    event::{BrowserEvent, InterpreterEvent},
     expr::*,
-    prelude::calls::*,
+    standard_prelude::calls::*,
     stmt::Stmt,
 };
+use numtoa::NumToA;
 use std::{
     cell::RefCell,
     io::{stdout, BufWriter, StdoutLock, Write},
     rc::Rc,
     sync::mpsc::Receiver,
-    sync::mpsc::Sender,
+    sync::{mpsc::Sender, Arc, Mutex},
 };
 
 mod environment;
+mod object;
 pub mod status;
-
-type Object = Rc<RefCell<Environment>>;
 
 pub struct TreeWalker<'a> {
     environment: Environment,
@@ -29,8 +31,6 @@ pub struct TreeWalker<'a> {
     stdout: BufWriter<StdoutLock<'a>>,
     sender: Sender<InterpreterEvent>,
     receiver: Receiver<BrowserEvent>,
-    ui_elements: FxHashMap<i64, Object>,
-    next_id_ui: i64,
 }
 
 impl<'a> TreeWalker<'a> {
@@ -45,11 +45,11 @@ impl<'a> TreeWalker<'a> {
             stdout: BufWriter::new(stdout().lock()),
             sender,
             receiver,
-            ui_elements: FxHashMap::default(),
-            next_id_ui: 0,
         };
 
-        tree_walker.interpret(&ast.start)
+        let result = tree_walker.interpret(&ast.start);
+        tree_walker.event(InterpreterEvent::Update)?;
+        result
     }
 
     pub fn interpret(&mut self, statement: &Stmt) -> Result<TreeWalkerStatus, TreeWalkerErr> {
@@ -69,6 +69,7 @@ impl<'a> TreeWalker<'a> {
                 let int = self.eval_int(expr)?;
                 self.environment
                     .get_object(*obj_id)
+                    .extract_zonkey_object()
                     .borrow_mut()
                     .assign_int(*id, int, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
@@ -90,6 +91,7 @@ impl<'a> TreeWalker<'a> {
                 let float = self.eval_float(expr)?;
                 self.environment
                     .get_object(*obj_id)
+                    .extract_zonkey_object()
                     .borrow_mut()
                     .assign_float(*id, float, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
@@ -111,6 +113,7 @@ impl<'a> TreeWalker<'a> {
                 let string = self.eval_string(expr)?;
                 self.environment
                     .get_object(*obj_id)
+                    .extract_zonkey_object()
                     .borrow_mut()
                     .assign_string(*id, string, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
@@ -132,6 +135,7 @@ impl<'a> TreeWalker<'a> {
                 let boolean = self.eval_boolean(expr)?;
                 self.environment
                     .get_object(*obj_id)
+                    .extract_zonkey_object()
                     .borrow_mut()
                     .assign_boolean(*id, boolean, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
@@ -153,6 +157,7 @@ impl<'a> TreeWalker<'a> {
                 let object = self.eval_object(expr)?;
                 self.environment
                     .get_object(*obj_id)
+                    .extract_zonkey_object()
                     .borrow_mut()
                     .assign_object(*id, object, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
@@ -297,6 +302,7 @@ impl<'a> TreeWalker<'a> {
             IntegerExpr::Property(obj_id, id) => Ok(self
                 .environment
                 .get_object(*obj_id)
+                .extract_zonkey_object()
                 .borrow_mut()
                 .get_int(*id)),
         }
@@ -332,6 +338,7 @@ impl<'a> TreeWalker<'a> {
             FloatExpr::Property(obj_id, id) => Ok(self
                 .environment
                 .get_object(*obj_id)
+                .extract_zonkey_object()
                 .borrow_mut()
                 .get_float(*id)),
         }
@@ -359,6 +366,7 @@ impl<'a> TreeWalker<'a> {
             StringExpr::Property(obj_id, id) => Ok(self
                 .environment
                 .get_object(*obj_id)
+                .extract_zonkey_object()
                 .borrow_mut()
                 .get_string(*id)),
         }
@@ -441,6 +449,7 @@ impl<'a> TreeWalker<'a> {
             BooleanExpr::Property(obj_id, id) => Ok(self
                 .environment
                 .get_object(*obj_id)
+                .extract_zonkey_object()
                 .borrow_mut()
                 .get_boolean(*id)),
         }
@@ -467,7 +476,7 @@ impl<'a> TreeWalker<'a> {
             ObjectExpr::Constructor(properties) => {
                 let mut object = Environment::new();
 
-                for property in properties {
+                for property in properties.iter() {
                     match property {
                         Expr::Integer(expr) => object.push_int(self.eval_int(expr)?),
                         Expr::Float(expr) => object.push_float(self.eval_float(expr)?),
@@ -478,11 +487,12 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                Ok(Rc::new(RefCell::new(object)))
+                Ok(Object::Zonkey(Rc::new(RefCell::new(object))))
             }
             ObjectExpr::Property(obj_id, id) => Ok(self
                 .environment
                 .get_object(*obj_id)
+                .extract_zonkey_object()
                 .borrow_mut()
                 .get_object(*id)),
         }
@@ -517,75 +527,6 @@ impl<'a> TreeWalker<'a> {
                 }
                 _ => panic!("Unprintable type"),
             },
-
-            NativeCallNone::AddButton(_, element) => {
-                let element = self.eval_object(element)?;
-                let text = element.borrow_mut().get_string(0);
-                let red = element.borrow().get_float(0) as f32;
-                let green = element.borrow().get_float(1) as f32;
-                let blue = element.borrow().get_float(2) as f32;
-                let id = self.next_id_ui;
-                self.next_id_ui += 1;
-                element
-                    .borrow_mut()
-                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
-                self.ui_elements.insert(id, Rc::clone(&element));
-                self.event(InterpreterEvent::AddButton(Button {
-                    id,
-                    text,
-                    red,
-                    green,
-                    blue,
-                }))?;
-            }
-
-            NativeCallNone::AddText(_, element) => {
-                let element = self.eval_object(element)?;
-                let text = element.borrow().get_string(0);
-                let size = element.borrow().get_float(0) as f32;
-                let red = element.borrow().get_float(1) as f32;
-                let green = element.borrow().get_float(2) as f32;
-                let blue = element.borrow().get_float(3) as f32;
-                let id = self.next_id_ui;
-                self.next_id_ui += 1;
-                element
-                    .borrow_mut()
-                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
-                self.ui_elements.insert(id, Rc::clone(&element));
-                self.event(InterpreterEvent::AddText(Text {
-                    id,
-                    size,
-                    value: text,
-                    red,
-                    green,
-                    blue,
-                }))?;
-            }
-
-            NativeCallNone::AddHyperlink(_, element) => {
-                let element = self.eval_object(element)?;
-                let text = element.borrow_mut().get_string(0);
-                let link = element.borrow_mut().get_string(1);
-                let id = self.next_id_ui;
-                self.next_id_ui += 1;
-                element
-                    .borrow_mut()
-                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
-                self.ui_elements.insert(id, Rc::clone(&element));
-                self.event(InterpreterEvent::AddHyperlink(text, link, id))?;
-            }
-
-            NativeCallNone::AddInput(_, element) => {
-                let element = self.eval_object(element)?;
-                let placeholder = element.borrow_mut().get_string(0);
-                let id = self.next_id_ui;
-                self.next_id_ui += 1;
-                element
-                    .borrow_mut()
-                    .assign_int(0, id, &NumericAssignmentOperator::Equal);
-                self.ui_elements.insert(id, Rc::clone(&element));
-                self.event(InterpreterEvent::AddInput(placeholder, id))?;
-            }
         }
 
         Ok(())
@@ -609,8 +550,16 @@ impl<'a> TreeWalker<'a> {
                 Ok(input.trim().to_string())
             }
             NativeCallString::GetInputText(input) => {
-                let input = self.eval_object(input)?;
-                let text = input.borrow_mut().get_string(1);
+                let mut input = self.eval_object(input)?;
+
+                let text = input
+                    .extract_native_object()
+                    .extract_input()
+                    .lock()
+                    .unwrap()
+                    .text
+                    .clone();
+
                 Ok(text)
             }
         }
@@ -618,51 +567,49 @@ impl<'a> TreeWalker<'a> {
 
     fn native_call_boolean(&mut self, call: &NativeCallBoolean) -> Result<bool, TreeWalkerErr> {
         match call {
-            NativeCallBoolean::WaitForEvent => match self.receiver.recv() {
-                Ok(BrowserEvent::ButtonPress(id)) => {
-                    self.ui_elements
-                        .get(&id)
-                        .unwrap()
-                        .borrow_mut()
-                        .assign_boolean(0, true, &BooleanAssignmentOperator::Equal);
-                    Ok(false)
+            NativeCallBoolean::WaitForEvent => {
+                self.event(InterpreterEvent::Update)?;
+                match self.receiver.recv() {
+                    Ok(BrowserEvent::ButtonPress(button)) => {
+                        button.lock().unwrap().clicked = true;
+                        Ok(true)
+                    }
+                    Ok(BrowserEvent::InputConfirmed(input)) => {
+                        input.lock().unwrap().confirmed = true;
+                        Ok(true)
+                    }
+                    Err(_) => Ok(false),
                 }
-                Ok(BrowserEvent::InputConfirmed(value, id)) => {
-                    self.ui_elements
-                        .get(&id)
-                        .unwrap()
-                        .borrow_mut()
-                        .assign_boolean(0, true, &BooleanAssignmentOperator::Equal);
-                    self.ui_elements
-                        .get(&id)
-                        .unwrap()
-                        .borrow_mut()
-                        .assign_string(1, value, &StringAssignmentOperator::Equal);
-                    Ok(false)
-                }
-                Err(_) => Ok(true),
-            },
+            }
 
-            NativeCallBoolean::ButtonClicked(button) => {
-                let button = self.eval_object(button)?;
-                let clicked = button.borrow().get_boolean(0);
-                if clicked {
-                    button
-                        .borrow_mut()
-                        .assign_boolean(0, false, &BooleanAssignmentOperator::Equal);
+            NativeCallBoolean::ButtonClicked(object) => {
+                let mut object = self.eval_object(object)?;
+
+                let mut button = object
+                    .extract_native_object()
+                    .extract_button()
+                    .lock()
+                    .unwrap();
+
+                if button.clicked {
+                    button.clicked = false;
                     Ok(true)
                 } else {
                     Ok(false)
                 }
             }
 
-            NativeCallBoolean::InputConfirmed(input) => {
-                let input = self.eval_object(input)?;
-                let clicked = input.borrow().get_boolean(0);
-                if clicked {
-                    input
-                        .borrow_mut()
-                        .assign_boolean(0, false, &BooleanAssignmentOperator::Equal);
+            NativeCallBoolean::InputConfirmed(object) => {
+                let mut object = self.eval_object(object)?;
+
+                let mut input = object
+                    .extract_native_object()
+                    .extract_input()
+                    .lock()
+                    .unwrap();
+
+                if input.confirmed {
+                    input.confirmed = false;
                     Ok(true)
                 } else {
                     Ok(false)
@@ -671,163 +618,323 @@ impl<'a> TreeWalker<'a> {
         }
     }
 
+    fn native_obj_to_element(obj: &NativeObject) -> ElementType {
+        match obj {
+            NativeObject::Page(_) => unreachable!("Cannot add page to a page"),
+            NativeObject::Button(button) => ElementType::Button(Arc::clone(button)),
+            NativeObject::Text(text) => ElementType::Text(Arc::clone(text)),
+            NativeObject::Hyperlink(hyperlink) => ElementType::Hyperlink(Arc::clone(hyperlink)),
+            NativeObject::Input(input) => ElementType::Input(Arc::clone(input)),
+            NativeObject::Row(row) => ElementType::Row(Arc::clone(row)),
+            NativeObject::Column(column) => ElementType::Column(Arc::clone(column)),
+        }
+    }
+
     fn native_call_object(&mut self, call: &NativeCallObject) -> Result<Object, TreeWalkerErr> {
         match call {
-            NativeCallObject::ButtonConstructor(text) => {
-                let mut button = Environment::new();
-                let text = self.eval_string(text)?;
-                button.push_string(text);
-                button.push_int(0);
-                button.push_boolean(false);
-                button.push_float(0.5);
-                button.push_float(0.5);
-                button.push_float(0.5);
-                Ok(Rc::new(RefCell::new(button)))
-            }
+            NativeCallObject::PageAddElement(page_obj, element) => {
+                let mut element = self.eval_object(element)?;
+                let mut page_obj = self.eval_object(page_obj)?;
 
-            NativeCallObject::SetButtonText(object, text) => {
-                let object = self.eval_object(object)?;
-                let text = self.eval_string(text)?;
+                {
+                    let mut page = page_obj
+                        .extract_native_object()
+                        .extract_page()
+                        .lock()
+                        .unwrap();
 
-                object.borrow_mut().assign_string(
-                    0,
-                    text.to_string(),
-                    &StringAssignmentOperator::Equal,
-                );
-
-                let id = object.borrow_mut().get_int(0);
-
-                if id != 0 {
-                    self.event(InterpreterEvent::SetButtonText(text, id))?;
+                    page.elements
+                        .push(Self::native_obj_to_element(element.extract_native_object()));
                 }
 
-                Ok(object)
+                Ok(page_obj)
+            }
+
+            NativeCallObject::RowAddElement(row_obj, element) => {
+                let mut element = self.eval_object(element)?;
+                let mut row_obj = self.eval_object(row_obj)?;
+
+                {
+                    let mut row = row_obj
+                        .extract_native_object()
+                        .extract_row()
+                        .lock()
+                        .unwrap();
+
+                    row.elements
+                        .push(Self::native_obj_to_element(element.extract_native_object()));
+                }
+
+                Ok(row_obj)
+            }
+
+            NativeCallObject::ColumnAddElement(column_obj, element) => {
+                let mut element = self.eval_object(element)?;
+                let mut column_obj = self.eval_object(column_obj)?;
+
+                {
+                    let mut column = column_obj
+                        .extract_native_object()
+                        .extract_column()
+                        .lock()
+                        .unwrap();
+
+                    column
+                        .elements
+                        .push(Self::native_obj_to_element(element.extract_native_object()));
+                }
+
+                Ok(column_obj)
             }
 
             NativeCallObject::PageConstructor => {
-                let button = Environment::new();
-                let object = Rc::new(RefCell::new(button));
+                let page = Arc::new(Mutex::new(Page {
+                    title: "Custom App".to_string(),
+                    elements: vec![],
+                    red: 1.,
+                    green: 1.,
+                    blue: 1.,
+                }));
+
+                self.event(InterpreterEvent::AddPage(Arc::clone(&page)))?;
+                Ok(Object::Native(NativeObject::Page(page)))
+            }
+
+            NativeCallObject::ButtonConstructor(text) => {
+                let text = self.eval_string(text)?;
+                let button = Arc::new(Mutex::new(Button {
+                    text,
+                    red: 0.5,
+                    green: 0.5,
+                    blue: 0.5,
+                    clicked: false,
+                    vertical_padding: 10.,
+                    horizontal_padding: 10.,
+                    width_fill: false,
+                }));
+                Ok(Object::Native(NativeObject::Button(button)))
+            }
+
+            NativeCallObject::ButtonSetText(object, text) => {
+                let mut object = self.eval_object(object)?;
+                let text = self.eval_string(text)?;
+
+                object
+                    .extract_native_object()
+                    .extract_button()
+                    .lock()
+                    .unwrap()
+                    .text = text;
+
                 Ok(object)
             }
 
-            NativeCallObject::TextConstructor(text) => {
-                let mut heading = Environment::new();
-                let text = self.eval_string(text)?;
-                heading.push_string(text);
-                heading.push_int(0);
-                heading.push_float(20.);
-                heading.push_float(0.5);
-                heading.push_float(0.5);
-                heading.push_float(0.5);
-                Ok(Rc::new(RefCell::new(heading)))
+            NativeCallObject::TextConstructor(value) => {
+                let value = self.eval_string(value)?;
+                let text = Arc::new(Mutex::new(Text {
+                    size: 20.,
+                    value,
+                    red: 0.,
+                    green: 0.,
+                    blue: 0.,
+                }));
+                Ok(Object::Native(NativeObject::Text(text)))
             }
 
-            NativeCallObject::SetTextValue(object, text) => {
-                let object = self.eval_object(object)?;
-                let text = self.eval_string(text)?;
+            NativeCallObject::TextSetValue(text, value) => {
+                let mut object = self.eval_object(text)?;
+                let value = self.eval_string(value)?;
 
-                object.borrow_mut().assign_string(
-                    0,
-                    text.to_string(),
-                    &StringAssignmentOperator::Equal,
-                );
-
-                let id = object.borrow_mut().get_int(0);
-
-                if id != 0 {
-                    self.event(InterpreterEvent::SetTextValue(text, id))?;
-                }
+                object
+                    .extract_native_object()
+                    .extract_text()
+                    .lock()
+                    .unwrap()
+                    .value = value;
 
                 Ok(object)
             }
 
             NativeCallObject::HyperlinkConstructor(text, link) => {
-                let mut hyperlink = Environment::new();
                 let text = self.eval_string(text)?;
                 let link = self.eval_string(link)?;
-                hyperlink.push_string(text);
-                hyperlink.push_string(link);
-                hyperlink.push_int(0);
-                Ok(Rc::new(RefCell::new(hyperlink)))
+                let hyperlink = Arc::new(Mutex::new(Hyperlink { link, text }));
+                Ok(Object::Native(NativeObject::Hyperlink(hyperlink)))
             }
 
             NativeCallObject::InputConstructor(placeholder) => {
-                let mut input = Environment::new();
                 let placeholder = self.eval_string(placeholder)?;
-                input.push_string(placeholder);
-                input.push_string("".to_string());
-                input.push_int(0);
-                input.push_boolean(false);
-                Ok(Rc::new(RefCell::new(input)))
+                let input = Arc::new(Mutex::new(Input {
+                    placeholder,
+                    text: String::new(),
+                    confirmed: false,
+                }));
+                Ok(Object::Native(NativeObject::Input(input)))
             }
 
-            NativeCallObject::SetTextSize(object, size) => {
-                let object = self.eval_object(object)?;
+            NativeCallObject::TextSetSize(object, size) => {
+                let mut object = self.eval_object(object)?;
                 let size = self.eval_float(size)?;
 
                 object
-                    .borrow_mut()
-                    .assign_float(0, size, &NumericAssignmentOperator::Equal);
+                    .extract_native_object()
+                    .extract_text()
+                    .lock()
+                    .unwrap()
+                    .size = size as f32;
 
-                let id = object.borrow_mut().get_int(0);
+                Ok(object)
+            }
 
-                if id != 0 {
-                    self.event(InterpreterEvent::SetTextSize(size as f32, id))?;
+            NativeCallObject::TextSetColour(object, red, green, blue) => {
+                let mut object = self.eval_object(object)?;
+                let red = self.eval_float(red)?;
+                let green = self.eval_float(green)?;
+                let blue = self.eval_float(blue)?;
+
+                {
+                    let mut text = object
+                        .extract_native_object()
+                        .extract_text()
+                        .lock()
+                        .unwrap();
+
+                    text.red = red as f32;
+                    text.green = green as f32;
+                    text.blue = blue as f32;
                 }
 
                 Ok(object)
             }
 
-            NativeCallObject::SetTextColour(object, red, green, blue) => {
-                let object = self.eval_object(object)?;
+            NativeCallObject::ButtonSetBackgroundColour(object, red, green, blue) => {
+                let mut object = self.eval_object(object)?;
                 let red = self.eval_float(red)?;
                 let green = self.eval_float(green)?;
                 let blue = self.eval_float(blue)?;
-                object
-                    .borrow_mut()
-                    .assign_float(1, red, &NumericAssignmentOperator::Equal);
-                object
-                    .borrow_mut()
-                    .assign_float(2, green, &NumericAssignmentOperator::Equal);
-                object
-                    .borrow_mut()
-                    .assign_float(3, blue, &NumericAssignmentOperator::Equal);
-                let id = object.borrow_mut().get_int(0);
-                if id != 0 {
-                    self.event(InterpreterEvent::SetTextColour(
-                        red as f32,
-                        green as f32,
-                        blue as f32,
-                        id,
-                    ))?;
+
+                {
+                    let mut button = object
+                        .extract_native_object()
+                        .extract_button()
+                        .lock()
+                        .unwrap();
+
+                    button.red = red as f32;
+                    button.green = green as f32;
+                    button.blue = blue as f32;
                 }
+
                 Ok(object)
             }
 
-            NativeCallObject::SetButtonBackgroundColour(object, red, green, blue) => {
-                let object = self.eval_object(object)?;
+            NativeCallObject::ButtonSetPadding(object, vertical, horizontal) => {
+                let mut object = self.eval_object(object)?;
+                let vertical = self.eval_float(vertical)?;
+                let horizontal = self.eval_float(horizontal)?;
+
+                {
+                    let mut button = object
+                        .extract_native_object()
+                        .extract_button()
+                        .lock()
+                        .unwrap();
+
+                    button.vertical_padding = vertical as f32;
+                    button.horizontal_padding = horizontal as f32;
+                }
+
+                Ok(object)
+            }
+
+            NativeCallObject::PageSetTitle(page, title) => {
+                let mut object = self.eval_object(page)?;
+                let title = self.eval_string(title)?;
+
+                object
+                    .extract_native_object()
+                    .extract_page()
+                    .lock()
+                    .unwrap()
+                    .title = title;
+
+                Ok(object)
+            }
+
+            NativeCallObject::PageSetBackgroundColour(page, red, green, blue) => {
+                let mut object = self.eval_object(page)?;
                 let red = self.eval_float(red)?;
                 let green = self.eval_float(green)?;
                 let blue = self.eval_float(blue)?;
-                object
-                    .borrow_mut()
-                    .assign_float(0, red, &NumericAssignmentOperator::Equal);
-                object
-                    .borrow_mut()
-                    .assign_float(1, green, &NumericAssignmentOperator::Equal);
-                object
-                    .borrow_mut()
-                    .assign_float(2, blue, &NumericAssignmentOperator::Equal);
-                let id = object.borrow_mut().get_int(0);
-                if id != 0 {
-                    self.event(InterpreterEvent::SetButtonBackgroundColour(
-                        red as f32,
-                        green as f32,
-                        blue as f32,
-                        id,
-                    ))?;
+
+                {
+                    let mut page = object
+                        .extract_native_object()
+                        .extract_page()
+                        .lock()
+                        .unwrap();
+
+                    page.red = red as f32;
+                    page.green = green as f32;
+                    page.blue = blue as f32;
                 }
+
                 Ok(object)
+            }
+
+            NativeCallObject::RowConstructor => {
+                let row = Arc::new(Mutex::new(Row {
+                    elements: vec![],
+                    center: false,
+                }));
+                Ok(Object::Native(NativeObject::Row(row)))
+            }
+
+            NativeCallObject::ColumnConstructor => {
+                let column = Arc::new(Mutex::new(Column {
+                    elements: vec![],
+                    max_width: 10000.,
+                }));
+                Ok(Object::Native(NativeObject::Column(column)))
+            }
+
+            NativeCallObject::ButtonSetWidthFill(obj) => {
+                let mut button = self.eval_object(obj)?;
+
+                button
+                    .extract_native_object()
+                    .extract_button()
+                    .lock()
+                    .unwrap()
+                    .width_fill = true;
+
+                Ok(button)
+            }
+
+            NativeCallObject::ColumnSetMaxWidth(obj, width) => {
+                let mut button = self.eval_object(obj)?;
+                let width = self.eval_float(width)?;
+
+                button
+                    .extract_native_object()
+                    .extract_column()
+                    .lock()
+                    .unwrap()
+                    .max_width = width as f32;
+
+                Ok(button)
+            }
+
+            NativeCallObject::RowCenter(obj) => {
+                let mut row = self.eval_object(obj)?;
+
+                row.extract_native_object()
+                    .extract_row()
+                    .lock()
+                    .unwrap()
+                    .center = true;
+
+                Ok(row)
             }
         }
     }

@@ -1,7 +1,7 @@
 use crate::{
     parser::production::expression::prelude::*,
     parser::{declaration::CallableType, value::ValueType},
-    prelude::calls::*,
+    standard_prelude::calls::*,
 };
 use std::rc::Rc;
 
@@ -114,6 +114,14 @@ impl Parser {
                         ObjectExpr::NativeCall(NativeCallObject::InputConstructor(Box::new(
                             arguments.remove(0).to_string_expr(),
                         ))),
+                    )),
+                    "Row" => Ok(Expr::Object(
+                        Rc::new("Row".to_string()),
+                        ObjectExpr::NativeCall(NativeCallObject::RowConstructor),
+                    )),
+                    "Column" => Ok(Expr::Object(
+                        Rc::new("Column".to_string()),
+                        ObjectExpr::NativeCall(NativeCallObject::ColumnConstructor),
                     )),
                     _ => unreachable!(),
                 },

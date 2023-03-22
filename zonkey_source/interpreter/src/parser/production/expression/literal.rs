@@ -32,48 +32,70 @@ impl Parser {
             Some(TokenType::LeftParen) => self.grouping(),
             // Getting a property
             Some(TokenType::At) => match self.find_value("self".to_string().into()) {
-                Some(Value::Object(class, obj_id)) => {
+                Some(Value::Object(_, obj_id)) => {
                     let property_name = match self.consume_token_type() {
                         Some(TokenType::Identifier(name)) => Rc::clone(name),
-                        _ => panic!("Expected method name"),
+                        _ => {
+                            self.error.add(ParserErrType::TempErrType(format!(
+                                "Expected a property name after @"
+                            )));
+                            return Err(ParserStatus::End);
+                        }
                     };
 
-                    let result = match self
-                        .class_declarations
-                        .get(&class)
-                        .unwrap()
-                        .properties
-                        .get(&property_name)
-                    {
-                        Some(Value::Integer(id)) => {
-                            Ok(Expr::Integer(IntegerExpr::Property(obj_id, *id)))
+                    let result = if let Some(properties) = &self.current_properties {
+                        match properties.get(&property_name) {
+                            Some(Value::Integer(id)) => {
+                                Ok(Expr::Integer(IntegerExpr::Property(obj_id, *id)))
+                            }
+                            Some(Value::Float(id)) => {
+                                Ok(Expr::Float(FloatExpr::Property(obj_id, *id)))
+                            }
+                            Some(Value::String(id)) => {
+                                Ok(Expr::String(StringExpr::Property(obj_id, *id)))
+                            }
+                            Some(Value::Boolean(id)) => {
+                                Ok(Expr::Boolean(BooleanExpr::Property(obj_id, *id)))
+                            }
+                            Some(Value::Object(class, id)) => Ok(Expr::Object(
+                                Rc::clone(&class),
+                                ObjectExpr::Property(obj_id, *id),
+                            )),
+                            _ => {
+                                self.error.add(ParserErrType::TempErrType(format!(
+                                    "Property {} does not exist",
+                                    property_name
+                                )));
+                                Err(ParserStatus::End)
+                            }
                         }
-                        Some(Value::Float(id)) => Ok(Expr::Float(FloatExpr::Property(obj_id, *id))),
-                        Some(Value::String(id)) => {
-                            Ok(Expr::String(StringExpr::Property(obj_id, *id)))
-                        }
-                        Some(Value::Boolean(id)) => {
-                            Ok(Expr::Boolean(BooleanExpr::Property(obj_id, *id)))
-                        }
-                        Some(Value::Object(class, id)) => Ok(Expr::Object(
-                            Rc::clone(&class),
-                            ObjectExpr::Property(obj_id, *id),
-                        )),
-                        _ => panic!("Property does not exist"),
+                    } else {
+                        self.error.add(ParserErrType::TempErrType(format!(
+                            "Cannot access property {} as it is outside a method or constructor",
+                            property_name,
+                        )));
+                        Err(ParserStatus::End)
                     };
 
                     if let Some(TokenType::Dot) = self.current_token_type() {
                         if let Ok(Expr::Object(class, expr)) = result {
                             self.method_call(class, expr)
                         } else {
-                            panic!("Cannot call method of a property that is not an object");
+                            self.error.add(ParserErrType::TempErrType(format!(
+                                "Cannot call a method of a property that is not an object"
+                            )));
+                            Err(ParserStatus::End)
                         }
                     } else {
                         result
                     }
                 }
                 v => {
-                    panic!("Self must be an object, but was {:?}", v);
+                    self.error.add(ParserErrType::TempErrType(format!(
+                        "Self must be an object to use @ for property access, but it was type {:?}",
+                        v,
+                    )));
+                    Err(ParserStatus::End)
                 }
             },
             Some(TokenType::Identifier(name)) => {
@@ -81,14 +103,18 @@ impl Parser {
                 match self.current_token_type() {
                     // Calling a function
                     Some(TokenType::LeftParen) => {
-                        let result = self.function_call(name);
+                        let result = self.function_call(Rc::clone(&name));
 
                         // Calling a method on a function result
                         if let Some(TokenType::Dot) = self.current_token_type() {
                             if let Ok(Expr::Object(class, expr)) = result {
                                 self.method_call(class, expr)
                             } else {
-                                panic!("Function did not return an object");
+                                self.error.add(ParserErrType::TempErrType(format!(
+                                    "Function {} does not return an object",
+                                    name,
+                                )));
+                                Err(ParserStatus::End)
                             }
                         } else {
                             result
@@ -100,14 +126,22 @@ impl Parser {
                             self.method_call(class, ObjectExpr::Variable(id))
                         }
                         _ => {
-                            panic!("Variable {} is not an object", name);
+                            self.error.add(ParserErrType::TempErrType(format!(
+                                "Tried to call a method on variable {} that was not an object",
+                                name
+                            )));
+                            Err(ParserStatus::End)
                         }
                     },
                     // Getting a variable
                     _ => match self.find_value(Rc::clone(&name)) {
                         Some(value) => Ok(self.get_variable_expr(&value)),
                         None => {
-                            panic!("Value {} not found", name);
+                            self.error.add(ParserErrType::TempErrType(format!(
+                                "Could find the variable {}",
+                                name,
+                            )));
+                            Err(ParserStatus::End)
                         }
                     },
                 }

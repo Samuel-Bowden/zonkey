@@ -1,26 +1,20 @@
 start {
-	let page = Page();
-
-	let counter_btn = Button("");
+	let counter_btn = Button("Counter: 0");
 
 	let reset_btn = Button("Reset")
 		.set_background_colour(1., 0., 0.);
 
 	# Add elements to the page
-	page.add(Text("A simple counter").set_size(50.));
-	page.add(Text("Click the button to increase the counter"));
-	page.add(counter_btn);
-	page.add(reset_btn);
+	Page()
+		.set_title("Counter")
+		.add(Text("A simple counter").set_size(50.))
+		.add(Text("Click the button to increase the counter"))
+		.add(counter_btn)
+		.add(reset_btn);
 
 	let counter = 0;
 
-	let exit = false;
-
-	while (!exit) {
-		counter_btn.set_text("Counter: " + (String counter));
-
-		exit = wait_for_event();
-
+	while (wait_for_event()) {
 		# React to events
 		if (counter_btn.clicked()) {
 			counter += 1;
@@ -29,5 +23,7 @@ start {
 		if (reset_btn.clicked()) {
 			counter = 0;
 		}
+
+		counter_btn.set_text("Counter: " + (String counter));
 	}
 }
