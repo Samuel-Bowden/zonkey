@@ -1,8 +1,0 @@
-start {
-	Page()
-		.set_title("")
-		.set_background_colour(0.5, 0.63, 0.75)
-		.add(Row().center().add(Text("£1.3m boost for Twigville homes").set_size(40.)))
-		.add(Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."))
-		.add(Hyperlink("Back to home page", "file:../test_scripts/news.zonk"));
-}

@@ -1,0 +1,6 @@
+start {
+	Page()
+		.set_title("Application error")
+		.add(Text("Application error").set_size(100.))
+		.add(Text("Failed to load application due to an error in the script."));
+}

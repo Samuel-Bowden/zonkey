@@ -1,0 +1,11 @@
+start {
+	Page()
+		.set_title("Home")
+		.add(Text("Home Page").set_size(100.))
+		.add(Text("Welcome to the Zonkey Browser. Use the address bar to open your first app."))
+		.add(Text("Here are some hyperlinks to example apps that I have made:"))
+		.add(Hyperlink("Calculator", "zonkey:calculator/app.zonk"))
+		.add(Hyperlink("Twigville Local News", "zonkey:news/home.zonk"))
+		.add(Hyperlink("Simple counter", "zonkey:test_scripts/counter.zonk"))
+		.add(Hyperlink("Guessing game", "zonkey:test_scripts/guessing.zonk"));
+}

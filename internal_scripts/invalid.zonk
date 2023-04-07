@@ -1,6 +1,0 @@
-start {
-	Page()
-		.set_title("Invalid Page")
-		.add(Text("Invalid page").set_size(100.))
-		.add(Text("The entered page could not be found."));
-}

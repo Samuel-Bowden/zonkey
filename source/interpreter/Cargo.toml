@@ -1,0 +1,13 @@
+[package]
+name = "interpreter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+numtoa = "0.2.4"
+ryu = "1.0"
+rustc-hash = "1.1"
+indexmap = "1.9.2"
+termcolor = "1.1"
+ui = { path = "../ui" }
+unicode-segmentation = "1.10.0"

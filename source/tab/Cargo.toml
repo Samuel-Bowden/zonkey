@@ -1,0 +1,12 @@
+[package]
+name = "tab"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+iced = { version = "0.8" }
+iced_native = "0.9.1"
+interpreter = { path = "../interpreter" }
+resource-loader = { path = "../resource-loader" }
+ui = { path = "../ui" }
+non-empty-vec = "0.2.3"

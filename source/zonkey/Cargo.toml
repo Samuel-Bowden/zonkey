@@ -1,0 +1,14 @@
+[package]
+name = "zonkey"
+version = "0.1.0"
+edition = "2021"
+description = "CLI Interpreter for the Zonkey programming language"
+authors = ["Sam Bowden"]
+
+[dependencies]
+interpreter = { path = "../interpreter" }
+ui = { path = "../ui" }
+tab = { path = "../tab" }
+resource-loader = { path = "../resource-loader" }
+iced = { version = "0.8", features = ["svg", "image"] }
+iced_native = "0.9.1"

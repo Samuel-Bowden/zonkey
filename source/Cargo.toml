@@ -1,0 +1,27 @@
+[workspace]
+
+members = [
+	"interpreter",
+	"zonkey",
+	"installer",
+	"zonkey-browser",
+	"tab",
+	"ui",
+	"resource-loader"
+]
+
+resolver = "2"
+
+[profile.release]
+strip = true
+lto = true
+opt-level = 3
+panic = "abort"
+codegen-units = 1
+
+[profile.dev]
+debug-assertions = false
+
+[profile.no-debug-info]
+inherits = "dev"
+debug-assertions = true 

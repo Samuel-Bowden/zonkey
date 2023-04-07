@@ -1,8 +1,0 @@
-start {
-	Page()
-		.set_title("Twigville Local News")
-		.set_background_colour(1., 0.98, 0.91)
-		.add(Row().add(Text("Twigville Local News").set_size(50.)).center())
-		.add(Text("Posts:"))
-		.add(Hyperlink("£1.3m boost for Twigville homes", "file:../test_scripts/article.zonk"));
-}
