@@ -1,5 +1,3 @@
-use std::{collections::BTreeMap, env::args, process::ExitCode};
-
 use iced::{
     executor, theme::Palette, widget::Column, Application, Color, Command, Element, Length,
     Settings, Subscription, Theme,
@@ -7,6 +5,7 @@ use iced::{
 use iced_native::command::Action;
 use message::Message;
 use resource_loader::Address;
+use std::{collections::BTreeMap, env::args, process::ExitCode};
 use tab::Tab;
 use ui::event::WindowEvent;
 
@@ -59,32 +58,27 @@ impl Application for ZonkeyBrowser {
         match message {
             Message::Tab((index, msg)) => {
                 if let Some(tab) = self.tabs.get_mut(&index) {
-                    match tab.update(msg) {
-                        Some(WindowEvent::TabFinished) => {
-                            if self.tabs.len() > 1 {
-                                if index == self.current_tab {
-                                    // Move focus to right of tab to be closed
-                                    let pos = self.tabs.iter().position(|t| {
-                                        *t.0 == index
-                                    }).unwrap();
-                                    self.tabs.remove(&index);
-                                    // Make sure that this isn't the last tab
-                                    if let Some(new_id) = self.tabs.iter().skip(pos).next() {
-                                        self.current_tab = *new_id.0;
-                                    } else {
-                                        self.current_tab = *self.tabs.last_entry().unwrap().key();
-                                    }
+                    if let Some(WindowEvent::TabFinished) = tab.update(msg) {
+                        if self.tabs.len() > 1 {
+                            if index == self.current_tab {
+                                // Move focus to right of tab to be closed
+                                let pos = self.tabs.iter().position(|t| *t.0 == index).unwrap();
+                                self.tabs.remove(&index);
+                                // Make sure that this isn't the last tab
+                                if let Some(new_id) = self.tabs.iter().nth(pos) {
+                                    self.current_tab = *new_id.0;
                                 } else {
-                                    self.tabs.remove(&index);
+                                    self.current_tab = *self.tabs.last_entry().unwrap().key();
                                 }
                             } else {
-                                // This is the last tab - close the application
-                                return Command::single(Action::Window(
-                                    iced_native::window::Action::Close,
-                                ));
+                                self.tabs.remove(&index);
                             }
+                        } else {
+                            // This is the last tab - close the application
+                            return Command::single(Action::Window(
+                                iced_native::window::Action::Close,
+                            ));
                         }
-                        None => (),
                     }
                 }
             }
@@ -163,7 +157,7 @@ impl ZonkeyBrowser {
 }
 
 pub fn main() -> ExitCode {
-    let address_result = if let Some(address_string) = args().skip(1).next() {
+    let address_result = if let Some(address_string) = args().nth(1) {
         Address::new(&address_string)
     } else {
         Ok(Address::Zonkey("home.zonk".into()))
@@ -186,7 +180,7 @@ pub fn main() -> ExitCode {
             match result {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(e) => {
-                    eprintln!("{e}");
+                    eprintln!("Failure running browser UI: {e}");
                     ExitCode::FAILURE
                 }
             }

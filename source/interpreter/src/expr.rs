@@ -27,6 +27,14 @@ impl Expr {
             panic!("Not a float expression")
         }
     }
+
+    pub fn to_integer_expr(self) -> IntegerExpr {
+        if let Expr::Integer(expr) = self {
+            expr
+        } else {
+            panic!("Not a integer expression")
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

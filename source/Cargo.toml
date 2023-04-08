@@ -22,6 +22,6 @@ codegen-units = 1
 [profile.dev]
 debug-assertions = false
 
-[profile.no-debug-info]
+[profile.debug-info]
 inherits = "dev"
 debug-assertions = true 

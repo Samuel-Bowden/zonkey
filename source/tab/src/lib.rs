@@ -194,8 +194,8 @@ impl Tab {
                     self.address_field = self.history.last().to_string();
                     source
                 }
-                Err(_) => {
-                    let address = Address::InvalidAddress;
+                Err(e) => {
+                    let address = Address::FailedToLoadAddress(e);
                     self.address_field = address.to_string();
                     address.load_script().expect("Invalid should always load")
                 }
@@ -211,8 +211,8 @@ impl Tab {
     fn open_address_from_string(&mut self, string: String) {
         match Address::new(&string) {
             Ok(address) => self.open_address(address),
-            Err(_) => {
-                self.open_address(Address::InvalidAddress);
+            Err(err) => {
+                self.open_address(Address::InvalidAddress(err));
             }
         }
     }

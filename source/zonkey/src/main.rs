@@ -45,7 +45,7 @@ fn run(address: Address) -> ExitCode {
     });
 
     if let Ok(InterpreterEvent::NewPage(page)) = this_receiver.recv() {
-        Window::run(Settings {
+        let result = Window::run(Settings {
             default_font: Some("Noto".as_bytes()),
             antialiasing: true,
             text_multithreading: true,
@@ -55,8 +55,15 @@ fn run(address: Address) -> ExitCode {
             default_text_size: 20.,
             exit_on_close_request: true,
             try_opengles_first: false,
-        })
-        .unwrap();
+        });
+
+        return match result {
+            Ok(_) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("Failure running window: {e}");
+                ExitCode::FAILURE
+            }
+        };
     }
 
     ExitCode::SUCCESS

@@ -1,6 +1,6 @@
 use super::{message::Message, PageViewer};
 use iced::{
-    widget::{text, Button, Column, Container, Image, Row, Scrollable, Space, Text, TextInput},
+    widget::{text, Button, Column, Container, Row, Scrollable, Space, Text, TextInput},
     Color, Element, Length, Padding,
 };
 use iced_native::theme;
@@ -140,7 +140,10 @@ fn build_image<'a>(image: Arc<Mutex<element::Image>>) -> Element<'a, Message> {
 
     match Address::new(&image_obj.link) {
         Ok(address) => {
-            let image = Image::new(address.get_path());
+            let image = match address.load_image() {
+                Ok(img) => img,
+                Err(_) => return text("Image failed to load").into(),
+            };
 
             if let Some(max_width) = image_obj.max_width {
                 image.width(max_width).into()

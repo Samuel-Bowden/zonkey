@@ -13,6 +13,8 @@ use std::{
     rc::Rc,
     sync::mpsc::Receiver,
     sync::{mpsc::Sender, Arc, Mutex},
+    thread::sleep,
+    time::Duration,
 };
 use ui::{
     event::PageEvent,
@@ -48,7 +50,7 @@ impl<'a> TreeWalker<'a> {
         };
 
         let result = tree_walker.interpret(&ast.start);
-        stdout().write(&tree_walker.stdout).unwrap();
+        stdout().write_all(&tree_walker.stdout).unwrap();
         tree_walker.stdout.clear();
         result
     }
@@ -511,17 +513,17 @@ impl<'a> TreeWalker<'a> {
                 Expr::Integer(expr) => {
                     let mut buffer = [0u8; 20];
                     let int = self.eval_int(expr)?.numtoa(10, &mut buffer);
-                    self.stdout.write(int).unwrap();
+                    self.stdout.extend_from_slice(int);
                     if *line {
-                        self.stdout.write(b"\n").unwrap();
+                        self.stdout.extend_from_slice(b"\n");
                     }
                 }
                 Expr::Float(expr) => {
                     let mut buffer = ryu::Buffer::new();
                     let float = buffer.format(self.eval_float(expr)?).as_bytes();
-                    self.stdout.write(float).unwrap();
+                    self.stdout.extend_from_slice(float);
                     if *line {
-                        self.stdout.write(b"\n").unwrap();
+                        self.stdout.extend_from_slice(b"\n");
                     }
                 }
                 Expr::String(expr) => {
@@ -534,6 +536,14 @@ impl<'a> TreeWalker<'a> {
                 }
                 _ => panic!("Unprintable type"),
             },
+
+            NativeCallNone::Sleep(duration) => {
+                let duration = self.eval_int(duration)?;
+                sleep(Duration::from_millis(duration as u64));
+                stdout().write_all(&self.stdout.as_slice()).unwrap();
+                stdout().flush().unwrap();
+                self.stdout.clear();
+            }
         }
 
         Ok(())

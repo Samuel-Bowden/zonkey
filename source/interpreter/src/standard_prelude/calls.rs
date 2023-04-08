@@ -1,9 +1,10 @@
-use crate::expr::{Expr, FloatExpr, ObjectExpr, StringExpr};
+use crate::expr::{Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr};
 
 // Standard prelude calls (Separated by return types)
 #[derive(Debug, Clone)]
 pub enum NativeCallNone {
     Print(Box<Expr>, bool),
+    Sleep(IntegerExpr),
 }
 
 #[derive(Debug, Clone)]

@@ -19,12 +19,10 @@ pub struct TopBarStyle;
 impl StyleSheet for TopBarStyle {
     type Style = Theme;
 
-    fn appearance(&self, style: &Self::Style) -> Appearance {
-        match style {
-            _ => Appearance {
-                background: Some(Background::Color(Color::from_rgb8(100, 100, 100))),
-                ..Default::default()
-            },
+    fn appearance(&self, _: &Self::Style) -> Appearance {
+        Appearance {
+            background: Some(Background::Color(Color::from_rgb8(100, 100, 100))),
+            ..Default::default()
         }
     }
 }

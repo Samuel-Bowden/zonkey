@@ -86,6 +86,9 @@ impl Parser {
                     "wait_for_event" => Ok(Expr::Boolean(BooleanExpr::NativeCall(
                         NativeCallBoolean::WaitForEvent,
                     ))),
+                    "sleep" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::Sleep(
+                        arguments.remove(0).to_integer_expr(),
+                    )))),
                     "Page" => Ok(Expr::Object(
                         Rc::new("Page".to_string()),
                         ObjectExpr::NativeCall(NativeCallObject::PageConstructor),

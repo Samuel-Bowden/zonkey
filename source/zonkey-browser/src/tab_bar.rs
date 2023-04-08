@@ -1,7 +1,12 @@
 use crate::{message::Message, ZonkeyBrowser};
 use iced::{
-    widget::{text, Button, Container, Row, Space, button::{StyleSheet, Appearance}},
-    Alignment, Length, Theme, Color, Background, theme, alignment::{Vertical, Horizontal},
+    alignment::{Horizontal, Vertical},
+    theme,
+    widget::{
+        button::{Appearance, StyleSheet},
+        text, Button, Container, Row, Space,
+    },
+    Alignment, Background, Color, Length, Theme,
 };
 
 pub enum TabButton {
@@ -66,13 +71,15 @@ pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
                     )
                     .push(Space::with_width(Length::Fill))
                     .push(
-                        Button::new(text("x").size(25)
+                        Button::new(
+                            text("x")
+                                .size(25)
                                 .vertical_alignment(Vertical::Center)
-                                .horizontal_alignment(Horizontal::Center)
-                            )
-                            .width(Length::Fixed(30.))
-                            .on_press(Message::TabClosePressed(*i))
-                            .style(theme::Button::Custom(Box::new(CloseButton)))
+                                .horizontal_alignment(Horizontal::Center),
+                        )
+                        .width(Length::Fixed(30.))
+                        .on_press(Message::TabClosePressed(*i))
+                        .style(theme::Button::Custom(Box::new(CloseButton))),
                     )
                     .align_items(Alignment::Center),
             )
@@ -91,19 +98,19 @@ pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
     }
 
     let content = Row::new()
+        .push(Row::with_children(tab_buttons).width(Length::FillPortion(1)))
         .push(
-            Row::with_children(tab_buttons)
-                .width(Length::FillPortion(1)),
-        )
-        .push(
-            Button::new(text("+").size(30)
-                        .vertical_alignment(Vertical::Center)
-                        .horizontal_alignment(Horizontal::Center)
-                        .height(Length::Fill))
-                .on_press(Message::NewTab)
-                .style(theme::Button::Custom(Box::new(AddButton)))
-                .width(Length::Fixed(40.))
-                .height(Length::Fill)
+            Button::new(
+                text("+")
+                    .size(30)
+                    .vertical_alignment(Vertical::Center)
+                    .horizontal_alignment(Horizontal::Center)
+                    .height(Length::Fill),
+            )
+            .on_press(Message::NewTab)
+            .style(theme::Button::Custom(Box::new(AddButton)))
+            .width(Length::Fixed(40.))
+            .height(Length::Fill),
         );
 
     Container::new(content)
