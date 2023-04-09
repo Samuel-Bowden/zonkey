@@ -1,0 +1,6 @@
+(ERROR) Expected name of property to access after @.
+	5 | 		<@>start = 1;
+        But the next token was 'start'.
+	5 | 		@<start> = 1;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

@@ -53,10 +53,17 @@ impl<'a> ErrReporter<'a> {
             let grapheme = self.graphemes.get(current);
 
             match grapheme {
-                Some(&"\n") | None => break,
+                Some(&"\n") | None => {
+                    if current == end {
+                        write!(&mut self.stderr, ">").unwrap();
+                    }
+                    break;
+                }
                 Some(t) => {
-                    if current >= start && current < end {
-                        write!(&mut self.stderr, "{}", t).unwrap();
+                    if current == start {
+                        write!(&mut self.stderr, "<{}", t).unwrap();
+                    } else if current == end {
+                        write!(&mut self.stderr, ">{}", t).unwrap();
                     } else {
                         write!(&mut self.stderr, "{}", t).unwrap();
                     }

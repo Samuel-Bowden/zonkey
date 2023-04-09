@@ -1,0 +1,7 @@
+(ERROR) Unexpected token 'let' in global scope.
+	1 | <let> name = prompt("Please enter your name: ");
+        Tip: There should only be start, function or class definitions in the global scope.
+
+(ERROR) No start block was found in the source file.
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

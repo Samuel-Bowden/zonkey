@@ -1,0 +1,4 @@
+(ERROR) A function with this name has already been declared.
+	3 | function <test_one>() -> String {}
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

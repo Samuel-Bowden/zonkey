@@ -40,8 +40,8 @@ pub enum LoadAddressErr {
 impl fmt::Display for LoadAddressErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::FileSystemFailure(e) => write!(f, "File system failure - {e}"),
-            Self::NetworkFailure(e) => write!(f, "Network failure - {e}"),
+            Self::FileSystemFailure(e) => write!(f, "Failed to read file - {e}"),
+            Self::NetworkFailure(e) => write!(f, "Failed to read over network - {e}"),
         }
     }
 }

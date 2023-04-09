@@ -1,0 +1,11 @@
+(ERROR) Expected '{' after ')' to start block.
+	1 | function hello(<)>:
+        But the next token was ':'.
+	1 | function hello()<:>
+
+(ERROR) Expected '{' after 'start' to start block.
+	4 | <start>:
+        But the next token was ':'.
+	4 | start<:>
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

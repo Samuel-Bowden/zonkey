@@ -1,0 +1,12 @@
+class Fruit {
+	String type;
+	Integer days_of_age;
+	Integer type;
+
+	method eat() {
+		println("Eating fruit");
+	}
+}
+
+start {
+}

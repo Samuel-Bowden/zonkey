@@ -30,6 +30,13 @@ impl Parser {
             }
         };
 
+        if let Some(_) = self.class_declarations.get(&class_name) {
+            self.error.add(ParserErrType::ClassRedeclared(
+                self.tokens[self.current - 1].clone(),
+            ));
+            return Err(ParserStatus::Unwind);
+        }
+
         let open_brace_pos = match self.consume_token_type() {
             Some(TokenType::LeftBrace) => self.current,
             _ => {
@@ -56,19 +63,21 @@ impl Parser {
             let property_name = match self.consume_token_type() {
                 Some(TokenType::Identifier(name)) => Rc::clone(name),
                 _ => {
-                    self.error.add(ParserErrType::TempErrType(format!(
-                        "Expected property name in class {}",
-                        class_name,
-                    )));
+                    self.error
+                        .add(ParserErrType::ClassDeclarationExpectedPropertyName(
+                            self.tokens[self.current - 2].clone(),
+                            self.tokens.get(self.current - 1).cloned(),
+                        ));
                     return Err(ParserStatus::End);
                 }
             };
 
             if let Some(_) = properties.get(&property_name) {
-                self.error.add(ParserErrType::TempErrType(format!(
-                    "Property {} already declared",
-                    property_name,
-                )));
+                self.error
+                    .add(ParserErrType::ClassDeclarationRedeclaredProperty(
+                        self.tokens[self.current - 1].clone(),
+                        property_name.to_string(),
+                    ));
                 return Err(ParserStatus::End);
             }
 
@@ -166,10 +175,10 @@ impl Parser {
         while let Some(TokenType::Constructor | TokenType::Method) = self.current_token_type() {
             if let Some(TokenType::Constructor) = self.current_token_type() {
                 if constructor_declared {
-                    self.error.add(ParserErrType::TempErrType(format!(
-                        "Constructor has already been declared for class {}",
-                        class_name,
-                    )));
+                    self.error
+                        .add(ParserErrType::ClassDeclarationRedeclaredConstructor(
+                            self.tokens[self.current].clone(),
+                        ));
                     return Err(ParserStatus::End);
                 }
 
@@ -238,13 +247,29 @@ impl Parser {
                 let method_name = match self.consume_token_type() {
                     Some(TokenType::Identifier(name)) => Rc::clone(name),
                     _ => {
-                        self.error.add(ParserErrType::TempErrType(format!(
-                            "Expected method name for class {}",
-                            class_name,
-                        )));
+                        self.error
+                            .add(ParserErrType::ClassDeclarationExpectedMethodName(
+                                self.tokens[self.current - 2].clone(),
+                                self.tokens.get(self.current - 1).cloned(),
+                            ));
                         return Err(ParserStatus::End);
                     }
                 };
+
+                if let Some(_) = self
+                    .class_declarations
+                    .get_mut(&class_name)
+                    .unwrap()
+                    .methods
+                    .get(&method_name)
+                {
+                    self.error
+                        .add(ParserErrType::ClassDeclarationRedeclaredMethod(
+                            self.tokens[self.current - 1].clone(),
+                            method_name.to_string(),
+                        ));
+                    return Err(ParserStatus::End);
+                }
 
                 let parameters = self.parameters(self.current - 1)?;
                 let return_type = self.return_type()?;
@@ -295,10 +320,30 @@ impl Parser {
             }
         }
 
+        if constructor_declared == false {
+            self.error.add(ParserErrType::ClassDeclarationNoConstructor(
+                self.tokens[class_token_pos].clone(),
+            ));
+            return Err(ParserStatus::Unwind);
+        }
+
         self.current_properties = None;
 
         match self.consume_token_type() {
             Some(TokenType::RightBrace) => (),
+            Some(
+                TokenType::IntegerType
+                | TokenType::FloatType
+                | TokenType::StringType
+                | TokenType::BooleanType
+                | TokenType::Identifier(_),
+            ) => {
+                self.error
+                    .add(ParserErrType::ClassDeclarationExpectPropertyTop(
+                        self.tokens[self.current - 1].clone(),
+                    ));
+                return Err(ParserStatus::Unwind);
+            }
             _ => {
                 self.error
                     .add(ParserErrType::ClassDeclarationExpectedRightBrace(

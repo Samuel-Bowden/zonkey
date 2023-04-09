@@ -1,0 +1,4 @@
+(ERROR) A class with this name has already been declared.
+	5 | class <Zonkey> {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

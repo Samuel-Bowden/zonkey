@@ -1,0 +1,11 @@
+(ERROR) Expected a value after '='.
+	6 | 	let c <=>;
+        But the next token was ';'.
+	6 | 	let c =<;>
+
+(ERROR) Expected a value after '+'.
+	8 | 	let d = a + b <+>
+        But the next token was '}'.
+	9 | <}>
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

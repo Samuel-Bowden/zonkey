@@ -1,0 +1,7 @@
+class Person:
+	method greet():
+		println("Hello")
+
+start:
+	p = Person()
+	p.greet()

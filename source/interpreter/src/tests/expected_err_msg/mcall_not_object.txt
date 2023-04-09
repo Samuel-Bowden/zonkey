@@ -1,0 +1,17 @@
+(ERROR) Started a method call on a value of type "Integer".
+	10 | 		@age<.>new();
+        Tip: Methods can only be called on objects.
+
+(ERROR) Started a method call on a value of type "Boolean".
+	17 | 	a<.>set_text();
+        Tip: Methods can only be called on objects.
+
+(ERROR) Started a method call on a value of type "String".
+	19 | 	Input("Hello").get_text()<.>bad();
+        Tip: Methods can only be called on objects.
+
+(ERROR) Started a method call on a value of type "Float".
+	21 | 	test()<.>hello();
+        Tip: Methods can only be called on objects.
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

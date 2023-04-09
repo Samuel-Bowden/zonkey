@@ -1,0 +1,21 @@
+(ERROR) Expected ';' after '1' to end statement.
+	2 | 	let a = <1>
+        But the next token was 'let'.
+	3 | 	<let> b = 2
+
+(ERROR) Expected ';' after '2' to end statement.
+	3 | 	let b = <2>
+        But the next token was 'let'.
+	5 | 	<let> c = a + b
+
+(ERROR) Expected ';' after 'b' to end statement.
+	5 | 	let c = a + <b>
+        But the next token was 'println'.
+	7 | 	<println>("hello")
+
+(ERROR) Expected ';' after 'hetasohtnashton' to end statement.
+	9 | 	let string = <"hetasohtnashton">
+        But the next token was 'string'.
+	10 | 	<string> = "gaionehgaiosh"
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

@@ -1,0 +1,7 @@
+(ERROR) Expected block to be closed with '}', but the end of the file was reached.
+        The block was opened here:
+	1 | start <{>
+        But '}' was expected after the last character below to close the opened block:
+	2 | 	print("hello world")<;>
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

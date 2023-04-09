@@ -1,0 +1,7 @@
+(ERROR) Attempted to declare a variable with name 'a', but a variable with this name has already been declared previously.
+	8 | 	let <a> = "Hello":
+
+(ERROR) Attempted to declare a variable with name 'a', but a variable with this name has already been declared previously.
+	10 | 	let <a> = a;
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

@@ -1,0 +1,5 @@
+(ERROR) Property was not declared before the constructor or methods.
+	4 | 	<Integer> count;
+        Tip: All property declarations must be placed together at the top of the class declaration.
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

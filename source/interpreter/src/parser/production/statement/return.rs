@@ -32,13 +32,12 @@ impl Parser {
                         None
                     };
 
-                    self.error.add(
-                        ParserErrType::FunctionDeclarationInvalidReturnExpressionType(
+                    self.error
+                        .add(ParserErrType::DeclarationInvalidReturnExpressionType(
                             self.tokens[return_token_position].clone(),
                             ret_type.clone(),
                             expr_type,
-                        ),
-                    );
+                        ));
 
                     return Err(ParserStatus::Unwind);
                 }

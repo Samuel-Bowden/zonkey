@@ -8,8 +8,6 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
         err_reporter.error_prefix();
 
         match error {
-            ParserErrType::TempErrType(msg) => err_reporter.writeln(&msg),
-
             // Miscellaneous/Global errors
             ParserErrType::UnterminatedStatement(before, after) => {
                 err_reporter.writeln(
@@ -48,14 +46,9 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(token);
             }
 
-            ParserErrType::ExpectedLiteralVariableCall(before, after) => {
-                err_reporter.writeln(
-                    format!(
-                        "Expected a function call, literal or variable name after '{}'.",
-                        before.token_type
-                    )
-                    .as_str(),
-                );
+            ParserErrType::ExpectedValue(before, after) => {
+                err_reporter
+                    .writeln(format!("Expected a value after '{}'.", before.token_type).as_str());
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
             }
@@ -97,11 +90,6 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::NoStartBlock => {
                 err_reporter.writeln("No start block was found in the source file.");
             }
-
-            ParserErrType::StartCannotReturn(return_token) => {
-                err_reporter.writeln("Start blocks cannot have return statements.");
-                err_reporter.report_token(return_token);
-            }
             //
 
             // Call errors
@@ -138,21 +126,9 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(token);
             }
 
-            ParserErrType::CallModuleFunctionNotFound(token, function, module) => {
-                err_reporter.writeln(
-                    format!("Function '{function}' does not exist in module '{module}'.",).as_str(),
-                );
-                err_reporter.report_token(token);
-            }
-
-            ParserErrType::CallModuleNotFound(token, module) => {
-                err_reporter.writeln(format!("Module '{module}' does not exist.",).as_str());
-                err_reporter.report_token(token);
-            }
-
-            ParserErrType::CallFunctionNotFound(token, function) => {
+            ParserErrType::CallNotFound(token, callable) => {
                 err_reporter
-                    .writeln(format!("Function '{function}' has not been declared.",).as_str());
+                    .writeln(format!("Callable '{callable}' has not been declared.",).as_str());
                 err_reporter.report_token(token);
             }
             //
@@ -275,6 +251,13 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             //
 
             // Function declaration errors
+            ParserErrType::FunctionRedeclared(location) => {
+                err_reporter.writeln(
+                    format!("A function with this name has already been declared.").as_str(),
+                );
+                err_reporter.report_token(location);
+            }
+
             ParserErrType::FunctionDeclarationExpectedName(before, after) => {
                 err_reporter.writeln(
                     format!("Expected a function name after '{}'.", before.token_type,).as_str(),
@@ -342,14 +325,14 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_next_token(after);
             }
 
-            ParserErrType::FunctionDeclarationInvalidReturnExpressionType(
+            ParserErrType::DeclarationInvalidReturnExpressionType(
                 return_token,
                 func_ret_type,
                 expr_ret_type,
             ) => {
                 err_reporter.writeln(
                     format!(
-                        "This return expression evaluates to type '{}', but the function it is declared in has a return type of {}.",
+                        "This return expression evaluates to type '{}', but the declaration it is defined in has a return type of {}.",
                         print_type(&expr_ret_type),
                         print_type(&func_ret_type),
                     ).as_str()
@@ -489,31 +472,6 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
             //
 
-            // Module errors
-            ParserErrType::ModuleExpectedIdentifier(before, after) => {
-                err_reporter.writeln(
-                    format!(
-                        "Expected an identifier after '{}' to specify a function within the module.",
-                        before.token_type
-                    )
-                    .as_str(),
-                );
-                err_reporter.report_token(before);
-                err_reporter.report_next_token(after);
-            }
-
-            ParserErrType::ModuleExpectedLeftParen(before, after) => {
-                err_reporter.writeln(
-                    format!(
-                        "Expected '(' after '{}' to start the parameter list of module function call.",
-                        before.token_type,
-                    )
-                    .as_str(),
-                );
-                err_reporter.report_token(before);
-                err_reporter.report_next_token(after);
-            }
-
             // Grouping errors
             ParserErrType::GroupingExpectedRightParen(before, after) => {
                 err_reporter.writeln(
@@ -567,6 +525,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
 
             // Class errors
+            ParserErrType::ClassRedeclared(location) => {
+                err_reporter
+                    .writeln(format!("A class with this name has already been declared.").as_str());
+                err_reporter.report_token(location);
+            }
+
             ParserErrType::ClassDeclarationExpectedName(before, after) => {
                 err_reporter.writeln(
                     format!("Expected a class name after '{}'.", before.token_type,).as_str(),
@@ -609,6 +573,14 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_next_token(after);
             }
 
+            ParserErrType::ClassDeclarationExpectedMethodName(before, after) => {
+                err_reporter.writeln(
+                    format!("Expected a method name after '{}'.", before.token_type,).as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
             ParserErrType::ClassDeclarationUnterminatedProperty(before, after) => {
                 err_reporter.writeln(
                     format!(
@@ -620,10 +592,110 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
             }
-            // Class use errors
-            ParserErrType::ClassNotFound(token, name) => {
+
+            ParserErrType::ClassDeclarationRedeclaredProperty(location, name) => {
+                err_reporter.writeln(
+                    format!(
+                        "Property with name '{}' has already been declared in this class.",
+                        name,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::ClassDeclarationRedeclaredConstructor(location) => {
+                err_reporter.writeln(
+                    format!(
+                        "This constructor has been declared when one has already been made for this class.",
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::ClassDeclarationRedeclaredMethod(location, name) => {
+                err_reporter.writeln(
+                    format!(
+                        "Method with name '{}' has already been declared in this class.",
+                        name,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::ClassDeclarationNoConstructor(location) => {
                 err_reporter
-                    .writeln(format!("Class with name {name} has not been declared.",).as_str());
+                    .writeln(format!("No constructor has been declared for this class.",).as_str());
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::ClassDeclarationExpectPropertyTop(location) => {
+                err_reporter.writeln(
+                    format!("Property was not declared before the constructor or methods.")
+                        .as_str(),
+                );
+                err_reporter.report_token(location);
+                err_reporter.give_tip("All property declarations must be placed together at the top of the class declaration.");
+            }
+
+            // Method call errors
+            ParserErrType::MethodCallExpectedName(before, after) => {
+                err_reporter.writeln(
+                    format!("Expected method name after '{}'.", before.token_type).as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::MethodCallExpectedLeftParen(before, after) => {
+                err_reporter.writeln(
+                    format!("Expected '(' after method call '{}'.", before.token_type).as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::MethodCallNotObject(location, value) => {
+                err_reporter.writeln(
+                    format!(
+                        "Started a method call on a value of type {:?}.",
+                        print_type(&value),
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
+                err_reporter.give_tip("Methods can only be called on objects.");
+            }
+
+            // Property accessor
+            ParserErrType::PropertyAccessorExpectedName(before, after) => {
+                err_reporter
+                    .writeln(format!("Expected name of property to access after @.").as_str());
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::PropertyNotFound(token, name) => {
+                err_reporter.writeln(
+                    format!(
+                        "Could not find a property with name '{}' in the current class.",
+                        name,
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(token);
+            }
+
+            ParserErrType::PropertyAccessorOutsideClass(token, name) => {
+                err_reporter.writeln(
+                    format!(
+                        "Cannot access property '{}' as it is outside a method or constructor of a class.",
+                        name,
+                    )
+                    .as_str(),
+                );
                 err_reporter.report_token(token);
             }
         }

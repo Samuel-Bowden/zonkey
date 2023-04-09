@@ -6,6 +6,7 @@ mod statement;
 use crate::{
     expr::Expr,
     parser::{production::prelude::*, value::ValueType},
+    parser_debug,
     stack::Stack,
 };
 use std::rc::Rc;
@@ -31,15 +32,18 @@ impl Parser {
             match result {
                 Ok(()) => (),
                 // Synchronise
-                Err(_) => loop {
-                    if let Some(TokenType::Start | TokenType::Function | TokenType::Class) | None =
-                        self.current_token_type()
-                    {
-                        break;
-                    }
+                Err(_) => {
+                    parser_debug!("Synchronising global");
+                    loop {
+                        if let Some(TokenType::Start | TokenType::Function | TokenType::Class)
+                        | None = self.current_token_type()
+                        {
+                            break;
+                        }
 
-                    self.current += 1;
-                },
+                        self.current += 1;
+                    }
+                }
             };
         }
     }

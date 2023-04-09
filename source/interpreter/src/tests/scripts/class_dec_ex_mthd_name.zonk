@@ -1,0 +1,7 @@
+class Zonkey {
+	constructor() {}
+
+	method() {}
+}
+
+start {}

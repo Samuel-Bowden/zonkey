@@ -1,0 +1,4 @@
+function test_one() {}
+function test_two() -> String {}
+function test_one() -> String {}
+start {}

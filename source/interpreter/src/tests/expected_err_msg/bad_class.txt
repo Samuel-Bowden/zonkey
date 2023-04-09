@@ -1,0 +1,11 @@
+(ERROR) Expected '{' after 'Person' to start body of class.
+	1 | class <Person>:
+        But the next token was ':'.
+	1 | class Person<:>
+
+(ERROR) Expected '{' after 'start' to start block.
+	5 | <start>:
+        But the next token was ':'.
+	5 | start<:>
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

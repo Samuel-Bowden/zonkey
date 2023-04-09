@@ -1,0 +1,12 @@
+class Computer {
+	method switch_on() {
+	}
+
+	method restart() {
+	}
+
+	method switch_on() {
+	}
+} 
+
+start {}

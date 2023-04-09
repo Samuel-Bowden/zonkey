@@ -1,0 +1,6 @@
+(ERROR) Expected name of property after the data type 'Float'.
+	4 | 	<Float>;
+        But the next token was ';'.
+	4 | 	Float<;>
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

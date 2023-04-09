@@ -1,0 +1,4 @@
+(ERROR) Cannot access property 'age' as it is outside a method or constructor of a class.
+	12 | 	@<age>;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

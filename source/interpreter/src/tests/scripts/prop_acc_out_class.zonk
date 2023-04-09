@@ -1,0 +1,13 @@
+class Fruit {
+	Integer age;
+
+	constructor() {
+		@age = 1;
+	}
+}
+
+start {	
+	let fruit = Fruit();
+
+	@age;
+}

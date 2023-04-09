@@ -1,0 +1,6 @@
+(ERROR) Expected '(' after method call 'set_text'.
+	2 | 	let a = Button("Hello").<set_text>);
+        But the next token was ')'.
+	2 | 	let a = Button("Hello").set_text<)>;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

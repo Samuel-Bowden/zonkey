@@ -19,9 +19,10 @@ impl Parser {
         let name = match self.consume_token_type() {
             Some(TokenType::Identifier(name)) => Rc::clone(name),
             _ => {
-                self.error.add(ParserErrType::TempErrType(format!(
-                    "Expected method name after ."
-                )));
+                self.error.add(ParserErrType::MethodCallExpectedName(
+                    self.tokens[self.current - 2].clone(),
+                    self.tokens.get(self.current - 1).cloned(),
+                ));
                 return Err(ParserStatus::End);
             }
         };
@@ -29,10 +30,10 @@ impl Parser {
         match self.consume_token_type() {
             Some(TokenType::LeftParen) => (),
             _ => {
-                self.error.add(ParserErrType::TempErrType(format!(
-                    "Expected left paren after method name {}",
-                    name,
-                )));
+                self.error.add(ParserErrType::MethodCallExpectedLeftParen(
+                    self.tokens[self.current - 2].clone(),
+                    self.tokens.get(self.current - 1).cloned(),
+                ));
                 return Err(ParserStatus::End);
             }
         };
@@ -285,7 +286,7 @@ impl Parser {
                         )),
                         _ => unreachable!(),
                     },
-                    _ => todo!(),
+                    _ => unreachable!(),
                 },
                 CallableType::Zonkey(id) => {
                     arguments.insert(0, Expr::Object(Rc::clone(&class), object));
@@ -318,19 +319,19 @@ impl Parser {
                 match result {
                     Ok(Expr::Object(class, expr)) => self.method_call(class, expr),
                     Err(_) => result,
-                    _ => {
-                        self.error.add(ParserErrType::TempErrType(format!(
-                            "Method {} did not return an object",
-                            name,
-                        )));
-                        return Err(ParserStatus::End);
+                    Ok(value) => {
+                        self.error.add(ParserErrType::MethodCallNotObject(
+                            self.tokens[self.current].clone(),
+                            self.expr_type(&value),
+                        ));
+                        return Err(ParserStatus::Unwind);
                     }
                 }
             } else {
                 result
             }
         } else {
-            self.error.add(ParserErrType::CallFunctionNotFound(
+            self.error.add(ParserErrType::CallNotFound(
                 self.tokens[token_pos - 1].clone(),
                 name.to_string(),
             ));

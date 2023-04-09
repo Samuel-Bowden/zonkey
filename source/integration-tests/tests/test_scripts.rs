@@ -24,14 +24,13 @@ fn test_file(script_name: &str, success: bool) -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn file_doesnt_exist() -> Result<(), Box<dyn Error>> {
+fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
     let mut cmd = Command::cargo_bin("zonkey")?;
 
     cmd.arg("/a-directory-that-does-not-exist");
-    cmd.assert()
-        .failure()
-        .stderr(predicate::eq("Error: Couldn't open address (File system failure - No such file or directory (os error 2))
-"));
+    cmd.assert().failure().stderr(predicate::eq(
+        "Failed to read file - No such file or directory (os error 2)\n",
+    ));
 
     Ok(())
 }
@@ -39,9 +38,4 @@ fn file_doesnt_exist() -> Result<(), Box<dyn Error>> {
 #[test]
 fn and_or_script() -> Result<(), Box<dyn Error>> {
     test_file("and_or", true)
-}
-
-#[test]
-fn bad_casting() -> Result<(), Box<dyn Error>> {
-    test_file("bad_casting", false)
 }

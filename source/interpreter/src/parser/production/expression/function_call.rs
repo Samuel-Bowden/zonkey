@@ -149,7 +149,7 @@ impl Parser {
                 }),
             }
         } else {
-            self.error.add(ParserErrType::CallFunctionNotFound(
+            self.error.add(ParserErrType::CallNotFound(
                 self.tokens[token_pos - 1].clone(),
                 name.to_string(),
             ));

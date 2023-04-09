@@ -1,0 +1,10 @@
+class Fruit {
+	Integer age;
+
+	method hello() {
+		@type = "hello";
+	}
+}
+
+start {
+}

@@ -1,0 +1,4 @@
+(ERROR) Property with name 'type' has already been declared in this class.
+	4 | 	Integer <type>;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

@@ -59,7 +59,10 @@ fn run(address: Address) -> ExitCode {
                 }
             };
         }
-        Ok(InterpreterEvent::ScriptError(error) | InterpreterEvent::LoadAddressError(error)) => {
+        Ok(InterpreterEvent::ScriptError(_)) => {
+            return ExitCode::FAILURE;
+        }
+        Ok(InterpreterEvent::LoadAddressError(error)) => {
             eprintln!("{}", error);
             return ExitCode::FAILURE;
         }

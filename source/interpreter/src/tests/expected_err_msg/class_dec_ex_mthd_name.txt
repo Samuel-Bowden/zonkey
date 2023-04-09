@@ -1,0 +1,6 @@
+(ERROR) Expected a method name after 'method'.
+	4 | 	<method>() {}
+        But the next token was '('.
+	4 | 	method<(>) {}
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

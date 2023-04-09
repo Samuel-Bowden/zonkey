@@ -1,0 +1,7 @@
+let name = prompt("Please enter your name: ");
+
+println("Hello " + name);
+
+let age = Integer prompt("Please enter your age");
+
+println("You will be " + (String age + 1) " years old next year");

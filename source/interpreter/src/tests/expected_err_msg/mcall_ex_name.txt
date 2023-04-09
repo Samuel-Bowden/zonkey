@@ -1,0 +1,6 @@
+(ERROR) Expected method name after '.'.
+	6 | 	let a = Button("Hello")<.>function.run();
+        But the next token was 'function'.
+	6 | 	let a = Button("Hello").<function>.run();
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

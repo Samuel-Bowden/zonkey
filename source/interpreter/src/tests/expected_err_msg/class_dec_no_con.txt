@@ -1,0 +1,7 @@
+(ERROR) No constructor has been declared for this class.
+	1 | <class> Book {
+
+(ERROR) Callable 'Book' has not been declared.
+	15 | 	<Book>().open();
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

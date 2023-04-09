@@ -6,6 +6,9 @@ use std::sync::mpsc::{Receiver, Sender};
 use ui::event::*;
 use unicode_segmentation::UnicodeSegmentation;
 
+#[cfg(test)]
+mod tests;
+
 mod ast;
 mod debugger;
 pub mod err;

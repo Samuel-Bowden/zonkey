@@ -1,0 +1,11 @@
+class Hello {
+	constructor() {}
+
+	Integer count;
+
+	method hello() {}
+
+	String name;
+}
+
+start {}

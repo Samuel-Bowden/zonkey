@@ -1,4 +1,4 @@
-use crate::parser::production::statement::prelude::*;
+use crate::{parser::production::statement::prelude::*, parser_debug};
 use indexmap::IndexMap;
 
 impl Parser {
@@ -46,6 +46,8 @@ impl Parser {
                         Ok(s) => statements.push(s),
                         Err(ParserStatus::Unwind) => {
                             // Best effort to synchronise on the end or start of statements
+                            parser_debug!("Synchronising inside block");
+
                             let mut braces_seen = 0;
 
                             loop {
@@ -60,7 +62,6 @@ impl Parser {
                                     // Statement start
                                     Some(
                                         TokenType::Let
-                                        | TokenType::Identifier(_)
                                         | TokenType::If
                                         | TokenType::For
                                         | TokenType::Return
@@ -81,11 +82,14 @@ impl Parser {
                                     Some(TokenType::LeftBrace) => {
                                         braces_seen += 1;
                                     }
+                                    None => break,
                                     _ => (),
                                 }
 
                                 self.current += 1;
                             }
+
+                            parser_debug!("Synchronised inside block successfully");
                         }
                         Err(ParserStatus::End) => return Err(ParserStatus::End),
                     }

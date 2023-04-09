@@ -1,5 +1,3 @@
-# This script won't run as it intentionally contains parser errors
-
 function impossible_casts() {
 	let a = Integer println("Hello");
 	let b = Float println("Hello");

@@ -1,0 +1,7 @@
+(ERROR) Start block was defined more than once.
+        The first definition of start was here:
+	1 | <start> {}
+        But it was defined again here:
+	3 | <start> {}
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

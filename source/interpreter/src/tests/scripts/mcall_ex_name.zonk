@@ -1,0 +1,9 @@
+start {
+	let b = 1;
+	let c = 2;
+	let d = 3;
+
+	let a = Button("Hello").function.run();
+
+	let e = a + b + c + d;
+}

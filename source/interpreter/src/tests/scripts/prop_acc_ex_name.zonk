@@ -1,0 +1,11 @@
+class Fruit {
+	Integer age;
+
+	method hello() {
+		@start = 1;
+	}
+}
+
+start {
+	println("Hello");
+}

@@ -1,0 +1,22 @@
+function test() -> Float {
+	return 1.0;
+}
+
+class Person {
+	String name;
+	Integer age;
+
+	method hello() {
+		@age.new();
+	}
+}
+
+start {
+	let a = true;
+
+	a.set_text();
+
+	Input("Hello").get_text().bad();
+
+	test().hello();
+}

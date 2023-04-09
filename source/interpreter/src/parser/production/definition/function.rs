@@ -24,6 +24,13 @@ impl Parser {
             }
         };
 
+        if let Some(_) = self.function_declarations.get(&function_name) {
+            self.error.add(ParserErrType::FunctionRedeclared(
+                self.tokens[self.current - 1].clone(),
+            ));
+            return Err(ParserStatus::Unwind);
+        }
+
         // Get function parameters
         let parameters = self.parameters(function_token_pos)?;
 

@@ -1,0 +1,15 @@
+class Vehicle {
+	constructor() {
+		println("Declared here");
+	}
+
+	method hello() {
+		println("Method in the middle");
+	}
+
+	constructor() {
+		println("Redeclared here");
+	}
+}
+
+start {}

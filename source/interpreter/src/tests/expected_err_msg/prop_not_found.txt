@@ -1,0 +1,4 @@
+(ERROR) Could not find a property with name 'type' in the current class.
+	5 | 		@<type> = "hello";
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

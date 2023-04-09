@@ -23,13 +23,12 @@ impl ParserErr {
 }
 
 pub enum ParserErrType {
-    TempErrType(String),
-
     // Miscellaneous/Global errors
     UnterminatedStatement(Token, Option<Token>),
     UnexpectedTokenInGlobal(Token),
     VariableNotFound(Token, String),
-    ExpectedLiteralVariableCall(Token, Option<Token>),
+    ExpectedValue(Token, Option<Token>),
+    DeclarationInvalidReturnExpressionType(Token, Option<ValueType>, Option<ValueType>),
 
     // Block errors
     BlockExpectedLeftBrace(Token, Option<Token>),
@@ -38,15 +37,12 @@ pub enum ParserErrType {
     // Start errors
     NoStartBlock,
     RedefinedStart(Token, Token),
-    StartCannotReturn(Token),
 
     // Call errors
     CallExpectedCommaOrRightParen(Token, Option<Token>),
     CallIncorrectArgumentsNum(Token, usize, usize, String),
     CallArgumentIncorrectType(Token, usize, Option<ValueType>, String),
-    CallModuleFunctionNotFound(Token, String, String),
-    CallModuleNotFound(Token, String),
-    CallFunctionNotFound(Token, String),
+    CallNotFound(Token, String),
 
     // If statement errors
     IfExpectedLeftParen(Token, Option<Token>),
@@ -66,13 +62,13 @@ pub enum ParserErrType {
     ForConditionNotBool(usize, usize),
 
     // Function declaration errors
+    FunctionRedeclared(Token),
     FunctionDeclarationExpectedName(Token, Option<Token>),
     FunctionDeclarationExpectedLeftParen(Token, Option<Token>),
     FunctionDeclarationExpectedParameterName(Token, Option<Token>),
     FunctionDeclarationExpectedParameterType(Token, Option<Token>),
     FunctionDeclarationExpectedCommaOrRightParen(Token, Option<Token>),
     FunctionDeclarationExpectedReturnType(Token, Option<Token>),
-    FunctionDeclarationInvalidReturnExpressionType(Token, Option<ValueType>, Option<ValueType>),
 
     // Operator errors
     InvalidAssignmentOperator(Token, ValueType),
@@ -92,10 +88,6 @@ pub enum ParserErrType {
     OperatorUnmatchingTypes(Token, Option<ValueType>, Option<ValueType>),
     OperatorInvalidForType(Token, Option<ValueType>),
 
-    // Module errors
-    ModuleExpectedIdentifier(Token, Option<Token>),
-    ModuleExpectedLeftParen(Token, Option<Token>),
-
     // Grouping errors
     GroupingExpectedRightParen(Token, Option<Token>),
 
@@ -107,12 +99,26 @@ pub enum ParserErrType {
     CastPointless(Token, Option<ValueType>),
 
     // Class declaration errors
+    ClassRedeclared(Token),
     ClassDeclarationExpectedName(Token, Option<Token>),
     ClassDeclarationExpectedLeftBrace(Token, Option<Token>),
     ClassDeclarationExpectedRightBrace(Token, Token),
     ClassDeclarationExpectedPropertyName(Token, Option<Token>),
+    ClassDeclarationExpectedMethodName(Token, Option<Token>),
     ClassDeclarationUnterminatedProperty(Token, Option<Token>),
+    ClassDeclarationRedeclaredProperty(Token, String),
+    ClassDeclarationRedeclaredConstructor(Token),
+    ClassDeclarationRedeclaredMethod(Token, String),
+    ClassDeclarationNoConstructor(Token),
+    ClassDeclarationExpectPropertyTop(Token),
 
-    // Class use errors
-    ClassNotFound(Token, String),
+    // Method call errors
+    MethodCallExpectedName(Token, Option<Token>),
+    MethodCallExpectedLeftParen(Token, Option<Token>),
+    MethodCallNotObject(Token, Option<ValueType>),
+
+    // Property accessor errors
+    PropertyAccessorExpectedName(Token, Option<Token>),
+    PropertyNotFound(Token, String),
+    PropertyAccessorOutsideClass(Token, String),
 }

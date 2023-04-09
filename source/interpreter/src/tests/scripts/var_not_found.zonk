@@ -1,0 +1,7 @@
+function greet(String name) -> String {
+	return namr += "Hello ";
+}
+
+start {
+	println(greet("Me"));
+}

@@ -1,0 +1,4 @@
+(ERROR) Method with name 'switch_on' has already been declared in this class.
+	8 | 	method <switch_on>() {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

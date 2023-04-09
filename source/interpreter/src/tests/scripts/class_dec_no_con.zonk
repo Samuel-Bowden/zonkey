@@ -1,0 +1,16 @@
+class Book {
+	Boolean opened;
+	Integer page_count;
+
+	method open() {
+		@opened = true;
+	}
+
+	method tear_out_page() {
+		@page_count -= 1;
+	}
+}
+
+start {
+	Book().open();
+}
