@@ -21,7 +21,7 @@ pub type MessagePointer = (usize, Message);
 
 pub struct Tab {
     page_viewer: PageViewer,
-    script_executor_sender: Option<Sender<String>>,
+    script_executor_sender: Option<Sender<Address>>,
     initial_state: Arc<Mutex<SubscriptionState>>,
     history: NonEmpty<Address>,
     waiting_to_load_next_script: bool,
@@ -101,8 +101,11 @@ impl Tab {
             Message::NewPage(page) => {
                 self.page_viewer.set_page(page);
             }
-            Message::ScriptError => {
-                self.open_address(Address::ScriptError);
+            Message::ScriptError(error) => {
+                self.page_viewer.script_error(error);
+            }
+            Message::LoadAddressErr(error) => {
+                self.page_viewer.load_address_error(error);
             }
             Message::Finished => return Some(WindowEvent::TabFinished),
         }
@@ -167,7 +170,12 @@ impl Tab {
                             InterpreterEvent::NewPage(page) => {
                                 Some((index, Message::NewPage(page)))
                             }
-                            InterpreterEvent::ScriptError => Some((index, Message::ScriptError)),
+                            InterpreterEvent::ScriptError(error) => {
+                                Some((index, Message::ScriptError(error)))
+                            }
+                            InterpreterEvent::LoadAddressError(error) => {
+                                Some((index, Message::LoadAddressErr(error)))
+                            }
                         },
                         (index, SubscriptionStateVariant::RunningScript(receiver)),
                     ),
@@ -189,18 +197,9 @@ impl Tab {
         self.page_viewer.finish();
 
         if let Some(sender) = std::mem::take(&mut self.script_executor_sender) {
-            let source = match self.history.last().load_script() {
-                Ok(source) => {
-                    self.address_field = self.history.last().to_string();
-                    source
-                }
-                Err(e) => {
-                    let address = Address::FailedToLoadAddress(e);
-                    self.address_field = address.to_string();
-                    address.load_script().expect("Invalid should always load")
-                }
-            };
-            sender.send(source).expect(
+            let address = self.history.last();
+            self.address_field = address.to_string();
+            sender.send(address.clone()).expect(
                 "Could not start new app as communication with interpreter died unexpectedly.",
             );
         } else {
@@ -209,12 +208,8 @@ impl Tab {
     }
 
     fn open_address_from_string(&mut self, string: String) {
-        match Address::new(&string) {
-            Ok(address) => self.open_address(address),
-            Err(err) => {
-                self.open_address(Address::InvalidAddress(err));
-            }
-        }
+        let address = Address::new(&string);
+        self.open_address(address);
     }
 
     pub fn open_address_in_bar(&mut self) {

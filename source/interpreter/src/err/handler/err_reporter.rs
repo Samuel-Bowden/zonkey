@@ -1,43 +1,29 @@
-use std::io::Write;
-use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
-
 use crate::{parser::value::ValueType, token::Token};
+use std::fmt::Write;
 
 pub struct ErrReporter<'a> {
-    stderr: StandardStream,
+    pub stderr: String,
     graphemes: &'a Vec<&'a str>,
 }
 
 impl<'a> ErrReporter<'a> {
     pub fn new(graphemes: &'a Vec<&'a str>) -> Self {
         Self {
-            stderr: StandardStream::stderr(termcolor::ColorChoice::Always),
+            stderr: String::new(),
             graphemes,
         }
     }
 
     pub fn error_prefix(&mut self) {
-        self.stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
-            .unwrap();
         write!(&mut self.stderr, "(ERROR) ").unwrap();
-        self.stderr.reset().unwrap();
     }
 
     pub fn aborting_prefix(&mut self) {
-        self.stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Blue)))
-            .unwrap();
         write!(&mut self.stderr, "(ABORTING) ").unwrap();
-        self.stderr.reset().unwrap();
     }
 
     pub fn uncaught_exception_prefix(&mut self) {
-        self.stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Red)))
-            .unwrap();
         write!(&mut self.stderr, "(UNCAUGHT EXCEPTION) ").unwrap();
-        self.stderr.reset().unwrap();
     }
 
     pub fn writeln(&mut self, line: &str) {
@@ -59,11 +45,7 @@ impl<'a> ErrReporter<'a> {
     pub fn report_section(&mut self, start: usize, end: usize) {
         let (line_num, line_start) = self.find_line(start);
 
-        self.stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Magenta)))
-            .unwrap();
         write!(&mut self.stderr, "\t{line_num} | ").unwrap();
-        self.stderr.reset().unwrap();
 
         let mut current = line_start;
 
@@ -74,11 +56,7 @@ impl<'a> ErrReporter<'a> {
                 Some(&"\n") | None => break,
                 Some(t) => {
                     if current >= start && current < end {
-                        self.stderr
-                            .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
-                            .unwrap();
                         write!(&mut self.stderr, "{}", t).unwrap();
-                        self.stderr.reset().unwrap();
                     } else {
                         write!(&mut self.stderr, "{}", t).unwrap();
                     }
@@ -126,13 +104,7 @@ impl<'a> ErrReporter<'a> {
     }
 
     pub fn give_tip(&mut self, tip: &str) {
-        self.stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Green)))
-            .unwrap();
-
         write!(&mut self.stderr, "        Tip: ",).unwrap();
-
-        self.stderr.reset().unwrap();
 
         writeln!(&mut self.stderr, "{tip}").unwrap();
     }

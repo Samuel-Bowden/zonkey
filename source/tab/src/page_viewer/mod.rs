@@ -5,9 +5,15 @@ pub mod message;
 pub mod update;
 pub mod view;
 
+pub enum PageErr {
+    LoadAddressError(String),
+    ScriptError(String),
+}
+
 pub struct PageViewer {
     page: Option<Arc<Mutex<Page>>>,
     page_event_sender: Option<Sender<PageEvent>>,
+    page_error: Option<PageErr>,
 }
 
 impl PageViewer {
@@ -18,6 +24,7 @@ impl PageViewer {
         Self {
             page,
             page_event_sender,
+            page_error: None,
         }
     }
 
@@ -25,6 +32,7 @@ impl PageViewer {
         Self {
             page: None,
             page_event_sender: None,
+            page_error: None,
         }
     }
 
@@ -36,11 +44,26 @@ impl PageViewer {
         self.page = Some(page);
     }
 
+    pub fn script_error(&mut self, error: String) {
+        self.page_error = Some(PageErr::ScriptError(error));
+    }
+
+    pub fn load_address_error(&mut self, error: String) {
+        self.page_error = Some(PageErr::LoadAddressError(error));
+    }
+
     pub fn title(&self) -> String {
         if let Some(page) = &self.page {
-            page.lock().unwrap().title.clone()
+            page.lock().unwrap().title.to_string()
         } else {
-            "Loading".into()
+            if let Some(error) = &self.page_error {
+                match error {
+                    PageErr::LoadAddressError(_) => "Load Address Error".into(),
+                    PageErr::ScriptError(_) => "Script Error".into(),
+                }
+            } else {
+                "Loading page".into()
+            }
         }
     }
 }

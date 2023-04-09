@@ -1,10 +1,11 @@
 use directories::ProjectDirs;
-use error::load_address::LoadAddressErr;
-use error::new_address::NewAddressErr;
-use iced::widget::Image;
-use iced_native::image::Handle;
 use reqwest::blocking::Response;
-use std::{fmt, fs::read_to_string, path::PathBuf};
+use std::{
+    fmt,
+    fs::{read_to_string, File},
+    io::{BufReader, Read},
+    path::PathBuf,
+};
 
 macro_rules! data_dir {
     () => {
@@ -22,40 +23,58 @@ fn http_name(secure: bool) -> &'static str {
     }
 }
 
-mod error;
-
+#[derive(Clone)]
 pub enum Address {
     Zonkey(String),
     File(String),
-    HTTP(bool, String), // True if using HTTPS
-    InvalidAddress(NewAddressErr),
-    FailedToLoadAddress(LoadAddressErr),
-    ScriptError,
+    HTTP(bool, String),      // True if using HTTPS
+    Invalid(String, String), // The bad address, then the error string
+}
+
+#[derive(Debug)]
+pub enum LoadAddressErr {
+    FileSystemFailure(std::io::Error),
+    NetworkFailure(reqwest::Error),
+}
+
+impl fmt::Display for LoadAddressErr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::FileSystemFailure(e) => write!(f, "File system failure - {e}"),
+            Self::NetworkFailure(e) => write!(f, "Network failure - {e}"),
+        }
+    }
 }
 
 impl Address {
-    pub fn new(string: &str) -> Result<Self, NewAddressErr> {
+    pub fn new(string: &str) -> Self {
         let mut it = string.splitn(2, ":");
 
         let first_section = match it.next() {
-            Some(sec) => Ok(sec),
-            None => Err(NewAddressErr::Empty),
-        }?;
+            Some(sec) => sec,
+            None => return Address::Invalid(string.into(), "The provided address is empty".into()),
+        };
 
         let second_section = match it.next() {
-            Some(sec) => Ok(sec),
+            Some(sec) => sec,
             None => {
                 // Assume to be a file if the address is not split into sections
-                return Ok(Address::File(first_section.to_string()));
+                return Address::File(first_section.to_string());
             }
-        }?;
+        };
 
         match first_section {
-            "zonkey" => Ok(Address::Zonkey(second_section.into())),
-            "file" => Ok(Address::File(second_section.into())),
-            "http" => Ok(Address::HTTP(false, second_section.into())),
-            "https" => Ok(Address::HTTP(true, second_section.into())),
-            _ => Err(NewAddressErr::InvalidFirstSection),
+            "zonkey" => Address::Zonkey(second_section.into()),
+            "file" => Address::File(second_section.into()),
+            "http" => Address::HTTP(false, second_section.into()),
+            "https" => Address::HTTP(true, second_section.into()),
+            invalid_section => Address::Invalid(
+                string.into(),
+                format!(
+                    "'{}' is not a valid first section of an address",
+                    invalid_section
+                ),
+            ),
         }
     }
 
@@ -69,24 +88,35 @@ impl Address {
                     Err(e) => Err(LoadAddressErr::NetworkFailure(e)),
                 }
             }
-            Self::InvalidAddress(error) => Ok(invalid_script(error)),
-            Self::FailedToLoadAddress(error) => Ok(failed_to_load_address_script(error)),
-            Self::ScriptError => Ok(script_error()),
+            Self::Invalid(bad_address, error) => Ok(invalid_address_script(&bad_address, error)),
         }
     }
 
-    pub fn load_image(&self) -> Result<Image, LoadAddressErr> {
+    pub fn load_image(&self) -> Vec<u8> {
         match self {
-            Self::Zonkey(_) => Ok(Image::new(self.get_path())),
-            Self::File(location) => Ok(Image::new(location)),
+            Self::Zonkey(_) => self.load_bytes(),
+            Self::File(_) => self.load_bytes(),
             Self::HTTP(secure, location) => {
-                match network_load(http_name(*secure), location)?.bytes() {
-                    Ok(data) => Ok(Image::new(Handle::from_memory(data))),
-                    Err(e) => Err(LoadAddressErr::NetworkFailure(e)),
+                if let Ok(response) = network_load(http_name(*secure), location) {
+                    if let Ok(data) = response.bytes() {
+                        return data.to_vec();
+                    }
                 }
+
+                include_bytes!("image_load_failed.png").to_vec()
             }
-            _ => panic!("Not the address of an image"),
+            Self::Invalid(..) => include_bytes!("image_load_failed.png").to_vec(),
         }
+    }
+
+    fn load_bytes(&self) -> Vec<u8> {
+        let mut reader = match File::open(self.get_path()) {
+            Ok(file) => BufReader::new(file),
+            Err(_) => return vec![],
+        };
+        let mut buffer = Vec::new();
+        reader.read_to_end(&mut buffer).unwrap();
+        buffer
     }
 
     pub fn get_path(&self) -> PathBuf {
@@ -104,9 +134,7 @@ impl fmt::Display for Address {
             Self::File(location) => write!(f, "file:{}", location),
             Self::Zonkey(location) => write!(f, "zonkey:{}", location),
             Self::HTTP(secure, location) => write!(f, "{}:{}", http_name(*secure), location),
-            Self::InvalidAddress(_) => write!(f, "error:invalid_address"),
-            Self::ScriptError => write!(f, "error:script_failed"),
-            Self::FailedToLoadAddress(_) => write!(f, "error:failed_to_load_address"),
+            Self::Invalid(bad_address, _) => write!(f, "{}", bad_address),
         }
     }
 }
@@ -125,58 +153,16 @@ pub fn network_load(protocol: &str, location: &str) -> Result<Response, LoadAddr
     }
 }
 
-fn invalid_script(error: &NewAddressErr) -> String {
+fn invalid_address_script(bad_address: &str, error: &str) -> String {
     format!(
         "
         start {{
             Page()
                 .set_title(\"Invalid address\")
                 .add(Text(\"Invalid address\").set_size(100.))
-                .add(Text(\"{error}\"));
+                .add(Text(\"The entered address '{bad_address}' is not valid.\"))
+                .add(Text(\"{error}.\"));
         }}
-    "
-    )
-}
-
-fn failed_to_load_address_script(error: &LoadAddressErr) -> String {
-    format!(
         "
-        start {{
-            Page()
-                .set_title(\"Failed to load page\")
-                .add(Text(\"Failed to load page\").set_size(100.))
-                .add(Text(\"{error}\"));
-        }}
-    "
     )
-}
-
-fn script_error() -> String {
-    format!("
-        start {{
-            let further_information_button = Button(\"Further information for developers\");
-            let further_information_open = false;
-
-            let further_information = Text(\"Detailed error information has been printed to the standard error stream. Please use the Zonkey command line interface to see and diagnose these errors.\");
-
-            let page = Page()
-                .set_title(\"Failed to load page\")
-                .add(Text(\"Failed to load page\").set_size(100.))
-                .add(Text(\"Execution of the script for the requested page failed.\"))
-                .add(Text(\"You can contact the developer of the application to notify them of this error on their page.\"))
-                .add(further_information_button);
-
-            while (wait_for_event()) {{
-                if (further_information_button.clicked() & !(further_information_open)) {{
-                    page
-                        .add(further_information);
-                    further_information_open = true;
-                }} else {{
-                    page
-                        .remove(further_information);
-                    further_information_open = false;
-                }}
-            }}
-        }}
-    ")
 }

@@ -1,7 +1,7 @@
 use super::err_reporter::{print_type, ErrReporter};
 use crate::err::parser::{ParserErr, ParserErrType};
 
-pub fn err_handler(mut err_reporter: ErrReporter, parser_err: ParserErr) {
+pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
     let len = parser_err.get_length();
 
     for error in parser_err.errors {

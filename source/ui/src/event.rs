@@ -1,11 +1,12 @@
 use super::element::{Button, Input, Page};
 use std::sync::{Arc, Mutex};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum InterpreterEvent {
     NewPage(Arc<Mutex<Page>>),
     Update,
-    ScriptError,
+    ScriptError(String),
+    LoadAddressError(String),
 }
 
 pub enum WindowEvent {

@@ -157,36 +157,28 @@ impl ZonkeyBrowser {
 }
 
 pub fn main() -> ExitCode {
-    let address_result = if let Some(address_string) = args().nth(1) {
+    let address = if let Some(address_string) = args().nth(1) {
         Address::new(&address_string)
     } else {
-        Ok(Address::Zonkey("home.zonk".into()))
+        Address::Zonkey("home.zonk".into())
     };
 
-    match address_result {
-        Ok(address) => {
-            let result = ZonkeyBrowser::run(Settings {
-                default_font: Some("Noto".as_bytes()),
-                antialiasing: true,
-                text_multithreading: true,
-                flags: address,
-                id: None,
-                window: iced::window::Settings::default(),
-                default_text_size: 20.,
-                exit_on_close_request: true,
-                try_opengles_first: false,
-            });
+    let result = ZonkeyBrowser::run(Settings {
+        default_font: Some("Noto".as_bytes()),
+        antialiasing: true,
+        text_multithreading: true,
+        flags: address,
+        id: None,
+        window: iced::window::Settings::default(),
+        default_text_size: 20.,
+        exit_on_close_request: true,
+        try_opengles_first: false,
+    });
 
-            match result {
-                Ok(()) => ExitCode::SUCCESS,
-                Err(e) => {
-                    eprintln!("Failure running browser UI: {e}");
-                    ExitCode::FAILURE
-                }
-            }
-        }
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("Improperly formatted address: {e}");
+            eprintln!("Failure running browser UI: {e}");
             ExitCode::FAILURE
         }
     }

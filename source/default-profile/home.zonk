@@ -6,7 +6,7 @@ start {
 		.add(Text("Here are some hyperlinks to example apps that I have made:"))
 		.add(Hyperlink("Calculator", "zonkey:calculator/app.zonk"))
 		.add(Hyperlink("Twigville Local News", "zonkey:news/home.zonk"))
-		.add(Hyperlink("Simple counter", "zonkey:test_scripts/counter.zonk"))
-		.add(Hyperlink("Guessing game", "zonkey:test_scripts/guessing.zonk"))
+		.add(Hyperlink("Simple counter", "zonkey:counter/app.zonk"))
+		.add(Hyperlink("Guessing game", "zonkey:guessing_game/app.zonk"))
 		.add(Hyperlink("A zonkey page loaded over the internet", "https://sam-bowden.codeberg.page/test.zonk"));
 }

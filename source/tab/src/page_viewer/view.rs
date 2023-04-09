@@ -1,15 +1,22 @@
-use super::{message::Message, PageViewer};
+use super::{message::Message, PageErr, PageViewer};
 use iced::{
-    widget::{text, Button, Column, Container, Row, Scrollable, Space, Text, TextInput},
+    alignment::{Horizontal, Vertical},
+    widget::{text, Button, Column, Container, Image, Row, Scrollable, Space, Text, TextInput},
     Color, Element, Length, Padding,
 };
-use iced_native::theme;
-use resource_loader::Address;
+use iced_native::{image::Handle, theme};
 use std::sync::{Arc, Mutex};
 use ui::element::{self, ElementType};
 
 impl PageViewer {
     pub fn view(&self) -> Element<Message> {
+        if let Some(error) = &self.page_error {
+            return match error {
+                PageErr::ScriptError(error) => script_error_page(error),
+                PageErr::LoadAddressError(error) => load_address_error_page(error),
+            };
+        }
+
         if let Some(page) = &self.page {
             Container::new(build_page(page))
                 .width(Length::Fill)
@@ -19,7 +26,12 @@ impl PageViewer {
                 )))
                 .into()
         } else {
-            text("Loading").into()
+            Container::new(text("Loading page").size(40))
+                .align_x(Horizontal::Center)
+                .align_y(Vertical::Center)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .into()
         }
     }
 }
@@ -138,19 +150,34 @@ fn build_column<'a>(column: Arc<Mutex<element::Column>>) -> Element<'a, Message>
 fn build_image<'a>(image: Arc<Mutex<element::Image>>) -> Element<'a, Message> {
     let image_obj = image.lock().unwrap();
 
-    match Address::new(&image_obj.link) {
-        Ok(address) => {
-            let image = match address.load_image() {
-                Ok(img) => img,
-                Err(_) => return text("Image failed to load").into(),
-            };
+    let image = if let Some(data) = &image_obj.data {
+        Image::new(Handle::from_memory(data.clone()))
+    } else {
+        return text("Loading image").into();
+    };
 
-            if let Some(max_width) = image_obj.max_width {
-                image.width(max_width).into()
-            } else {
-                image.into()
-            }
-        }
-        Err(_) => text("Image has an invalid address").into(),
+    if let Some(max_width) = image_obj.max_width {
+        image.width(max_width).into()
+    } else {
+        image.into()
     }
+}
+
+fn script_error_page<'a>(error: &str) -> Element<'a, Message> {
+    Column::new()
+        .push(text("Failed to run application").size(100))
+        .push(text("Execution of the script failed:"))
+        .push(text(error))
+        .padding(20)
+        .spacing(20)
+        .into()
+}
+
+fn load_address_error_page<'a>(error: &str) -> Element<'a, Message> {
+    Column::new()
+        .push(text("Failed to load application").size(100))
+        .push(text(error))
+        .padding(20)
+        .spacing(20)
+        .into()
 }

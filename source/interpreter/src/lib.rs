@@ -1,10 +1,8 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
 use crate::{parser::Parser, tree_walker::TreeWalker};
 use ast::AST;
-use std::{
-    process::ExitCode,
-    sync::mpsc::{Receiver, Sender},
-};
+use resource_loader::Address;
+use std::sync::mpsc::{Receiver, Sender};
 use ui::event::*;
 use unicode_segmentation::UnicodeSegmentation;
 
@@ -21,18 +19,30 @@ pub mod token;
 mod tree_walker;
 
 pub fn run_with_std_stream_error_handling(
-    source: String,
+    address: Address,
     mut sender: Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
-) -> ExitCode {
+) {
+    let source = match address.load_script() {
+        Ok(source) => source,
+        Err(e) => {
+            sender
+                .send(InterpreterEvent::LoadAddressError(e.to_string()))
+                .unwrap();
+            return;
+        }
+    };
+
     let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
     match run(&graphemes, &mut sender, receiver) {
-        Ok(_) => ExitCode::SUCCESS,
+        Ok(_) => (),
         Err(e) => {
-            sender.send(InterpreterEvent::ScriptError).unwrap();
-            err::handler::run(e, &graphemes);
-            ExitCode::FAILURE
+            let error_message = err::handler::run(e, &graphemes);
+            eprintln!("{}", error_message);
+            sender
+                .send(InterpreterEvent::ScriptError(error_message))
+                .unwrap();
         }
     }
 }

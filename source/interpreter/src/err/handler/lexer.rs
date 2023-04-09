@@ -1,7 +1,7 @@
 use super::err_reporter::ErrReporter;
 use crate::err::lexer::LexerErr;
 
-pub fn err_handler(mut err_reporter: ErrReporter, lexer_err: LexerErr) {
+pub fn err_handler(err_reporter: &mut ErrReporter, lexer_err: LexerErr) {
     err_reporter.error_prefix();
 
     match lexer_err {

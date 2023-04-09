@@ -75,8 +75,8 @@ pub struct Input {
 
 #[derive(Debug, Clone)]
 pub struct Image {
+    pub data: Option<Vec<u8>>,
     pub id: u64,
-    pub link: String,
     pub max_width: Option<f32>,
     pub max_height: Option<f32>,
 }

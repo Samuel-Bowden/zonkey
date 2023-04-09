@@ -7,13 +7,14 @@ use crate::{
     ast::AST, err::tree_walker::TreeWalkerErr, expr::*, standard_prelude::calls::*, stmt::Stmt,
 };
 use numtoa::NumToA;
+use resource_loader::Address;
 use std::{
     cell::RefCell,
     io::{stdout, Write},
     rc::Rc,
     sync::mpsc::Receiver,
     sync::{mpsc::Sender, Arc, Mutex},
-    thread::sleep,
+    thread::{self, sleep},
     time::Duration,
 };
 use ui::{
@@ -738,7 +739,7 @@ impl<'a> TreeWalker<'a> {
             NativeCallObject::PageConstructor => {
                 let page = Arc::new(Mutex::new(Page {
                     id: self.next_element_id(),
-                    title: "Custom App".to_string(),
+                    title: "Unnamed Application".to_string(),
                     elements: vec![],
                     red: 1.,
                     green: 1.,
@@ -833,11 +834,22 @@ impl<'a> TreeWalker<'a> {
             NativeCallObject::ImageConstructor(link) => {
                 let link = self.eval_string(link)?;
                 let image = Arc::new(Mutex::new(Image {
+                    data: None,
                     id: self.next_element_id(),
-                    link,
                     max_width: None,
                     max_height: None,
                 }));
+
+                let image_ref = Arc::clone(&image);
+
+                let sender_clone = self.interpreter_event_sender.clone();
+
+                thread::spawn(move || {
+                    let data = Address::new(&link).load_image();
+                    image_ref.lock().unwrap().data = Some(data);
+                    sender_clone.send(InterpreterEvent::Update).unwrap();
+                });
+
                 Ok(Object::Native(NativeObject::Image(image)))
             }
 

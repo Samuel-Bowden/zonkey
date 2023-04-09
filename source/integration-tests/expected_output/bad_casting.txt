@@ -1,0 +1,26 @@
+(ERROR) Cannot cast evaluated value of expression from none to Integer.
+	4 | 	let a = Integer println("Hello");
+
+(ERROR) Cannot cast evaluated value of expression from none to Float.
+	5 | 	let b = Float println("Hello");
+
+(ERROR) Cannot cast evaluated value of expression from none to String.
+	6 | 	let c = String println("Hello");
+
+(ERROR) Cannot cast evaluated value of expression from none to Boolean.
+	7 | 	let d = Boolean println("Hello");
+
+(ERROR) Casting evaluated value of expression from Integer to Integer is pointless
+	11 | 	let a = Integer 1 + 2 + 3;
+
+(ERROR) Casting evaluated value of expression from Float to Float is pointless
+	12 | 	let b = Float 1.1 + 2.4 + 8.2 + 8.;
+
+(ERROR) Casting evaluated value of expression from String to String is pointless
+	13 | 	let c = String "Hello" + "Hello";
+
+(ERROR) Casting evaluated value of expression from Boolean to Boolean is pointless
+	14 | 	let d = Boolean true;
+
+(ABORTING) Cannot start execution of script due to 8 error(s).
+

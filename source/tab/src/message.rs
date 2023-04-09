@@ -1,4 +1,5 @@
 use crate::page_viewer;
+use resource_loader::Address;
 use std::sync::{mpsc::Sender, Arc, Mutex};
 use ui::{element::Page, event::PageEvent};
 
@@ -6,9 +7,10 @@ use ui::{element::Page, event::PageEvent};
 pub enum Message {
     Update,
     PageViewer(page_viewer::message::Message),
-    ReadyForNextScript(Sender<String>),
+    ReadyForNextScript(Sender<Address>),
     StartedScript(Sender<PageEvent>),
     NewPage(Arc<Mutex<Page>>),
-    ScriptError,
+    ScriptError(String),
+    LoadAddressErr(String),
     Finished,
 }
