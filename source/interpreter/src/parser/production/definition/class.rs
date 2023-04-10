@@ -132,6 +132,11 @@ impl Parser {
                                     Box::new(StringExpr::Literal("".to_string().into())),
                                     Box::new(StringExpr::Literal("".to_string().into())),
                                 ),
+                                "Row" => NativeCallObject::RowConstructor,
+                                "Column" => NativeCallObject::ColumnConstructor,
+                                "Image" => NativeCallObject::ImageConstructor(
+                                    Box::new(StringExpr::Literal("".to_string().into())),
+                                ),
                                 _ => unreachable!(),
                             }),
                             ClassType::Zonkey(exprs) => ObjectExpr::Constructor(Rc::clone(&exprs)),

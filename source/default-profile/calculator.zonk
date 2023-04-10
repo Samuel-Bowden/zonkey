@@ -1,5 +1,3 @@
-# Zonkey Calculator
-
 class Calculator {
 	Button calc_screen;
 	String screen_state;
@@ -93,17 +91,13 @@ class Calculator {
 			.add(third_column)
 			.add(fourth_column);
 
-		Page()
+		set_page(Page()
 			.set_title("Calculator")
 			.set_background_colour(0., 0., 0.)
-			.add(
-				Row()
-					.center()
-					.add(
-						Column()
-							.add(@calc_screen)
-							.add(row)
-							.set_max_width(400.)));
+			.center()
+			.add(@calc_screen)
+			.add(row)
+			.set_max_width(480.));
 	}
 
 	method default_screen() {

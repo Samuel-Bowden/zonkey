@@ -45,6 +45,24 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
     );
 
     functions.insert(
+        Rc::new("close_tab".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: None,
+        },
+    );
+
+    functions.insert(
+        Rc::new("set_page".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Class(Rc::new("Page".into()))],
+            return_type: None,
+        },
+    );
+
+    functions.insert(
         Rc::new("wait_for_event".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,

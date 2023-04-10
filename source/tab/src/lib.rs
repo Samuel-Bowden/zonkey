@@ -98,7 +98,7 @@ impl Tab {
                     }
                 }
             }
-            Message::NewPage(page) => {
+            Message::SetPage(page) => {
                 self.page_viewer.set_page(page);
             }
             Message::ScriptError(error) => {
@@ -167,14 +167,17 @@ impl Tab {
                     Ok(event) => (
                         match event {
                             InterpreterEvent::Update => Some((index, Message::Update)),
-                            InterpreterEvent::NewPage(page) => {
-                                Some((index, Message::NewPage(page)))
+                            InterpreterEvent::SetPage(page) => {
+                                Some((index, Message::SetPage(page)))
                             }
                             InterpreterEvent::ScriptError(error) => {
                                 Some((index, Message::ScriptError(error)))
                             }
                             InterpreterEvent::LoadAddressError(error) => {
                                 Some((index, Message::LoadAddressErr(error)))
+                            }
+                            InterpreterEvent::CloseTab => {
+                                Some((index, Message::Finished))
                             }
                         },
                         (index, SubscriptionStateVariant::RunningScript(receiver)),

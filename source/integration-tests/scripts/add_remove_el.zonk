@@ -1,0 +1,157 @@
+# Add and remove elements from UI
+
+class ColumnWithText {
+	Text one;
+	Text two;
+	Text three;
+	Text four;
+	Column col;
+
+	constructor() {
+		@one = Text("one");
+		@two = Text("two");
+		@three = Text("three");
+		@four = Text("four");
+
+		@col = Column()
+			.add(@one)
+			.add(@two)
+			.add(@three)
+			.add(@four);
+	}
+
+	method remove_test_one() {
+		@col.remove(@one);
+		@col.remove(@three);
+	}
+
+	method remove_test_two() {
+		@col.remove(@two);
+		@col.remove(@four);
+	}
+
+	method get_column() -> Column {
+		return @col;
+	}
+}
+
+function moving_to_next() {
+	sleep(1000);
+	let page = Page();
+	set_page(page);
+	page.add(Text("Moving onto next test.").set_size(50.));
+	let loading = ".";
+	let text = Text(loading).set_size(50.);
+	
+	for (Integer i = 0, i < 5, i += 1) {
+		loading += ".";
+		page.remove(text);
+		text = Text(loading).set_size(50.);
+		page.add(text);
+		sleep(500);
+	}
+}
+
+function subtest_one() {
+	let page = Page();
+	set_page(page);
+	page.add(Text("Subtest 1").set_size(50.));
+
+	for (Integer i = 0, i < 5, i += 1) {	
+		page.add(Button("Number " + (String i)));
+		sleep(50);
+	}
+	sleep(500);
+
+	# Add some text in the middle
+	let text_one = Text("Test 1");
+	page.add(text_one);
+	sleep(500);
+
+	for (Integer i = 0, i < 4, i += 1) {	
+		page.add(Input("Number " + (String i)));
+		sleep(50);
+	}
+	sleep(500);
+
+	# Add some more text
+	let text_two = Text("Test 2");
+	page.add(text_two);
+	sleep(500);
+
+	# Add 5 buttons to the page
+	for (Integer i = 0, i < 5, i += 1) {	
+		page.add(Input("Number" + (String i)));
+		sleep(50);
+	}
+	sleep(500);
+
+	# Remove first text and change second text
+	page.remove(text_one);
+	text_two.set_value("Test change 2");
+	sleep(500);
+}
+
+function subtest_two() {
+	# Test adding and removing from rows and columns
+	let page = Page();
+	set_page(page);
+	page.add(Text("Subtest 2").set_size(50.));
+
+	let row = Row();
+
+	page.add(row);
+
+	let column_one = ColumnWithText();
+	let column_two = ColumnWithText();
+	let column_three = ColumnWithText();
+	let column_four = ColumnWithText();
+	let column_five = ColumnWithText();
+
+	row.add(column_one.get_column());
+	sleep(500);
+	row.add(column_two.get_column());
+	sleep(500);
+	row.add(column_three.get_column());
+	sleep(500);
+	row.add(column_four.get_column());
+	sleep(500);
+	row.add(column_five.get_column());
+	sleep(500);
+
+	column_one.remove_test_one();
+	sleep(500);
+	column_two.remove_test_two();
+	sleep(500);
+	column_three.remove_test_one();
+	sleep(500);
+	column_three.remove_test_two();
+	sleep(500);
+	column_four.remove_test_one();
+	sleep(500);
+	column_four.remove_test_one();
+	sleep(500);
+	column_four.remove_test_two();
+	sleep(500);
+	column_four.remove_test_two();
+	sleep(500);
+
+	row.remove(column_one.get_column());
+	sleep(500);
+	row.remove(column_three.get_column());
+	sleep(500);
+	row.remove(column_five.get_column());
+	sleep(500);
+	row.remove(column_two.get_column());
+	sleep(500);
+	row.remove(column_four.get_column());
+	row.remove(column_four.get_column());
+	sleep(500);
+}
+
+start {
+	subtest_one();
+	moving_to_next();
+	subtest_two();
+	close_tab();
+}

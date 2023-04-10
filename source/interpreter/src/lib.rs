@@ -1,5 +1,5 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
-use crate::{parser::Parser, tree_walker::TreeWalker};
+use crate::{parser::Parser, tree_walker::TreeWalker, err::tree_walker::TreeWalkerErr};
 use ast::AST;
 use resource_loader::Address;
 use std::sync::mpsc::{Receiver, Sender};
@@ -99,6 +99,7 @@ fn run_tree_walker(
 
     match TreeWalker::run(ast, sender, receiver) {
         Ok(_) => Ok(()),
+        Err(TreeWalkerErr::Exit) => Ok(()),
         Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
     }
 }

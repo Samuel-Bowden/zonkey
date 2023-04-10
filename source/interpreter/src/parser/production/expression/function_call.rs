@@ -86,8 +86,14 @@ impl Parser {
                     "wait_for_event" => Ok(Expr::Boolean(BooleanExpr::NativeCall(
                         NativeCallBoolean::WaitForEvent,
                     ))),
+                    "close_tab" => Ok(Expr::None(NoneExpr::NativeCall(
+                        NativeCallNone::CloseTab,
+                    ))),
                     "sleep" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::Sleep(
                         arguments.remove(0).to_integer_expr(),
+                    )))),
+                    "set_page" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::SetPage(
+                        arguments.remove(0).to_object_expr(),
                     )))),
                     "Page" => Ok(Expr::Object(
                         Rc::new("Page".to_string()),

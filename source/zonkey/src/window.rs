@@ -1,4 +1,5 @@
 use iced::{executor, Application, Command, Renderer, Theme};
+use iced_native::command::Action;
 use resource_loader::Address;
 use std::sync::{
     mpsc::{Receiver, Sender},
@@ -7,7 +8,7 @@ use std::sync::{
 use tab::Tab;
 use ui::{
     element::Page,
-    event::{InterpreterEvent, PageEvent},
+    event::{InterpreterEvent, PageEvent, WindowEvent},
 };
 
 pub struct Window {
@@ -47,8 +48,13 @@ impl Application for Window {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         let (_, msg) = message;
-        self.tab.update(msg);
-        Command::none()
+        if let Some(WindowEvent::TabFinished) = self.tab.update(msg) {
+            Command::single(Action::Window(
+                iced_native::window::Action::Close,
+            ))
+        } else {
+            Command::none()
+        }
     }
 
     fn title(&self) -> String {

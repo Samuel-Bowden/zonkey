@@ -6,7 +6,7 @@ impl PageViewer {
         match message {
             Message::ButtonPressed(id) => {
                 if let Some(sender) = &self.page_event_sender {
-                    sender.send(PageEvent::ButtonPress(id)).unwrap();
+                    sender.send(PageEvent::ButtonPress(id)).ok();
                 }
                 None
             }
@@ -17,7 +17,7 @@ impl PageViewer {
             }
             Message::InputSubmit(input) => {
                 if let Some(sender) = &self.page_event_sender {
-                    sender.send(PageEvent::InputConfirmed(input)).unwrap();
+                    sender.send(PageEvent::InputConfirmed(input)).ok();
                 }
                 None
             }

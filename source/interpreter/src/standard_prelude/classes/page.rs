@@ -22,6 +22,24 @@ pub fn new(page: Rc<String>) -> ClassDeclaration {
     );
 
     methods.insert(
+        "center".to_string().into(),
+        Rc::new(CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: Some(ValueType::Class(Rc::clone(&page))),
+        }),
+    );
+
+    methods.insert(
+        "set_max_width".to_string().into(),
+        Rc::new(CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Float],
+            return_type: Some(ValueType::Class(Rc::clone(&page))),
+        }),
+    );
+
+    methods.insert(
         "set_title".to_string().into(),
         Rc::new(CallableDeclaration {
             callable_type: CallableType::Native,

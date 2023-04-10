@@ -39,3 +39,8 @@ fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
 fn and_or_script() -> Result<(), Box<dyn Error>> {
     test_file("and_or", true)
 }
+
+#[test]
+fn add_and_remove_elements() -> Result<(), Box<dyn Error>> {
+    test_file("add_remove_el", true)
+}

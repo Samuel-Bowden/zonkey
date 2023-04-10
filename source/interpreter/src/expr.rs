@@ -32,7 +32,15 @@ impl Expr {
         if let Expr::Integer(expr) = self {
             expr
         } else {
-            panic!("Not a integer expression")
+            panic!("Not an integer expression")
+        }
+    }
+
+    pub fn to_object_expr(self) -> ObjectExpr {
+        if let Expr::Object(_, expr) = self {
+            expr
+        } else {
+            panic!("Not an object expression")
         }
     }
 }

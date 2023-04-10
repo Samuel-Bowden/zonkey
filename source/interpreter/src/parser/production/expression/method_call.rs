@@ -137,6 +137,15 @@ impl Parser {
                                 arguments.remove(0).to_float_expr(),
                             )),
                         )),
+                        "set_text_colour" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::ButtonSetTextColour(
+                                Box::new(object),
+                                arguments.remove(0).to_float_expr(),
+                                arguments.remove(0).to_float_expr(),
+                                arguments.remove(0).to_float_expr(),
+                            )),
+                        )),
                         "set_padding" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(NativeCallObject::ButtonSetPadding(
@@ -196,30 +205,35 @@ impl Parser {
                                 Box::new(arguments.remove(0).to_string_expr()),
                             )),
                         )),
+                        "set_max_width" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::PageSetMaxWidth(
+                                Box::new(object),
+                                arguments.remove(0).to_float_expr(),
+                            )),
+                        )),
+                        "center" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::PageCenter(
+                                Box::new(object),
+                            )),
+                        )),
                         "add" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(
-                                if let Expr::Object(_, expr) = arguments.remove(0) {
-                                    NativeCallObject::PageAddElement(
-                                        Box::new(object),
-                                        Box::new(expr),
-                                    )
-                                } else {
-                                    unreachable!()
-                                },
+                                NativeCallObject::PageAddElement(
+                                    Box::new(object),
+                                    Box::new(arguments.remove(0).to_object_expr()),
+                                )
                             ),
                         )),
                         "remove" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(
-                                if let Expr::Object(_, expr) = arguments.remove(0) {
-                                    NativeCallObject::PageRemoveElement(
-                                        Box::new(object),
-                                        Box::new(expr),
-                                    )
-                                } else {
-                                    unreachable!()
-                                },
+                                NativeCallObject::PageRemoveElement(
+                                    Box::new(object),
+                                    Box::new(arguments.remove(0).to_object_expr()),
+                                )
                             ),
                         )),
                         "set_background_colour" => Ok(Expr::Object(
@@ -237,14 +251,19 @@ impl Parser {
                         "add" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(
-                                if let Expr::Object(_, expr) = arguments.remove(0) {
-                                    NativeCallObject::RowAddElement(
-                                        Box::new(object),
-                                        Box::new(expr),
-                                    )
-                                } else {
-                                    unreachable!()
-                                },
+                                NativeCallObject::RowAddElement(
+                                    Box::new(object),
+                                    Box::new(arguments.remove(0).to_object_expr()),
+                                )
+                            ),
+                        )),
+                        "remove" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(
+                                NativeCallObject::RowRemoveElement(
+                                    Box::new(object),
+                                    Box::new(arguments.remove(0).to_object_expr()),
+                                )
                             ),
                         )),
                         "center" => Ok(Expr::Object(
@@ -257,14 +276,19 @@ impl Parser {
                         "add" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(
-                                if let Expr::Object(_, expr) = arguments.remove(0) {
-                                    NativeCallObject::ColumnAddElement(
-                                        Box::new(object),
-                                        Box::new(expr),
-                                    )
-                                } else {
-                                    unreachable!()
-                                },
+                                NativeCallObject::ColumnAddElement(
+                                    Box::new(object),
+                                    Box::new(arguments.remove(0).to_object_expr()),
+                                )
+                            ),
+                        )),
+                        "remove" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(
+                                NativeCallObject::ColumnRemoveElement(
+                                    Box::new(object),
+                                    Box::new(arguments.remove(0).to_object_expr()),
+                                )
                             ),
                         )),
                         "set_max_width" => Ok(Expr::Object(
@@ -332,7 +356,7 @@ impl Parser {
             }
         } else {
             self.error.add(ParserErrType::CallNotFound(
-                self.tokens[token_pos - 1].clone(),
+                self.tokens[token_pos + 1].clone(),
                 name.to_string(),
             ));
             Err(ParserStatus::Unwind)

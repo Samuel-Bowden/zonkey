@@ -541,9 +541,25 @@ impl<'a> TreeWalker<'a> {
             NativeCallNone::Sleep(duration) => {
                 let duration = self.eval_int(duration)?;
                 sleep(Duration::from_millis(duration as u64));
-                stdout().write_all(&self.stdout.as_slice()).unwrap();
-                stdout().flush().unwrap();
+                stdout().write_all(&self.stdout.as_slice()).ok();
+                stdout().flush().ok();
                 self.stdout.clear();
+                self.interpreter_event_sender.send(InterpreterEvent::Update).ok();
+            }
+
+            NativeCallNone::SetPage(page) => {
+                let mut page = self.eval_object(page)?;
+
+                self.interpreter_event_sender
+                    .send(InterpreterEvent::SetPage(Arc::clone(page.extract_native_object().extract_page())))
+                    .ok();
+            }
+
+            NativeCallNone::CloseTab => {
+                self.interpreter_event_sender
+                    .send(InterpreterEvent::CloseTab)
+                    .ok();
+                return Err(TreeWalkerErr::Exit);
             }
         }
 
@@ -588,7 +604,7 @@ impl<'a> TreeWalker<'a> {
             NativeCallBoolean::WaitForEvent => {
                 self.interpreter_event_sender
                     .send(InterpreterEvent::Update)
-                    .unwrap();
+                    .ok();
                 match self.page_event_receiver.recv() {
                     Ok(PageEvent::ButtonPress(button)) => {
                         button.lock().unwrap().clicked = true;
@@ -700,7 +716,7 @@ impl<'a> TreeWalker<'a> {
             }
 
             NativeCallObject::RowAddElement(row_obj, element) => {
-                let mut element = self.eval_object(element)?;
+                let mut element_obj = self.eval_object(element)?;
                 let mut row_obj = self.eval_object(row_obj)?;
 
                 {
@@ -710,15 +726,43 @@ impl<'a> TreeWalker<'a> {
                         .lock()
                         .unwrap();
 
+                    let element = element_obj.extract_native_object();
+
                     row.elements
-                        .push(Self::native_obj_to_element(element.extract_native_object()));
+                        .push((element.get_id(), Self::native_obj_to_element(element)));
+                }
+
+                Ok(row_obj)
+            }
+
+            NativeCallObject::RowRemoveElement(row_obj, element) => {
+                let mut element_obj = self.eval_object(element)?;
+                let mut row_obj = self.eval_object(row_obj)?;
+
+                {
+                    let mut row = row_obj
+                        .extract_native_object()
+                        .extract_row()
+                        .lock()
+                        .unwrap();
+
+                    let element = element_obj.extract_native_object();
+
+                    let pos = row 
+                        .elements
+                        .iter()
+                        .position(|&(id, _)| id == element.get_id());
+
+                    if let Some(pos) = pos {
+                        row.elements.remove(pos);
+                    }
                 }
 
                 Ok(row_obj)
             }
 
             NativeCallObject::ColumnAddElement(column_obj, element) => {
-                let mut element = self.eval_object(element)?;
+                let mut element_obj = self.eval_object(element)?;
                 let mut column_obj = self.eval_object(column_obj)?;
 
                 {
@@ -728,9 +772,36 @@ impl<'a> TreeWalker<'a> {
                         .lock()
                         .unwrap();
 
-                    column
+                    let element = element_obj.extract_native_object();
+
+                    column.elements
+                        .push((element.get_id(), Self::native_obj_to_element(element)));
+                }
+
+                Ok(column_obj)
+            }
+
+            NativeCallObject::ColumnRemoveElement(column_obj, element) => {
+                let mut element_obj = self.eval_object(element)?;
+                let mut column_obj = self.eval_object(column_obj)?;
+
+                {
+                    let mut column = column_obj
+                        .extract_native_object()
+                        .extract_column()
+                        .lock()
+                        .unwrap();
+
+                    let element = element_obj.extract_native_object();
+
+                    let pos = column 
                         .elements
-                        .push(Self::native_obj_to_element(element.extract_native_object()));
+                        .iter()
+                        .position(|&(id, _)| id == element.get_id());
+
+                    if let Some(pos) = pos {
+                        column.elements.remove(pos);
+                    }
                 }
 
                 Ok(column_obj)
@@ -744,11 +815,10 @@ impl<'a> TreeWalker<'a> {
                     red: 1.,
                     green: 1.,
                     blue: 1.,
+                    center: false,
+                    max_width: None,
                 }));
 
-                self.interpreter_event_sender
-                    .send(InterpreterEvent::NewPage(Arc::clone(&page)))
-                    .unwrap();
                 Ok(Object::Native(NativeObject::Page(page)))
             }
 
@@ -757,9 +827,12 @@ impl<'a> TreeWalker<'a> {
                 let button = Arc::new(Mutex::new(Button {
                     id: self.next_element_id(),
                     text,
-                    red: 0.5,
-                    green: 0.5,
-                    blue: 0.5,
+                    bg_red: 0.5,
+                    bg_green: 0.5,
+                    bg_blue: 0.5,
+                    txt_red: 1.,
+                    txt_green: 1.,
+                    txt_blue: 1.,
                     clicked: false,
                     vertical_padding: 10.,
                     horizontal_padding: 10.,
@@ -837,7 +910,6 @@ impl<'a> TreeWalker<'a> {
                     data: None,
                     id: self.next_element_id(),
                     max_width: None,
-                    max_height: None,
                 }));
 
                 let image_ref = Arc::clone(&image);
@@ -901,9 +973,30 @@ impl<'a> TreeWalker<'a> {
                         .lock()
                         .unwrap();
 
-                    button.red = red as f32;
-                    button.green = green as f32;
-                    button.blue = blue as f32;
+                    button.bg_red = red as f32;
+                    button.bg_green = green as f32;
+                    button.bg_blue = blue as f32;
+                }
+
+                Ok(object)
+            }
+
+            NativeCallObject::ButtonSetTextColour(object, red, green, blue) => {
+                let mut object = self.eval_object(object)?;
+                let red = self.eval_float(red)?;
+                let green = self.eval_float(green)?;
+                let blue = self.eval_float(blue)?;
+
+                {
+                    let mut button = object
+                        .extract_native_object()
+                        .extract_button()
+                        .lock()
+                        .unwrap();
+
+                    button.txt_red = red as f32;
+                    button.txt_green = green as f32;
+                    button.txt_blue = blue as f32;
                 }
 
                 Ok(object)
@@ -976,7 +1069,7 @@ impl<'a> TreeWalker<'a> {
                 let column = Arc::new(Mutex::new(Column {
                     id: self.next_element_id(),
                     elements: vec![],
-                    max_width: 10000.,
+                    max_width: None,
                 }));
                 Ok(Object::Native(NativeObject::Column(column)))
             }
@@ -1003,7 +1096,7 @@ impl<'a> TreeWalker<'a> {
                     .extract_column()
                     .lock()
                     .unwrap()
-                    .max_width = width as f32;
+                    .max_width = Some(width as f32);
 
                 Ok(button)
             }
@@ -1032,6 +1125,33 @@ impl<'a> TreeWalker<'a> {
                     .max_width = Some(width as f32);
 
                 Ok(image)
+            }
+
+            NativeCallObject::PageCenter(page) => {
+                let mut page = self.eval_object(page)?;
+
+                page 
+                    .extract_native_object()
+                    .extract_page()
+                    .lock()
+                    .unwrap()
+                    .center = true;
+
+                Ok(page)
+            }
+
+            NativeCallObject::PageSetMaxWidth(page, max_width) => {
+                let mut page = self.eval_object(page)?;
+                let max_width = self.eval_float(max_width)?;
+
+                page 
+                    .extract_native_object()
+                    .extract_page()
+                    .lock()
+                    .unwrap()
+                    .max_width = Some(max_width as f32);
+
+                Ok(page)
             }
         }
     }

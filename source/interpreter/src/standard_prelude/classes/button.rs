@@ -22,6 +22,15 @@ pub fn new(button: Rc<String>) -> ClassDeclaration {
     );
 
     methods.insert(
+        "set_text_colour".to_string().into(),
+        Rc::new(CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Float, ValueType::Float, ValueType::Float],
+            return_type: Some(ValueType::Class(Rc::clone(&button))),
+        }),
+    );
+
+    methods.insert(
         "clicked".to_string().into(),
         Rc::new(CallableDeclaration {
             callable_type: CallableType::Native,

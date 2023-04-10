@@ -5,12 +5,12 @@ start {
 		.set_background_colour(1., 0., 0.);
 
 	# Add elements to the page
-	Page()
+	set_page(Page()
 		.set_title("Counter")
 		.add(Text("A simple counter").set_size(50.))
 		.add(Text("Click the button to increase the counter"))
 		.add(counter_btn)
-		.add(reset_btn);
+		.add(reset_btn));
 
 	let counter = 0;
 

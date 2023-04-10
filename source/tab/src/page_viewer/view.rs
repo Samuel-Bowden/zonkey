@@ -18,13 +18,7 @@ impl PageViewer {
         }
 
         if let Some(page) = &self.page {
-            Container::new(build_page(page))
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .style(theme::Container::Custom(Box::new(
-                    page.lock().unwrap().clone(),
-                )))
-                .into()
+            build_page(page)
         } else {
             Container::new(text("Loading page").size(40))
                 .align_x(Horizontal::Center)
@@ -56,13 +50,28 @@ pub fn build_page<'a>(page: &Arc<Mutex<element::Page>>) -> Element<'a, Message> 
         page_content.push(build_calls(element));
     }
 
-    Scrollable::new(
-        Column::with_children(page_content)
+    let mut column = Column::with_children(page_content)
             .padding(30)
-            .spacing(20)
-            .width(Length::Fill),
-    )
-    .into()
+            .spacing(20);
+
+    if let Some(max_width) = page.max_width {
+        column = column.max_width(max_width);
+    }
+
+    let scrollable = Scrollable::new(column);
+
+    let mut container = Container::new(scrollable)
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .style(theme::Container::Custom(Box::new(
+            page.clone(),
+        )));
+
+    if page.center {
+        container = container.center_x();
+    }
+
+    container.into()
 }
 
 fn build_text<'a>(text: Arc<Mutex<element::Text>>) -> Element<'a, Message> {
@@ -119,7 +128,7 @@ fn build_row<'a>(row: Arc<Mutex<element::Row>>) -> Element<'a, Message> {
         row_content.push(Space::with_width(Length::Fill).into());
     }
 
-    for element in &row.elements {
+    for (_, element) in &row.elements {
         row_content.push(build_calls(element));
     }
 
@@ -134,17 +143,21 @@ fn build_row<'a>(row: Arc<Mutex<element::Row>>) -> Element<'a, Message> {
 }
 
 fn build_column<'a>(column: Arc<Mutex<element::Column>>) -> Element<'a, Message> {
-    let column = column.lock().unwrap();
+    let column_obj = column.lock().unwrap();
     let mut column_content = vec![];
 
-    for element in &column.elements {
+    for (_, element) in &column_obj.elements {
         column_content.push(build_calls(element));
     }
 
-    Column::with_children(column_content)
-        .spacing(10)
-        .max_width(column.max_width)
-        .into()
+    let mut column = Column::with_children(column_content)
+        .spacing(10);
+
+    if let Some(max_width) = column_obj.max_width {
+        column = column.max_width(max_width);
+    }
+
+    column.into()
 }
 
 fn build_image<'a>(image: Arc<Mutex<element::Image>>) -> Element<'a, Message> {

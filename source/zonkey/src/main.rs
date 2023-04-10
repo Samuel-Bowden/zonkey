@@ -38,7 +38,7 @@ fn run(address: Address) -> ExitCode {
     });
 
     match this_receiver.recv() {
-        Ok(InterpreterEvent::NewPage(page)) => {
+        Ok(InterpreterEvent::SetPage(page)) => {
             let result = Window::run(Settings {
                 default_font: Some("Noto".as_bytes()),
                 antialiasing: true,

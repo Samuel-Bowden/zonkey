@@ -9,7 +9,7 @@ pub enum Message {
     PageViewer(page_viewer::message::Message),
     ReadyForNextScript(Sender<Address>),
     StartedScript(Sender<PageEvent>),
-    NewPage(Arc<Mutex<Page>>),
+    SetPage(Arc<Mutex<Page>>),
     ScriptError(String),
     LoadAddressErr(String),
     Finished,

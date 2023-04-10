@@ -23,9 +23,11 @@ impl button::StyleSheet for Button {
     fn active(&self, _: &Self::Style) -> button::Appearance {
         button::Appearance {
             background: Some(iced::Background::Color(Color::from_rgb(
-                self.red, self.green, self.blue,
+                self.bg_red, self.bg_green, self.bg_blue,
             ))),
-            text_color: Color::WHITE,
+            text_color: Color::from_rgb(
+                self.txt_red, self.txt_green, self.txt_blue,
+            ),
             ..Default::default()
         }
     }

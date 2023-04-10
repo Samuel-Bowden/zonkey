@@ -3,10 +3,11 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Debug)]
 pub enum InterpreterEvent {
-    NewPage(Arc<Mutex<Page>>),
+    SetPage(Arc<Mutex<Page>>),
     Update,
     ScriptError(String),
     LoadAddressError(String),
+    CloseTab,
 }
 
 pub enum WindowEvent {

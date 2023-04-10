@@ -4,4 +4,5 @@ pub enum TreeWalkerErr {
     FailedStringToIntegerCast,
     FailedStringToFloatCast,
     FailedStringToBooleanCast,
+    Exit,
 }

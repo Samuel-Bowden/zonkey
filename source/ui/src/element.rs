@@ -19,20 +19,22 @@ pub struct Page {
     pub red: f32,
     pub green: f32,
     pub blue: f32,
+    pub center: bool,
+    pub max_width: Option<f32>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Row {
     pub id: u64,
-    pub elements: Vec<ElementType>,
+    pub elements: Vec<(u64, ElementType)>,
     pub center: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct Column {
     pub id: u64,
-    pub elements: Vec<ElementType>,
-    pub max_width: f32,
+    pub elements: Vec<(u64, ElementType)>,
+    pub max_width: Option<f32>,
 }
 
 #[derive(Debug, Clone)]
@@ -49,9 +51,12 @@ pub struct Text {
 pub struct Button {
     pub id: u64,
     pub text: String,
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
+    pub bg_red: f32,
+    pub bg_green: f32,
+    pub bg_blue: f32,
+    pub txt_red: f32,
+    pub txt_green: f32,
+    pub txt_blue: f32,
     pub clicked: bool,
     pub vertical_padding: f32,
     pub horizontal_padding: f32,
@@ -78,5 +83,4 @@ pub struct Image {
     pub data: Option<Vec<u8>>,
     pub id: u64,
     pub max_width: Option<f32>,
-    pub max_height: Option<f32>,
 }
