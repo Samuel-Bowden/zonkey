@@ -1473,13 +1473,14 @@ dependencies = [
 name = "interpreter"
 version = "0.1.0"
 dependencies = [
+ "iced",
+ "iced_native",
  "indexmap",
  "numtoa",
  "resource-loader",
  "rustc-hash",
  "ryu",
  "termcolor",
- "ui",
  "unicode-segmentation",
 ]
 
@@ -2920,8 +2921,6 @@ dependencies = [
  "iced_native",
  "interpreter",
  "non-empty-vec",
- "resource-loader",
- "ui",
 ]
 
 [[package]]
@@ -3156,14 +3155,6 @@ dependencies = [
  "cfg-if",
  "rand",
  "static_assertions",
-]
-
-[[package]]
-name = "ui"
-version = "0.1.0"
-dependencies = [
- "iced",
- "iced_native",
 ]
 
 [[package]]
@@ -3959,9 +3950,7 @@ dependencies = [
  "iced",
  "iced_native",
  "interpreter",
- "resource-loader",
  "tab",
- "ui",
 ]
 
 [[package]]
@@ -3970,9 +3959,7 @@ version = "0.1.0"
 dependencies = [
  "iced",
  "iced_native",
- "resource-loader",
  "tab",
- "ui",
 ]
 
 [[package]]

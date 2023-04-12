@@ -1,9 +1,0 @@
-start {
-	let count = 1;
-
-	loop {
-		println(count);
-		count += 1;
-		sleep(1000);
-	}
-}

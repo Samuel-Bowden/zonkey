@@ -1,7 +1,7 @@
 use iced::{Application, Settings};
-use resource_loader::Address;
+use tab::Address;
 use std::{env::args, process::ExitCode, sync::mpsc, thread};
-use ui::event::InterpreterEvent;
+use interpreter::event::InterpreterEvent;
 use window::Window;
 
 mod window;

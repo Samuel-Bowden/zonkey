@@ -1,5 +1,5 @@
 use std::sync::{mpsc::Sender, Arc, Mutex};
-use ui::{element::Page, event::PageEvent};
+use interpreter::{element::Page, event::PageEvent};
 
 pub mod message;
 pub mod update;

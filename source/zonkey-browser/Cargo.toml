@@ -9,5 +9,3 @@ authors = ["Sam Bowden"]
 iced = { version = "0.8", features = ["svg", "image"] }
 iced_native = "0.9.1"
 tab = { path = "../tab" }
-resource-loader = { path = "../resource-loader" }
-ui = { path = "../ui" }

@@ -1,9 +1,0 @@
-start {
-	let page = Page();
-
-	page.add(Text("Testing the scroll feature").set_size(75.));
-
-	for (Integer count = 0, count <= 100, count += 1) {
-		page.add(Text("Current iteration: " + (String count)));
-	}
-}

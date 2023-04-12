@@ -1,6 +1,5 @@
-use resource_loader::Address;
 use std::sync::mpsc::Receiver;
-use ui::event::InterpreterEvent;
+use interpreter::{event::InterpreterEvent, Address};
 
 pub type SubscriptionState = (usize, SubscriptionStateVariant);
 

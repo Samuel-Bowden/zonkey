@@ -123,7 +123,7 @@ pub fn print_type<'a>(value_type: &'a Option<ValueType>) -> &'a str {
         Some(ValueType::Float) => "Float",
         Some(ValueType::String) => "String",
         Some(ValueType::Boolean) => "Boolean",
-        Some(ValueType::Any) => "Any",
+        Some(ValueType::Printable) => "Printable",
         Some(ValueType::Element) => "Element",
         Some(ValueType::Class(name)) => &name,
         None => "none",

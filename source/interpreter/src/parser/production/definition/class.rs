@@ -143,7 +143,7 @@ impl Parser {
                         },
                     ));
                 }
-                ValueType::Any | ValueType::Element => {
+                ValueType::Printable | ValueType::Element => {
                     unreachable!("Zonkey code cannot use this type")
                 }
             }

@@ -6,7 +6,6 @@ members = [
 	"installer",
 	"zonkey-browser",
 	"tab",
-	"ui",
 	"resource-loader",
 	"integration-tests",
 ]

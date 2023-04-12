@@ -1,0 +1,59 @@
+# Add and remove all elements available in Zonkey from page
+
+start {
+	let page = Page();
+	set_page(page);
+
+	let text = Text("Some text");
+	let input = Input("Enter input...");
+	let button = Button("Click me");
+	let hyperlink = Hyperlink("A hyperlink to the home page", "zonkey:home.zonk");
+	let image = Image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Zoologist421898_080b.jpg/1280px-Zoologist421898_080b.jpg").set_max_width(100.);
+	let row = Row().add(Text("one")).add(Text("two")).add(Text("three"));
+	let column = Column().add(Text("one")).add(Text("two")).add(Text("three"));
+
+	let sleep_dur = 500;
+
+	page.add(text);
+	sleep(sleep_dur);
+	page.add(input);
+	sleep(sleep_dur);
+	page.add(button);
+	sleep(sleep_dur);
+	page.add(hyperlink);
+	sleep(sleep_dur);
+	page.add(image);
+	sleep(sleep_dur);
+	page.add(row);
+	sleep(sleep_dur);
+	page.add(column);
+
+	# Sleep to check
+	sleep(2000);
+
+	# Remove odd elements first in order, then even
+
+	# Odd
+	page.remove(text);
+	sleep(sleep_dur);
+	page.remove(button);
+	sleep(sleep_dur);
+	page.remove(image);
+	sleep(sleep_dur);
+	page.remove(column);
+
+	# Sleep to check
+	sleep(2000);
+
+	# Even
+	page.remove(input);
+	sleep(sleep_dur);
+	page.remove(hyperlink);
+	sleep(sleep_dur);
+	page.remove(row);
+
+	# Page should now be empty
+	sleep(2000);
+
+	close_tab();
+}

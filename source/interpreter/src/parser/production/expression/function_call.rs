@@ -55,7 +55,7 @@ impl Parser {
                     (Expr::Float(_), ValueType::Float) => (),
                     (Expr::String(_), ValueType::String) => (),
                     (Expr::Boolean(_), ValueType::Boolean) => (),
-                    (_, ValueType::Any) => (),
+                    (Expr::Integer(_) | Expr::Float(_) | Expr::String(_) | Expr::Boolean(_), ValueType::Printable) => (),
                     (Expr::Object(class, _), ValueType::Class(name)) => if class == name {},
                     (expr, _) => {
                         let expr_type = self.expr_type(expr);
@@ -83,11 +83,25 @@ impl Parser {
                     "prompt" => Ok(Expr::String(StringExpr::NativeCall(
                         NativeCallString::Prompt(Box::new(arguments.remove(0).to_string_expr())),
                     ))),
+                    "read_string" => Ok(Expr::String(StringExpr::NativeCall(
+                        NativeCallString::ReadString(Box::new(arguments.remove(0).to_string_expr())),
+                    ))),
+                    "write_string" => Ok(Expr::None(NoneExpr::NativeCall(
+                        NativeCallNone::WriteString(
+                            Box::new(arguments.remove(0).to_string_expr()),
+                            Box::new(arguments.remove(0).to_string_expr()),
+                        )),
+                    )),
                     "wait_for_event" => Ok(Expr::Boolean(BooleanExpr::NativeCall(
                         NativeCallBoolean::WaitForEvent,
                     ))),
                     "close_tab" => Ok(Expr::None(NoneExpr::NativeCall(
                         NativeCallNone::CloseTab,
+                    ))),
+                    "open_link" => Ok(Expr::None(NoneExpr::NativeCall(
+                        NativeCallNone::OpenLink(
+                            Box::new(arguments.remove(0).to_string_expr()),
+                        ),
                     ))),
                     "sleep" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::Sleep(
                         arguments.remove(0).to_integer_expr(),
@@ -149,7 +163,7 @@ impl Parser {
                         Expr::Object(Rc::clone(class), ObjectExpr::Call(id, arguments))
                     }
                     None => Expr::None(NoneExpr::Call(id, arguments)),
-                    Some(ValueType::Any | ValueType::Element) => {
+                    Some(ValueType::Printable | ValueType::Element) => {
                         unreachable!("Zonkey code cannot use these types")
                     }
                 }),

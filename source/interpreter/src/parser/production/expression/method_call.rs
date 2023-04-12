@@ -72,7 +72,7 @@ impl Parser {
         {
             if arguments.len() != call.parameters.len() {
                 self.error.add(ParserErrType::CallIncorrectArgumentsNum(
-                    self.tokens[token_pos - 1].clone(),
+                    self.tokens[token_pos + 1].clone(),
                     arguments.len(),
                     call.parameters.len(),
                     name.to_string(),
@@ -89,7 +89,6 @@ impl Parser {
                     (Expr::Float(_), ValueType::Float) => (),
                     (Expr::String(_), ValueType::String) => (),
                     (Expr::Boolean(_), ValueType::Boolean) => (),
-                    (_, ValueType::Any) => (),
                     (Expr::Object(class, _), ValueType::Element)
                         if matches!(
                             class.as_str(),
@@ -102,7 +101,7 @@ impl Parser {
                         failed = true;
 
                         self.error.add(ParserErrType::CallArgumentIncorrectType(
-                            self.tokens[token_pos - 1].clone(),
+                            self.tokens[token_pos + 1].clone(),
                             i,
                             expr_type,
                             name.to_string(),
@@ -169,10 +168,17 @@ impl Parser {
                         "get_text" => Ok(Expr::String(StringExpr::NativeCall(
                             NativeCallString::GetInputText(object),
                         ))),
+                        "set_text" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::InputSetText(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_string_expr()),
+                            )),
+                        )),
                         _ => unreachable!(),
                     },
                     "Text" => match name.as_str() {
-                        "set_value" => Ok(Expr::Object(
+                        "set_text" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(NativeCallObject::TextSetValue(
                                 Box::new(object),
@@ -331,7 +337,7 @@ impl Parser {
                             ObjectExpr::Call(id, arguments),
                         )),
                         None => Ok(Expr::None(NoneExpr::Call(id, arguments))),
-                        Some(ValueType::Any | ValueType::Element) => {
+                        Some(ValueType::Printable | ValueType::Element) => {
                             unreachable!("Zonkey code cannot use these types")
                         }
                     }

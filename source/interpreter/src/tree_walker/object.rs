@@ -4,7 +4,7 @@ use std::{
     rc::Rc,
     sync::{Arc, Mutex},
 };
-use ui::element::*;
+use crate::element::*;
 
 #[derive(Debug, Clone)]
 pub enum NativeObject {
@@ -112,3 +112,4 @@ impl Object {
         }
     }
 }
+

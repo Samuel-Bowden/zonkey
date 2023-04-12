@@ -7,12 +7,15 @@ pub enum NativeCallNone {
     Sleep(IntegerExpr),
     SetPage(ObjectExpr),
     CloseTab,
+    WriteString(Box<StringExpr>, Box<StringExpr>),
+    OpenLink(Box<StringExpr>),
 }
 
 #[derive(Debug, Clone)]
 pub enum NativeCallString {
     Prompt(Box<StringExpr>),
     GetInputText(ObjectExpr),
+    ReadString(Box<StringExpr>),
 }
 
 #[derive(Debug, Clone)]
@@ -39,6 +42,7 @@ pub enum NativeCallObject {
     HyperlinkConstructor(Box<StringExpr>, Box<StringExpr>),
 
     InputConstructor(Box<StringExpr>),
+    InputSetText(Box<ObjectExpr>, Box<StringExpr>),
 
     PageConstructor,
     PageSetTitle(Box<ObjectExpr>, Box<StringExpr>),

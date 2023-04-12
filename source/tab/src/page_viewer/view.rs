@@ -6,7 +6,7 @@ use iced::{
 };
 use iced_native::{image::Handle, theme};
 use std::sync::{Arc, Mutex};
-use ui::element::{self, ElementType};
+use interpreter::element::{self, ElementType};
 
 impl PageViewer {
     pub fn view(&self) -> Element<Message> {

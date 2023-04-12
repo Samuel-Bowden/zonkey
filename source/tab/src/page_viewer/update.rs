@@ -1,8 +1,12 @@
 use super::{message::Message, PageViewer};
-use ui::event::*;
+use interpreter::event::*;
+
+pub enum PageViewerEvent {
+    HyperlinkPressed(String),
+}
 
 impl PageViewer {
-    pub fn update(&self, message: Message) -> Option<TabEvent> {
+    pub fn update(&self, message: Message) -> Option<PageViewerEvent> {
         match message {
             Message::ButtonPressed(id) => {
                 if let Some(sender) = &self.page_event_sender {
@@ -10,7 +14,7 @@ impl PageViewer {
                 }
                 None
             }
-            Message::HyperlinkPressed(location) => Some(TabEvent::HyperlinkPressed(location)),
+            Message::HyperlinkPressed(location) => Some(PageViewerEvent::HyperlinkPressed(location)),
             Message::InputChanged(text, input) => {
                 input.lock().unwrap().text = text;
                 None

@@ -27,7 +27,7 @@ pub enum ValueType {
     Float,
     String,
     Boolean,
-    Any,
+    Printable,
     Element,
     Class(Rc<String>),
 }

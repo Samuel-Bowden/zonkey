@@ -7,7 +7,9 @@ start {
 
 	set_page(Page()	
 		.set_title(title)
-		.add(Text(title).set_size(75.))
+		.center()
+		.set_max_width(600.)
+		.add(Text(title).set_size(40.))
 		.add(status)
 		.add(password)
 		.add(exit));
@@ -16,19 +18,17 @@ start {
 		if (password.confirmed()) {
 			if (password.get_text() == "password1234") {
 				status	
-					.set_value("You guessed the correct password!")
+					.set_text("You guessed the correct password!")
 					.set_colour(0., 0.7, 0.);
 			} else {
 				status	
-					.set_value("That wasn't the right password")
+					.set_text("That wasn't the right password")
 					.set_colour(1., 0., 0.);
 			}
 		}
 
 		if (exit.clicked()) {
-			break;
+			close_tab();
 		}
 	}
-
-	close_tab();
 }

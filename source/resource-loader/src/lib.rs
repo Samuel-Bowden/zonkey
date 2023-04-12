@@ -2,7 +2,7 @@ use directories::ProjectDirs;
 use reqwest::blocking::Response;
 use std::{
     fmt,
-    fs::{read_to_string, File},
+    fs::{read_to_string, File, self},
     io::{BufReader, Read},
     path::PathBuf,
 };
@@ -32,16 +32,18 @@ pub enum Address {
 }
 
 #[derive(Debug)]
-pub enum LoadAddressErr {
+pub enum AddressErr {
     FileSystemFailure(std::io::Error),
     NetworkFailure(reqwest::Error),
+    InvalidAddress(String),
 }
 
-impl fmt::Display for LoadAddressErr {
+impl fmt::Display for AddressErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::FileSystemFailure(e) => write!(f, "Failed to read file - {e}"),
             Self::NetworkFailure(e) => write!(f, "Failed to read over network - {e}"),
+            Self::InvalidAddress(e) => write!(f, "Could not load as the address is invalid - {e}"),
         }
     }
 }
@@ -78,17 +80,40 @@ impl Address {
         }
     }
 
-    pub fn load_script(&self) -> Result<String, LoadAddressErr> {
+    pub fn load_script(&self) -> Result<String, AddressErr> {
         match self {
-            Self::Zonkey(location) => file_system_load(data_dir!().join(location)),
-            Self::File(location) => file_system_load(location.into()),
+            Self::Zonkey(location) => file_system_read(data_dir!().join(location)),
+            Self::File(location) => file_system_read(location.into()),
             Self::HTTP(secure, location) => {
-                match network_load(http_name(*secure), location)?.text() {
+                match network_read(http_name(*secure), location)?.text() {
                     Ok(script) => Ok(script),
-                    Err(e) => Err(LoadAddressErr::NetworkFailure(e)),
+                    Err(e) => Err(AddressErr::NetworkFailure(e)),
                 }
             }
             Self::Invalid(bad_address, error) => Ok(invalid_address_script(&bad_address, error)),
+        }
+    }
+
+    pub fn read_string(&self) -> Result<String, AddressErr> {
+        match self {
+            Self::Zonkey(location) => file_system_read(data_dir!().join(location)),
+            Self::File(location) => file_system_read(location.into()),
+            Self::HTTP(secure, location) => {
+                match network_read(http_name(*secure), location)?.text() {
+                    Ok(script) => Ok(script),
+                    Err(e) => Err(AddressErr::NetworkFailure(e)),
+                }
+            }
+            Self::Invalid(_, error) => Err(AddressErr::InvalidAddress(error.into())),
+        }
+    }
+
+    pub fn write_string(&self, string: String) -> Result<(), AddressErr> {
+        match self {
+            Self::Zonkey(location) => file_system_write(data_dir!().join(location), string),
+            Self::File(location) => file_system_write(location.into(), string),
+            Self::HTTP(secure, location) => network_write(http_name(*secure), location, string),
+            Self::Invalid(_, error) => Err(AddressErr::InvalidAddress(error.into())),
         }
     }
 
@@ -97,7 +122,7 @@ impl Address {
             Self::Zonkey(_) => self.load_bytes(),
             Self::File(_) => self.load_bytes(),
             Self::HTTP(secure, location) => {
-                if let Ok(response) = network_load(http_name(*secure), location) {
+                if let Ok(response) = network_read(http_name(*secure), location) {
                     if let Ok(data) = response.bytes() {
                         return data.to_vec();
                     }
@@ -139,17 +164,42 @@ impl fmt::Display for Address {
     }
 }
 
-fn file_system_load(path: PathBuf) -> Result<String, LoadAddressErr> {
+fn file_system_read(path: PathBuf) -> Result<String, AddressErr> {
     match read_to_string(path) {
         Ok(source) => Ok(source),
-        Err(e) => Err(LoadAddressErr::FileSystemFailure(e)),
+        Err(e) => Err(AddressErr::FileSystemFailure(e)),
     }
 }
 
-pub fn network_load(protocol: &str, location: &str) -> Result<Response, LoadAddressErr> {
+fn file_system_write(path: PathBuf, string: String) -> Result<(), AddressErr> {
+    match fs::write(path, string) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(AddressErr::FileSystemFailure(e)),
+    }
+}
+
+pub fn network_read(protocol: &str, location: &str) -> Result<Response, AddressErr> {
     match reqwest::blocking::get(protocol.to_string() + ":" + location) {
-        Ok(response) => Ok(response),
-        Err(e) => Err(LoadAddressErr::NetworkFailure(e)),
+        Ok(response) => match response.error_for_status() {
+            Ok(response) => Ok(response),
+            Err(e) => Err(AddressErr::NetworkFailure(e)),
+        },
+        Err(e) => Err(AddressErr::NetworkFailure(e)),
+    }
+}
+
+pub fn network_write(protocol: &str, location: &str, string: String) -> Result<(), AddressErr> {
+    let client = reqwest::blocking::Client::new();
+    match client
+        .post(protocol.to_string() + ":" + location)
+        .body(string)
+        .send()
+    {
+        Ok(response) => match response.error_for_status() {
+            Ok(_) => Ok(()),
+            Err(e) => Err(AddressErr::NetworkFailure(e)),
+        }
+        Err(e) => Err(AddressErr::NetworkFailure(e)),
     }
 }
 

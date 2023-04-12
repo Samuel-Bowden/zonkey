@@ -41,6 +41,11 @@ fn and_or_script() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn add_and_remove_elements() -> Result<(), Box<dyn Error>> {
-    test_file("add_remove_el", true)
+fn add_and_remove_elements_from_page() -> Result<(), Box<dyn Error>> {
+    test_file("add_remove_el_page", true)
+}
+
+#[test]
+fn add_and_remove_elements_from_row_and_column() -> Result<(), Box<dyn Error>> {
+    test_file("add_remove_el_row_col", true)
 }

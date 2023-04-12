@@ -1,0 +1,109 @@
+class PrefilledRow {
+	Text text;
+	Button button;
+	Input input;
+	Hyperlink hyperlink;
+	Image image;
+	Row row;
+	Column column;
+
+	Row this;
+
+	constructor() {
+		@text = Text("Some text");
+		@input = Input("Enter input...");
+		@button = Button("Click me");
+		@hyperlink = Hyperlink("A hyperlink to the home page", "zonkey:home.zonk");
+		@image = Image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Zoologist421898_080b.jpg/1280px-Zoologist421898_080b.jpg").set_max_width(100.);
+		@row = Row().add(Text("one")).add(Text("two")).add(Text("three"));
+		@column = Column().add(Text("one")).add(Text("two")).add(Text("three"));
+
+		@this = Row()
+			.add(@text)
+			.add(@input)
+			.add(@button)
+			.add(@hyperlink)
+			.add(@image)
+			.add(@row)
+			.add(@column);
+	}
+
+	method remove_odd() {
+		@this.remove(@text)
+			 .remove(@button)
+			 .remove(@image)
+		     .remove(@column);
+	}
+
+	method remove_even() {
+		@this.remove(@input)
+	         .remove(@hyperlink)
+		     .remove(@row);
+	}
+
+	method get_row() -> Row {
+		return @this;
+	}
+}
+
+start {
+	# Test the add and remove methods of the Row and Column objects
+	let page = Page();
+	set_page(page);
+
+	# Add five rows in a column with all available elements in each Row 
+	let column = Column();
+	page.add(column);
+	let row_one = PrefilledRow();
+	let row_two = PrefilledRow();
+	let row_three = PrefilledRow();
+	let row_four = PrefilledRow();
+	let row_five = PrefilledRow();
+	column.add(row_one.get_row());
+	sleep(1000);
+	column.add(row_two.get_row());
+	sleep(1000);
+	column.add(row_three.get_row());
+	sleep(1000);
+	column.add(row_four.get_row());
+	sleep(1000);
+	column.add(row_five.get_row());
+	sleep(1000);
+
+	# Remove elements from each column in a different order.
+	row_one.remove_odd();
+	sleep(500);
+	row_two.remove_even();
+	sleep(500);
+	row_three.remove_odd();
+	sleep(500);
+	row_three.remove_even();
+	sleep(500);
+	row_four.remove_even();
+	sleep(500);
+	row_four.remove_odd();
+	sleep(500);
+	# Test duplicate removal
+	row_four.remove_even();
+	sleep(500);
+	row_four.remove_even();
+	sleep(500);
+
+	# Finally, remove all columns
+	column.remove(row_one.get_row());
+	sleep(500);
+	column.remove(row_three.get_row());
+	sleep(500);
+	column.remove(row_five.get_row());
+	sleep(500);
+	column.remove(row_two.get_row());
+	sleep(500);
+	# Test duplicate removal
+	column.remove(row_four.get_row());
+	column.remove(row_four.get_row());
+	sleep(500);
+
+	# Finally inspect result
+	sleep(2000);
+	close_tab();
+}

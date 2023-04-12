@@ -7,6 +7,5 @@ start {
 		.add(Hyperlink("Calculator", "zonkey:calculator.zonk"))
 		.add(Hyperlink("Twigville Local News", "zonkey:news.zonk"))
 		.add(Hyperlink("Simple counter", "zonkey:counter.zonk"))
-		.add(Hyperlink("Guessing game", "zonkey:guessing_game.zonk"))
-		.add(Hyperlink("A zonkey page loaded over the internet", "https://sam-bowden.codeberg.page/test.zonk")));
+		.add(Hyperlink("Guessing game", "zonkey:guessing_game.zonk")));
 }

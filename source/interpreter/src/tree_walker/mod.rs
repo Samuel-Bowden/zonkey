@@ -4,7 +4,7 @@ use self::{
     status::TreeWalkerStatus,
 };
 use crate::{
-    ast::AST, err::tree_walker::TreeWalkerErr, expr::*, standard_prelude::calls::*, stmt::Stmt,
+    element::*, ast::AST, err::tree_walker::TreeWalkerErr, expr::*, standard_prelude::calls::*, stmt::Stmt, event::{InterpreterEvent, PageEvent},
 };
 use numtoa::NumToA;
 use resource_loader::Address;
@@ -16,10 +16,6 @@ use std::{
     sync::{mpsc::Sender, Arc, Mutex},
     thread::{self, sleep},
     time::Duration,
-};
-use ui::{
-    event::PageEvent,
-    {element::*, event::InterpreterEvent},
 };
 
 mod environment;
@@ -561,6 +557,23 @@ impl<'a> TreeWalker<'a> {
                     .ok();
                 return Err(TreeWalkerErr::Exit);
             }
+
+            NativeCallNone::WriteString(location, string) => {
+                let location = self.eval_string(location)?;
+                let string = self.eval_string(string)?;
+
+                match Address::new(&location).write_string(string) {
+                    Ok(string) => string,
+                    Err(e) => return Err(TreeWalkerErr::WriteAddressFailed(e.to_string())),
+                };
+            }
+
+            NativeCallNone::OpenLink(link) => {
+                let link = self.eval_string(&link)?;
+                self.interpreter_event_sender
+                    .send(InterpreterEvent::OpenLink(link))
+                    .ok();
+            }
         }
 
         Ok(())
@@ -595,6 +608,17 @@ impl<'a> TreeWalker<'a> {
                     .clone();
 
                 Ok(text)
+            }
+
+            NativeCallString::ReadString(location) => {
+                let location = self.eval_string(location)?;
+
+                let string = match Address::new(&location).read_string() {
+                    Ok(string) => string,
+                    Err(e) => return Err(TreeWalkerErr::ReadAddressFailed(e.to_string())),
+                };
+
+                Ok(string)
             }
         }
     }
@@ -1152,6 +1176,20 @@ impl<'a> TreeWalker<'a> {
                     .max_width = Some(max_width as f32);
 
                 Ok(page)
+            }
+
+            NativeCallObject::InputSetText(input, text) => {
+                let mut input = self.eval_object(input)?;
+                let text = self.eval_string(text)?;
+
+                input 
+                    .extract_native_object()
+                    .extract_input()
+                    .lock()
+                    .unwrap()
+                    .text = text;
+
+                Ok(input)
             }
         }
     }

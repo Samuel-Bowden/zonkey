@@ -108,7 +108,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::CallIncorrectArgumentsNum(token, arg_len, expected_len, name) => {
                 err_reporter.writeln(
                     format!(
-                        "Expected {expected_len} argument(s) for function call '{name}', but {arg_len} argument(s) were provided.",
+                        "Expected {expected_len} argument(s) for callable '{name}', but {arg_len} argument(s) were provided.",
                     )
                     .as_str(),
                 );
@@ -118,7 +118,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::CallArgumentIncorrectType(token, position, expr_type, name) => {
                 err_reporter.writeln(
                     format!(
-                        "Function call {name} does not accept a value of type {} for the parameter at position {position}.",
+                        "Callable {name} does not accept a value of type {} for the parameter at position {position}.",
                         print_type(&expr_type),
                     )
                     .as_str(),

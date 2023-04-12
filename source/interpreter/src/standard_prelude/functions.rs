@@ -12,7 +12,7 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
         Rc::new("print".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,
-            parameters: vec![ValueType::Any],
+            parameters: vec![ValueType::Printable],
             return_type: None,
         },
     );
@@ -21,7 +21,7 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
         Rc::new("println".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,
-            parameters: vec![ValueType::Any],
+            parameters: vec![ValueType::Printable],
             return_type: None,
         },
     );
@@ -45,10 +45,37 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
     );
 
     functions.insert(
+        Rc::new("read_string".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String],
+            return_type: Some(ValueType::String),
+        },
+    );
+
+    functions.insert(
+        Rc::new("write_string".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String, ValueType::String],
+            return_type: None,
+        },
+    );
+
+    functions.insert(
         Rc::new("close_tab".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,
             parameters: vec![],
+            return_type: None,
+        },
+    );
+
+    functions.insert(
+        Rc::new("open_link".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String],
             return_type: None,
         },
     );

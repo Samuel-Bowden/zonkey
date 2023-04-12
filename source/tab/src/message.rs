@@ -1,7 +1,6 @@
 use crate::page_viewer;
-use resource_loader::Address;
 use std::sync::{mpsc::Sender, Arc, Mutex};
-use ui::{element::Page, event::PageEvent};
+use interpreter::{element::Page, event::PageEvent, Address};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -13,4 +12,5 @@ pub enum Message {
     ScriptError(String),
     LoadAddressErr(String),
     Finished,
+    OpenLink(String),
 }

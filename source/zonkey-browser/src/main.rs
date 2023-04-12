@@ -4,10 +4,9 @@ use iced::{
 };
 use iced_native::command::Action;
 use message::Message;
-use resource_loader::Address;
+use tab::Address;
 use std::{collections::BTreeMap, env::args, process::ExitCode};
-use tab::Tab;
-use ui::event::WindowEvent;
+use tab::{Tab, TabEvent};
 
 mod control_bar;
 mod message;
@@ -58,7 +57,7 @@ impl Application for ZonkeyBrowser {
         match message {
             Message::Tab((index, msg)) => {
                 if let Some(tab) = self.tabs.get_mut(&index) {
-                    if let Some(WindowEvent::TabFinished) = tab.update(msg) {
+                    if let Some(TabEvent::Finished) = tab.update(msg) {
                         if self.tabs.len() > 1 {
                             if index == self.current_tab {
                                 // Move focus to right of tab to be closed

@@ -4,7 +4,7 @@ pub fn new(text: Rc<String>) -> ClassDeclaration {
     let mut methods = FxHashMap::default();
 
     methods.insert(
-        "set_value".to_string().into(),
+        "set_text".to_string().into(),
         Rc::new(CallableDeclaration {
             callable_type: CallableType::Native,
             parameters: vec![ValueType::String],

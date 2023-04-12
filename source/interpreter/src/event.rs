@@ -8,14 +8,7 @@ pub enum InterpreterEvent {
     ScriptError(String),
     LoadAddressError(String),
     CloseTab,
-}
-
-pub enum WindowEvent {
-    TabFinished,
-}
-
-pub enum TabEvent {
-    HyperlinkPressed(String),
+    OpenLink(String),
 }
 
 #[derive(Debug, Clone)]

@@ -141,7 +141,7 @@ impl Parser {
                 scope.insert(name, Value::Object(Rc::clone(class), self.object_next_id));
                 self.object_next_id += 1;
             }
-            ValueType::Any | ValueType::Element => {
+            ValueType::Printable | ValueType::Element => {
                 unreachable!("Zonkey code cannot use these types")
             }
         }

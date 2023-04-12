@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-pub fn new(_: Rc<String>) -> ClassDeclaration {
+pub fn new(input: Rc<String>) -> ClassDeclaration {
     let mut methods = FxHashMap::default();
 
     methods.insert(
@@ -18,6 +18,15 @@ pub fn new(_: Rc<String>) -> ClassDeclaration {
             callable_type: CallableType::Native,
             parameters: vec![],
             return_type: Some(ValueType::String),
+        }),
+    );
+
+    methods.insert(
+        "set_text".to_string().into(),
+        Rc::new(CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String],
+            return_type: Some(ValueType::Class(Rc::clone(&input))),
         }),
     );
 

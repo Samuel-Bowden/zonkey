@@ -1,8 +1,8 @@
 use iced::{subscription, Element};
 pub use message::Message;
 use non_empty_vec::NonEmpty;
-use page_viewer::PageViewer;
-use resource_loader::Address;
+use page_viewer::{PageViewer, update::PageViewerEvent};
+pub use interpreter::Address;
 use std::{
     sync::{
         mpsc::{self, Receiver, Sender},
@@ -11,13 +11,17 @@ use std::{
     thread,
 };
 use subscription_state::{SubscriptionState, SubscriptionStateVariant};
-use ui::{element::Page, event::*};
+pub use interpreter::{element::Page, event::{PageEvent, InterpreterEvent}};
 
 mod message;
 mod page_viewer;
 mod subscription_state;
 
 pub type MessagePointer = (usize, Message);
+
+pub enum TabEvent {
+    Finished,
+}
 
 pub struct Tab {
     page_viewer: PageViewer,
@@ -76,11 +80,11 @@ impl Tab {
             .map(|msg| (self.position, Message::PageViewer(msg)))
     }
 
-    pub fn update(&mut self, message: Message) -> Option<WindowEvent> {
+    pub fn update(&mut self, message: Message) -> Option<TabEvent> {
         match message {
             Message::Update => (),
             Message::PageViewer(msg) => match self.page_viewer.update(msg) {
-                Some(TabEvent::HyperlinkPressed(location)) => {
+                Some(PageViewerEvent::HyperlinkPressed(location)) => {
                     self.open_address_from_string(location)
                 }
                 None => (),
@@ -107,7 +111,10 @@ impl Tab {
             Message::LoadAddressErr(error) => {
                 self.page_viewer.load_address_error(error);
             }
-            Message::Finished => return Some(WindowEvent::TabFinished),
+            Message::Finished => return Some(TabEvent::Finished),
+            Message::OpenLink(link) => {
+                self.open_address_from_string(link)
+            }
         }
 
         None
@@ -178,6 +185,9 @@ impl Tab {
                             }
                             InterpreterEvent::CloseTab => {
                                 Some((index, Message::Finished))
+                            }
+                            InterpreterEvent::OpenLink(link) => {
+                                Some((index, Message::OpenLink(link)))
                             }
                         },
                         (index, SubscriptionStateVariant::RunningScript(receiver)),

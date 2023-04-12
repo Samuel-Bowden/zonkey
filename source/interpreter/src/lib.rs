@@ -1,9 +1,9 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
 use crate::{parser::Parser, tree_walker::TreeWalker, err::tree_walker::TreeWalkerErr};
 use ast::AST;
-use resource_loader::Address;
+use event::{InterpreterEvent, PageEvent};
+pub use resource_loader::Address;
 use std::sync::mpsc::{Receiver, Sender};
-use ui::event::*;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
@@ -11,15 +11,17 @@ mod tests;
 
 mod ast;
 mod debugger;
-pub mod err;
+mod err;
 mod expr;
 mod lexer;
 mod parser;
 mod stack;
 mod standard_prelude;
 mod stmt;
-pub mod token;
+mod token;
 mod tree_walker;
+pub mod element;
+pub mod event;
 
 pub fn run_with_std_stream_error_handling(
     address: Address,
@@ -50,7 +52,7 @@ pub fn run_with_std_stream_error_handling(
     }
 }
 
-pub fn run(
+fn run(
     source: &Vec<&str>,
     sender: &mut Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
