@@ -66,6 +66,8 @@ impl Parser {
                             expr_type,
                             name.to_string(),
                         ));
+
+                        return Err(ParserStatus::Unwind);
                     }
                 }
             }

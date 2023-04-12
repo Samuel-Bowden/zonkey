@@ -51,6 +51,8 @@ impl Parser {
         };
 
         let true_branch = Box::new(self.block()?);
+        let true_branch_return = self.returned_value;
+        self.returned_value = false;
 
         let false_branch = match self.current_token_type() {
             Some(TokenType::Else) => {
@@ -60,6 +62,9 @@ impl Parser {
             }
             _ => None,
         };
+        let false_branch_return = self.returned_value;
+
+        self.returned_value = true_branch_return && false_branch_return;
 
         Ok(Stmt::If(expression, true_branch, false_branch))
     }

@@ -51,7 +51,10 @@ impl Parser {
             BooleanExpr::Literal(false)
         };
 
+        self.loop_count += 1;
         let block = Box::new(self.block()?);
+        self.returned_value = false;
+        self.loop_count -= 1;
 
         Ok(Stmt::While(expression, block))
     }

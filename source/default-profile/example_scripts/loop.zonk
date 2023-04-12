@@ -1,0 +1,17 @@
+# Loop should count from 0-9, but skip 5
+
+start {
+	let count = 0;
+
+	loop {
+	  	count += 1;
+
+		if (count == 10) {
+	    	break;
+	  	} else if (count == 5) {
+	    	continue;
+	  	} else {
+	    	println(count);
+	  	}
+	}
+}

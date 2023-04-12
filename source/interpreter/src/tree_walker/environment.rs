@@ -5,8 +5,14 @@ use crate::{
         StringAssignmentOperator,
     },
     interpreter_debug,
-    stack::Stack,
+    stack::Stack, err::tree_walker::TreeWalkerErr, token::Token,
 };
+
+#[derive(Debug)]
+pub enum NullableReference {
+    Some(Object),
+    None(Token),
+}
 
 #[derive(Debug)]
 pub struct Environment {
@@ -14,7 +20,7 @@ pub struct Environment {
     float_stack: Vec<f64>,
     string_stack: Vec<String>,
     boolean_stack: Vec<bool>,
-    object_stack: Vec<Object>,
+    object_stack: Vec<NullableReference>,
 }
 
 impl Environment {
@@ -87,7 +93,7 @@ impl Environment {
         self.boolean_stack.push(boolean);
     }
 
-    pub fn push_object(&mut self, object: Object) {
+    pub fn push_object(&mut self, object: NullableReference) {
         self.object_stack.push(object);
     }
 
@@ -161,7 +167,7 @@ impl Environment {
         let current_val = &mut self.object_stack[id];
 
         match assignment_operator {
-            ObjectAssignmentOperator::Equal => *current_val = val,
+            ObjectAssignmentOperator::Equal => *current_val = NullableReference::Some(val),
         }
     }
 
@@ -181,7 +187,10 @@ impl Environment {
         self.boolean_stack[id]
     }
 
-    pub fn get_object(&self, id: usize) -> Object {
-        self.object_stack[id].clone()
+    pub fn get_object(&self, id: usize) -> Result<Object, TreeWalkerErr> {
+        match &self.object_stack[id] {
+            NullableReference::Some(object) => Ok(object.clone()),
+            NullableReference::None(prop_name) => Err(TreeWalkerErr::PropertyNotInitialised(prop_name.clone())),
+        }
     }
 }

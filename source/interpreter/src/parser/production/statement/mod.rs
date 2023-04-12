@@ -42,12 +42,26 @@ impl Parser {
         let statement = match self.current_token_type() {
             Some(TokenType::Return) => self.return_statement()?,
             Some(TokenType::Break) => {
-                self.current += 1;
-                Stmt::Break
+                if self.loop_count > 0 {
+                    self.current += 1;
+                    Stmt::Break
+                } else {
+                    self.error.add(ParserErrType::BreakOutsideLoop(
+                        self.tokens[self.current].clone(),
+                    ));
+                    return Err(ParserStatus::Unwind)
+                }
             }
             Some(TokenType::Continue) => {
-                self.current += 1;
-                Stmt::Continue
+                if self.loop_count > 0 {
+                    self.current += 1;
+                    Stmt::Continue
+                } else {
+                    self.error.add(ParserErrType::ContinueOutsideLoop(
+                        self.tokens[self.current].clone(),
+                    ));
+                    return Err(ParserStatus::Unwind)
+                }
             }
             Some(TokenType::Let) => self.variable_init()?,
             _ => self.expression_statement()?,

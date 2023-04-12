@@ -1,0 +1,15 @@
+# A computationally complex program to test the speed of Zonkey execution.
+# Mainly tests the tree walker speed - parsing will be done very quickly
+# for this example due to the small size of the program.
+
+start {
+	for (let i = 0, i < 1000, i += 1) {
+		for (let j = 0, j < 10, j += 1) {
+			for (let k = 0, k < 10, k += 1) {
+				for (let l = 0, l < 10, l += 1) {
+					println("Current number: " + (String i + j + k + l));
+				}
+			}
+		}
+	}
+}

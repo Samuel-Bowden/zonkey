@@ -66,7 +66,7 @@ impl Parser {
         if let Some(call) = self
             .class_declarations
             .get(&class)
-            .unwrap()
+            .expect(format!("expected class to exist, {class}").as_str())
             .methods
             .get(&name)
         {

@@ -1,0 +1,14 @@
+class Person {
+	String name;
+
+	constructor() {
+		@name = "Steve";
+	}
+}
+
+function test_function_one() -> Person {
+}
+
+start {
+	let a = test_function();
+}

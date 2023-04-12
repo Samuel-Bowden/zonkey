@@ -79,7 +79,7 @@ class Calculator {
 		@btn_divide = self.operation_button("÷");
 		let fourth_column = self.calculator_column(@btn_add, @btn_subtract, @btn_multiply, @btn_divide);
 
-		@calc_screen
+		@calc_screen = Button("")
 			.set_width_fill()
 			.set_text(" ")
 			.set_background_colour(0.4, 0.45, 0.4)

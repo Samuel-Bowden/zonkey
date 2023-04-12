@@ -103,7 +103,10 @@ impl Parser {
             }
         };
 
+        self.loop_count += 1;
         let mut block = self.block()?;
+        self.returned_value = false;
+        self.loop_count -= 1;
 
         if let Stmt::Block(b, _) = &mut block {
             b.push(update_statement);

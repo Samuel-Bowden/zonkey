@@ -30,6 +30,18 @@ pub fn err_handler(err_reporter: &mut ErrReporter, lexer_err: LexerErr) {
 
             err_reporter.report_section(position, position + 1);
         }
+
+        LexerErr::FailedToParseFloat(start, end, error) => {
+            err_reporter.writeln(format!("Failed to parse the float provided: {error}").as_str());
+
+            err_reporter.report_section(start, end);
+        }
+
+        LexerErr::FailedToParseInteger(start, end, error) => {
+            err_reporter.writeln(format!("Failed to parse the integer provided: {error}").as_str());
+
+            err_reporter.report_section(start, end);
+        }
     }
 
     err_reporter.newln();

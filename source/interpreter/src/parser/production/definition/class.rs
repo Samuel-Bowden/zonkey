@@ -1,13 +1,12 @@
 use rustc_hash::FxHashMap;
 
 use crate::{
-    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr},
+    expr::{Expr, ObjectExpr},
     parser::{
-        declaration::{CallableDeclaration, CallableType, ClassDeclaration, ClassType},
+        declaration::{CallableDeclaration, CallableType, ClassDeclaration, ClassType, ConstructionType},
         production::definition::prelude::*,
         value::{Value, ValueType},
     },
-    standard_prelude::calls::NativeCallObject,
     stmt::Stmt,
 };
 use std::rc::Rc;
@@ -57,9 +56,10 @@ impl Parser {
         let mut class_object_next_id = 0;
         let mut property_default_expressions = vec![];
 
-        while let Ok(dt) = self.data_type() {
+        while let Some(dt) = self.data_type()? {
             self.current += 1;
 
+            let property_name_pos = self.current;
             let property_name = match self.consume_token_type() {
                 Some(TokenType::Identifier(name)) => Rc::clone(name),
                 _ => {
@@ -85,63 +85,37 @@ impl Parser {
                 ValueType::Integer => {
                     properties.insert(property_name, Value::Integer(class_integer_next_id));
                     class_integer_next_id += 1;
-                    property_default_expressions.push(Expr::Integer(IntegerExpr::Literal(0)));
+                    property_default_expressions.push(ConstructionType::Integer);
                 }
                 ValueType::Float => {
                     properties.insert(property_name, Value::Float(class_float_next_id));
                     class_float_next_id += 1;
-                    property_default_expressions.push(Expr::Float(FloatExpr::Literal(0.)));
+                    property_default_expressions.push(ConstructionType::Float);
                 }
                 ValueType::String => {
                     properties.insert(property_name, Value::String(class_string_next_id));
                     class_string_next_id += 1;
-                    property_default_expressions
-                        .push(Expr::String(StringExpr::Literal("".to_string().into())));
+                    property_default_expressions.push(ConstructionType::String);
                 }
                 ValueType::Boolean => {
                     properties.insert(property_name, Value::Boolean(class_boolean_next_id));
                     class_boolean_next_id += 1;
-                    property_default_expressions.push(Expr::Boolean(BooleanExpr::Literal(false)));
+                    property_default_expressions.push(ConstructionType::Boolean);
                 }
                 ValueType::Class(class) => {
+                    if let None = self.class_declarations.get(&class) {
+                        self.error.add(ParserErrType::ClassNotFound(
+                            self.tokens[self.current - 2].clone(),
+                        ));
+                        return Err(ParserStatus::Unwind);
+                    }
+
                     properties.insert(
-                        property_name,
+                        property_name.clone(),
                         Value::Object(Rc::clone(&class), class_object_next_id),
                     );
                     class_object_next_id += 1;
-                    property_default_expressions.push(Expr::Object(
-                        Rc::clone(&class),
-                        match &self
-                            .class_declarations
-                            .get(&class)
-                            .expect("Class not declared")
-                            .class_type
-                        {
-                            ClassType::Native => ObjectExpr::NativeCall(match class.as_str() {
-                                "Page" => NativeCallObject::PageConstructor,
-                                "Button" => NativeCallObject::ButtonConstructor(Box::new(
-                                    StringExpr::Literal("".to_string().into()),
-                                )),
-                                "Text" => NativeCallObject::TextConstructor(Box::new(
-                                    StringExpr::Literal("".to_string().into()),
-                                )),
-                                "Input" => NativeCallObject::InputConstructor(Box::new(
-                                    StringExpr::Literal("".to_string().into()),
-                                )),
-                                "Hyperlink" => NativeCallObject::HyperlinkConstructor(
-                                    Box::new(StringExpr::Literal("".to_string().into())),
-                                    Box::new(StringExpr::Literal("".to_string().into())),
-                                ),
-                                "Row" => NativeCallObject::RowConstructor,
-                                "Column" => NativeCallObject::ColumnConstructor,
-                                "Image" => NativeCallObject::ImageConstructor(
-                                    Box::new(StringExpr::Literal("".to_string().into())),
-                                ),
-                                _ => unreachable!(),
-                            }),
-                            ClassType::Zonkey(exprs) => ObjectExpr::Constructor(Rc::clone(&exprs)),
-                        },
-                    ));
+                    property_default_expressions.push(ConstructionType::NullPointer(self.tokens[property_name_pos].clone()));
                 }
                 ValueType::Printable | ValueType::Element => {
                     unreachable!("Zonkey code cannot use this type")

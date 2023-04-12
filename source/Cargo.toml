@@ -8,6 +8,7 @@ members = [
 	"tab",
 	"resource-loader",
 	"integration-tests",
+	"fuzz-tests",
 ]
 
 resolver = "2"
@@ -23,5 +24,9 @@ codegen-units = 1
 debug-assertions = false
 
 [profile.debug-info]
+inherits = "dev"
+debug-assertions = true 
+
+[profile.fuzz-testing]
 inherits = "dev"
 debug-assertions = true 

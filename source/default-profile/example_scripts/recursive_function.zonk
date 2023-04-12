@@ -1,0 +1,13 @@
+function factorial(Integer n) -> Integer {
+	if (n == 1) {
+		return 1;
+	} else {
+		return n * factorial(n - 1);
+	}
+}
+
+start {
+	let n = Integer prompt("Enter an integer n:");
+
+	println("The factorial of n is " + (String factorial(n)));
+}

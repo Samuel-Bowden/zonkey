@@ -1,0 +1,9 @@
+class Hello {
+	BadObject test;
+
+	constructor() {
+	}
+}
+
+start {
+}

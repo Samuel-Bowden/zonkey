@@ -27,6 +27,7 @@ impl Parser {
         let float_point = self.float_next_id;
         let string_point = self.string_next_id;
         let boolean_point = self.boolean_next_id;
+        let object_point = self.object_next_id;
 
         loop {
             match self.current_token_type() {
@@ -38,6 +39,7 @@ impl Parser {
                     self.float_next_id = float_point;
                     self.string_next_id = string_point;
                     self.boolean_next_id = boolean_point;
+                    self.object_next_id = object_point;
 
                     return Ok(Stmt::Block(statements, self.stack()));
                 }
@@ -97,7 +99,6 @@ impl Parser {
                 None => {
                     self.error.add(ParserErrType::BlockExpectedRightBrace(
                         self.tokens[open_brace_pos].clone(),
-                        self.tokens[self.current - 1].clone(),
                     ));
 
                     return Err(ParserStatus::End);

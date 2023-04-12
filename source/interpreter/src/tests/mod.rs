@@ -135,6 +135,11 @@ fn class_declaration_properties_not_at_top() {
 }
 
 #[test]
+fn class_not_declared() {
+    test_script_error!("class_not_declared");
+}
+
+#[test]
 fn code_outside_start_block() {
     test_script_error!("code_out_start");
 }
@@ -167,4 +172,19 @@ fn expected_right_brace() {
 #[test]
 fn start_returning_invalid_value() {
     test_script_error!("start_ret_inv");
+}
+
+#[test]
+fn no_value_returned() {
+    test_script_error!("no_value_returned");
+}
+
+#[test]
+fn continue_outside_loop() {
+    test_script_error!("continue_outside_loop");
+}
+
+#[test]
+fn break_outside_loop() {
+    test_script_error!("break_outside_loop");
 }

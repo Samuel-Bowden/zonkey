@@ -1,10 +1,10 @@
 use self::{
-    environment::Environment,
+    environment::{Environment, NullableReference},
     object::{NativeObject, Object},
     status::TreeWalkerStatus,
 };
 use crate::{
-    element::*, ast::AST, err::tree_walker::TreeWalkerErr, expr::*, standard_prelude::calls::*, stmt::Stmt, event::{InterpreterEvent, PageEvent},
+    element::*, ast::AST, err::tree_walker::TreeWalkerErr, expr::*, standard_prelude::calls::*, stmt::Stmt, event::{InterpreterEvent, PageEvent}, parser::declaration::ConstructionType,
 };
 use numtoa::NumToA;
 use resource_loader::Address;
@@ -74,7 +74,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::IntegerPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let int = self.eval_int(expr)?;
                 self.environment
-                    .get_object(*obj_id)
+                    .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
                     .assign_int(*id, int, assignment_operator);
@@ -96,7 +96,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::FloatPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let float = self.eval_float(expr)?;
                 self.environment
-                    .get_object(*obj_id)
+                    .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
                     .assign_float(*id, float, assignment_operator);
@@ -118,7 +118,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::StringPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let string = self.eval_string(expr)?;
                 self.environment
-                    .get_object(*obj_id)
+                    .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
                     .assign_string(*id, string, assignment_operator);
@@ -140,7 +140,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::BooleanPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let boolean = self.eval_boolean(expr)?;
                 self.environment
-                    .get_object(*obj_id)
+                    .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
                     .assign_boolean(*id, boolean, assignment_operator);
@@ -150,7 +150,7 @@ impl<'a> TreeWalker<'a> {
             // Class statements
             Stmt::ObjectVariableInitialisation(expr) => {
                 let object = self.eval_object(expr)?;
-                self.environment.push_object(object);
+                self.environment.push_object(NullableReference::Some(object));
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::ObjectVariableAssignment(id, expr, assignment_operator) => {
@@ -162,7 +162,7 @@ impl<'a> TreeWalker<'a> {
             Stmt::ObjectPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let object = self.eval_object(expr)?;
                 self.environment
-                    .get_object(*obj_id)
+                    .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
                     .assign_object(*id, object, assignment_operator);
@@ -307,7 +307,7 @@ impl<'a> TreeWalker<'a> {
             },
             IntegerExpr::Property(obj_id, id) => Ok(self
                 .environment
-                .get_object(*obj_id)
+                .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
                 .get_int(*id)),
@@ -343,7 +343,7 @@ impl<'a> TreeWalker<'a> {
             },
             FloatExpr::Property(obj_id, id) => Ok(self
                 .environment
-                .get_object(*obj_id)
+                .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
                 .get_float(*id)),
@@ -371,7 +371,7 @@ impl<'a> TreeWalker<'a> {
             StringExpr::NativeCall(call) => self.native_call_string(call),
             StringExpr::Property(obj_id, id) => Ok(self
                 .environment
-                .get_object(*obj_id)
+                .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
                 .get_string(*id)),
@@ -454,7 +454,7 @@ impl<'a> TreeWalker<'a> {
             BooleanExpr::NativeCall(call) => self.native_call_boolean(call),
             BooleanExpr::Property(obj_id, id) => Ok(self
                 .environment
-                .get_object(*obj_id)
+                .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
                 .get_boolean(*id)),
@@ -473,7 +473,7 @@ impl<'a> TreeWalker<'a> {
 
     fn eval_object(&mut self, expression: &ObjectExpr) -> Result<Object, TreeWalkerErr> {
         match expression {
-            ObjectExpr::Variable(id) => Ok(self.environment.get_object(*id)),
+            ObjectExpr::Variable(id) => self.environment.get_object(*id),
             ObjectExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnObject(v) => Ok(v),
                 v => panic!("Call did not return correct type - {:?} was returned", v),
@@ -484,12 +484,11 @@ impl<'a> TreeWalker<'a> {
 
                 for property in properties.iter() {
                     match property {
-                        Expr::Integer(expr) => object.push_int(self.eval_int(expr)?),
-                        Expr::Float(expr) => object.push_float(self.eval_float(expr)?),
-                        Expr::String(expr) => object.push_string(self.eval_string(expr)?),
-                        Expr::Boolean(expr) => object.push_boolean(self.eval_boolean(expr)?),
-                        Expr::Object(_, expr) => object.push_object(self.eval_object(expr)?),
-                        _ => panic!("Unsupported type"),
+                        ConstructionType::Integer => object.push_int(0),
+                        ConstructionType::Float => object.push_float(0.),
+                        ConstructionType::String => object.push_string(String::new()),
+                        ConstructionType::Boolean => object.push_boolean(false),
+                        ConstructionType::NullPointer(prop_name) => object.push_object(NullableReference::None(prop_name.clone())),
                     }
                 }
 
@@ -497,10 +496,10 @@ impl<'a> TreeWalker<'a> {
             }
             ObjectExpr::Property(obj_id, id) => Ok(self
                 .environment
-                .get_object(*obj_id)
+                .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
-                .get_object(*id)),
+                .get_object(*id)?),
         }
     }
 
@@ -1221,7 +1220,7 @@ impl<'a> TreeWalker<'a> {
                 }
                 Expr::None(_) => panic!("Cannot pass none to a callable"),
                 Expr::Object(_, expr) => {
-                    environment.push_object(self.eval_object(expr)?);
+                    environment.push_object(NullableReference::Some(self.eval_object(expr)?));
                 }
             }
         }

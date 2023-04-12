@@ -1,0 +1,16 @@
+function test() {
+	if (true) {
+		break;
+	}
+
+	loop {
+		continue;
+		if (true) {
+			break;
+		}
+	}
+}
+
+start {
+	test();
+}

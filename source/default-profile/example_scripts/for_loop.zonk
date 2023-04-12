@@ -1,0 +1,9 @@
+# Should print from 0-99
+
+start {
+	for (let i = 0, i <= 90, i += 10) {
+		for (let j = 0, j <= 9, j += 1) {
+			println("Iteration");
+		}
+	}
+}

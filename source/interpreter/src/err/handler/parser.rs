@@ -35,6 +35,26 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 );
             }
 
+            ParserErrType::BreakOutsideLoop(location) => {
+                err_reporter.writeln(
+                    format!(
+                        "Cannot break outside of a loop.",
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::ContinueOutsideLoop(location) => {
+                err_reporter.writeln(
+                    format!(
+                        "Cannot use continue outside of a loop.",
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
+            }
+
             ParserErrType::VariableNotFound(token, name) => {
                 err_reporter.writeln(
                     format!(
@@ -67,14 +87,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_next_token(after);
             }
 
-            ParserErrType::BlockExpectedRightBrace(open, before) => {
+            ParserErrType::BlockExpectedRightBrace(open) => {
                 err_reporter.writeln(
                     "Expected block to be closed with '}', but the end of the file was reached.",
                 );
                 err_reporter.writeln("        The block was opened here:");
                 err_reporter.report_token(open);
-                err_reporter.writeln("        But '}' was expected after the last character below to close the opened block:");
-                err_reporter.report_token(before);
             }
             //
 
@@ -293,7 +311,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::FunctionDeclarationExpectedParameterName(before, after) => {
                 err_reporter.writeln(
                     format!(
-                        "Expected the name of the function parameter after '{}'.",
+                        "Expected the name of the function parameter after type '{}'.",
                         before.token_type,
                     )
                     .as_str(),
@@ -323,6 +341,17 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 );
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::FunctionDeclarationDidNotReturnValueInAllCases(location, req_type) => {
+                err_reporter.writeln(
+                    format!(
+                        "Function declaration did not return the required type '{}' in all branches of code.",
+                        print_type(&Some(req_type)),
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(location);
             }
 
             ParserErrType::DeclarationInvalidReturnExpressionType(
@@ -528,6 +557,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::ClassRedeclared(location) => {
                 err_reporter
                     .writeln(format!("A class with this name has already been declared.").as_str());
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::ClassNotFound(location) => {
+                err_reporter
+                    .writeln(format!("A class with this name has not been declared.").as_str());
                 err_reporter.report_token(location);
             }
 

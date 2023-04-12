@@ -63,6 +63,17 @@ impl Parser {
         // Parse the function block
         let block = self.block()?;
 
+        if let Some(return_type) = &self.current_return_type {
+            if !self.returned_value {
+                self.error
+                    .add(ParserErrType::FunctionDeclarationDidNotReturnValueInAllCases(
+                        self.tokens[function_token_pos + 1].clone(),
+                        return_type.clone(),
+                    ));
+                return Err(ParserStatus::Unwind);
+            }
+        }
+
         // Clean value stack after it has been parsed
         self.value_stack.clear();
         self.integer_next_id = 0;

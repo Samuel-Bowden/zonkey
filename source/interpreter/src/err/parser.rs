@@ -1,5 +1,6 @@
 use crate::{parser::value::ValueType, token::Token};
 
+#[derive(Debug)]
 pub struct ParserErr {
     pub errors: Vec<ParserErrType>,
 }
@@ -22,6 +23,7 @@ impl ParserErr {
     }
 }
 
+#[derive(Debug)]
 pub enum ParserErrType {
     // Miscellaneous/Global errors
     UnterminatedStatement(Token, Option<Token>),
@@ -29,10 +31,12 @@ pub enum ParserErrType {
     VariableNotFound(Token, String),
     ExpectedValue(Token, Option<Token>),
     DeclarationInvalidReturnExpressionType(Token, Option<ValueType>, Option<ValueType>),
+    BreakOutsideLoop(Token),
+    ContinueOutsideLoop(Token),
 
     // Block errors
     BlockExpectedLeftBrace(Token, Option<Token>),
-    BlockExpectedRightBrace(Token, Token),
+    BlockExpectedRightBrace(Token),
 
     // Start errors
     NoStartBlock,
@@ -69,6 +73,7 @@ pub enum ParserErrType {
     FunctionDeclarationExpectedParameterType(Token, Option<Token>),
     FunctionDeclarationExpectedCommaOrRightParen(Token, Option<Token>),
     FunctionDeclarationExpectedReturnType(Token, Option<Token>),
+    FunctionDeclarationDidNotReturnValueInAllCases(Token, ValueType),
 
     // Operator errors
     InvalidAssignmentOperator(Token, ValueType),
@@ -100,6 +105,7 @@ pub enum ParserErrType {
 
     // Class declaration errors
     ClassRedeclared(Token),
+    ClassNotFound(Token),
     ClassDeclarationExpectedName(Token, Option<Token>),
     ClassDeclarationExpectedLeftBrace(Token, Option<Token>),
     ClassDeclarationExpectedRightBrace(Token, Token),

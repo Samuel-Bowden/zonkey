@@ -5,6 +5,7 @@ pub mod lexer;
 pub mod parser;
 pub mod tree_walker;
 
+#[derive(Debug)]
 pub enum InterpreterErr {
     LexerFailed(LexerErr),
     ParserFailed(ParserErr),

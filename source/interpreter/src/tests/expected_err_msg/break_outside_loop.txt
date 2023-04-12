@@ -1,0 +1,4 @@
+(ERROR) Cannot break outside of a loop.
+	3 | 		<break>;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

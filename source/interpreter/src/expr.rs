@@ -1,4 +1,4 @@
-use crate::standard_prelude::calls::*;
+use crate::{standard_prelude::calls::*, parser::declaration::ConstructionType};
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -54,12 +54,12 @@ pub enum IntegerExpr {
     },
     Literal(i64),
     Variable(usize),
-    Property(usize, usize),
+    Property(usize, usize), // Object address, property address
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
     StringCast(Box<StringExpr>),
     Unary(NumericUnaryOperator, Box<IntegerExpr>),
-    Call(usize, Vec<Expr>),
+    Call(usize, Vec<Expr>), // Call address, argument expressions
 }
 
 #[derive(Debug, Clone)]
@@ -71,12 +71,12 @@ pub enum FloatExpr {
     },
     Literal(f64),
     Variable(usize),
-    Property(usize, usize),
+    Property(usize, usize), // Object address, property address
     IntegerCast(Box<IntegerExpr>),
     BooleanCast(Box<BooleanExpr>),
     StringCast(Box<StringExpr>),
     Unary(NumericUnaryOperator, Box<FloatExpr>),
-    Call(usize, Vec<Expr>),
+    Call(usize, Vec<Expr>), // Call address, argument expressions
 }
 
 #[derive(Debug, Clone)]
@@ -88,11 +88,11 @@ pub enum StringExpr {
     },
     Literal(Rc<String>),
     Variable(usize),
-    Property(usize, usize),
+    Property(usize, usize), // Object address, property address
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     BooleanCast(Box<BooleanExpr>),
-    Call(usize, Vec<Expr>),
+    Call(usize, Vec<Expr>), // Call address, argument expressions
     NativeCall(NativeCallString),
 }
 
@@ -120,13 +120,13 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
-    Property(usize, usize),
+    Property(usize, usize), // Object address, property address
     IntegerCast(Box<IntegerExpr>),
     FloatCast(Box<FloatExpr>),
     StringCast(Box<StringExpr>),
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
     NativeCall(NativeCallBoolean),
-    Call(usize, Vec<Expr>),
+    Call(usize, Vec<Expr>), // Call address, argument expressions
 }
 
 #[derive(Debug, Clone)]
@@ -138,9 +138,9 @@ pub enum NoneExpr {
 #[derive(Debug, Clone)]
 pub enum ObjectExpr {
     Variable(usize),
-    Property(usize, usize),
-    Call(usize, Vec<Expr>),
-    Constructor(Rc<Vec<Expr>>),
+    Property(usize, usize), // Object address, property address
+    Call(usize, Vec<Expr>), // Call name, Call address, argument expressions
+    Constructor(Rc<Vec<ConstructionType>>),
     NativeCall(NativeCallObject),
 }
 

@@ -229,10 +229,16 @@ impl<'a> Lexer<'a> {
         }
 
         if float {
-            let val = literal.parse::<f64>().unwrap();
+            let val = match literal.parse::<f64>() {
+                Ok(v) => v,
+                Err(e) => return Err(LexerErr::FailedToParseFloat(self.start, self.current, e)),
+            };
             self.add_token(TokenType::Float(val));
         } else {
-            let val = literal.parse::<i64>().unwrap();
+            let val = match literal.parse::<i64>() {
+                Ok(v) => v,
+                Err(e) => return Err(LexerErr::FailedToParseInteger(self.start, self.current, e)),
+            };
             self.add_token(TokenType::Integer(val));
         }
 

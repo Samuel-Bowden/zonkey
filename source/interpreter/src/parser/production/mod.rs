@@ -43,6 +43,11 @@ impl Parser {
 
                         self.current += 1;
                     }
+                    // Clean up any state from unfinished parsing
+                    self.current_properties = None;
+                    self.current_return_type = None;
+                    self.loop_count = 0;
+                    self.returned_value = false;
                 }
             };
         }

@@ -6,19 +6,27 @@ mod start;
 use std::rc::Rc;
 
 use crate::{
-    parser::production::definition::prelude::*, parser::value::Value, parser::value::ValueType,
-};
+    parser::production::definition::prelude::*, parser::value::Value, parser::value::ValueType};
 
 impl Parser {
     // Helper functions used by some definitions to convert token_type to a value_type
-    fn data_type(&self) -> Result<ValueType, ()> {
+    fn data_type(&mut self) -> Result<Option<ValueType>, ParserStatus> {
         match self.current_token_type() {
-            Some(TokenType::IntegerType) => Ok(ValueType::Integer),
-            Some(TokenType::FloatType) => Ok(ValueType::Float),
-            Some(TokenType::StringType) => Ok(ValueType::String),
-            Some(TokenType::BooleanType) => Ok(ValueType::Boolean),
-            Some(TokenType::Identifier(type_name)) => Ok(ValueType::Class(Rc::clone(type_name))),
-            _ => Err(()),
+            Some(TokenType::IntegerType) => Ok(Some(ValueType::Integer)),
+            Some(TokenType::FloatType) => Ok(Some(ValueType::Float)),
+            Some(TokenType::StringType) => Ok(Some(ValueType::String)),
+            Some(TokenType::BooleanType) => Ok(Some(ValueType::Boolean)),
+            Some(TokenType::Identifier(class)) => {
+                if let None = self.class_declarations.get(class) {
+                    self.error.add(ParserErrType::ClassNotFound(
+                        self.tokens[self.current].clone(),
+                    ));
+                    return Err(ParserStatus::Unwind);
+                }
+
+                Ok(Some(ValueType::Class(Rc::clone(class))))
+            }
+            _ => Ok(None),
         }
     }
 
@@ -26,12 +34,12 @@ impl Parser {
         if let Some(TokenType::Arrow) = self.current_token_type() {
             self.current += 1;
 
-            match self.data_type() {
-                Ok(return_type) => {
+            match self.data_type()? {
+                Some(return_type) => {
                     self.current += 1;
                     Ok(Some(return_type))
                 }
-                Err(_) => {
+                None => {
                     self.error
                         .add(ParserErrType::FunctionDeclarationExpectedReturnType(
                             self.tokens[self.current - 1].clone(),
@@ -68,9 +76,9 @@ impl Parser {
                 self.current += 1;
             }
             _ => loop {
-                let parameter_data_type = match self.data_type() {
-                    Ok(data_type) => data_type,
-                    Err(_) => {
+                let parameter_data_type = match self.data_type()? {
+                    Some(data_type) => data_type,
+                    None => {
                         self.error
                             .add(ParserErrType::FunctionDeclarationExpectedParameterType(
                                 self.tokens[self.current - 1].clone(),
@@ -86,7 +94,7 @@ impl Parser {
                     _ => {
                         self.error
                             .add(ParserErrType::FunctionDeclarationExpectedParameterName(
-                                self.tokens[main_token_pos].clone(),
+                                self.tokens[self.current - 2].clone(),
                                 self.tokens.get(self.current - 1).cloned(),
                             ));
                         return Err(ParserStatus::Unwind);

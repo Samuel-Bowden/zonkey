@@ -4,14 +4,14 @@ use ast::AST;
 use event::{InterpreterEvent, PageEvent};
 pub use resource_loader::Address;
 use std::sync::mpsc::{Receiver, Sender};
-use unicode_segmentation::UnicodeSegmentation;
+pub use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
 mod tests;
 
 mod ast;
 mod debugger;
-mod err;
+pub mod err;
 mod expr;
 mod lexer;
 mod parser;
@@ -52,7 +52,7 @@ pub fn run_with_std_stream_error_handling(
     }
 }
 
-fn run(
+pub fn run(
     source: &Vec<&str>,
     sender: &mut Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
@@ -66,7 +66,7 @@ fn run(
     run_tree_walker(ast, sender, receiver)
 }
 
-fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
+pub fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
     interpreter_debug!("Starting lexer");
 
     let lexer = Lexer::new(source).run();
@@ -80,7 +80,7 @@ fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
     }
 }
 
-fn run_parser(tokens: Vec<Token>) -> Result<AST, InterpreterErr> {
+pub fn run_parser(tokens: Vec<Token>) -> Result<AST, InterpreterErr> {
     interpreter_debug!("Starting parser");
 
     match Parser::new(tokens).run() {

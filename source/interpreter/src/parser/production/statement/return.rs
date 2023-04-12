@@ -12,7 +12,7 @@ impl Parser {
             _ => Some(self.expression()?),
         };
 
-        Ok(Stmt::Return(
+        let result = Ok(Stmt::Return(
             match (&self.current_return_type, expression) {
                 (Some(ValueType::Integer), Some(Expr::Integer(expr))) => Some(Expr::Integer(expr)),
                 (Some(ValueType::Float), Some(Expr::Float(expr))) => Some(Expr::Float(expr)),
@@ -42,6 +42,10 @@ impl Parser {
                     return Err(ParserStatus::Unwind);
                 }
             },
-        ))
+        ));
+
+        self.returned_value = true;
+
+        result
     }
 }

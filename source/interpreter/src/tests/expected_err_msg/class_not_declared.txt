@@ -1,0 +1,4 @@
+(ERROR) A class with this name has not been declared.
+	2 | 	<BadObject> test;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

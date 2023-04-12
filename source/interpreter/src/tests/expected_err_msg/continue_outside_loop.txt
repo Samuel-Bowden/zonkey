@@ -1,0 +1,4 @@
+(ERROR) Cannot use continue outside of a loop.
+	10 | 		<continue>;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

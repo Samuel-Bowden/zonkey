@@ -1,4 +1,4 @@
-use crate::{expr::Expr, parser::value::ValueType};
+use crate::{parser::value::ValueType, token::Token};
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
@@ -24,5 +24,14 @@ pub struct ClassDeclaration {
 #[derive(Debug)]
 pub enum ClassType {
     Native,
-    Zonkey(Rc<Vec<Expr>>),
+    Zonkey(Rc<Vec<ConstructionType>>),
+}
+
+#[derive(Debug)]
+pub enum ConstructionType {
+    Integer,
+    Float,
+    String,
+    Boolean,
+    NullPointer(Token),
 }
