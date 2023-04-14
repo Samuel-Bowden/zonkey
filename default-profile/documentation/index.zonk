@@ -1,0 +1,92 @@
+class Section {
+	[Hyperlink] subsections;
+	Hyperlink intro;
+
+	constructor() {
+		@subsections = Hyperlink[];
+	}
+
+	method add_intro(String name, String location) -> Section {
+		@intro = Hyperlink(name, "zonkey:documentation/" + location);
+		return self;
+	}
+
+	method add_subsection(String name, String location) -> Section {
+		@subsections.push(Hyperlink(name, "zonkey:documentation/" + location));
+		return self;
+	}
+
+	method get_intro() -> Hyperlink {
+		return @intro;
+	}
+
+	method get_subsections() -> [Hyperlink] {
+		return @subsections;
+	}
+}
+
+class ZonkeyDocumentation {
+	Page page;
+	[Section] sections;
+
+	constructor() {
+		let prefix = "zonkey:documentation/";
+
+		@sections = Section[
+			Section()
+				.add_intro("Learning The Basics Of The Language", "learning_language.zonk")
+				.add_subsection("Creating And Running Your First Script", "creating_running_first_script.zonk")
+				.add_subsection("Variables And Types", "variables_and_types.zonk")
+				.add_subsection("Expressions", "expressions.zonk")
+				.add_subsection("Loops", "loops.zonk")
+				.add_subsection("Functions", "functions.zonk")
+				.add_subsection("Classes And Objects", "classes_and_objects.zonk")
+				.add_subsection("Arrays", "arrays.zonk"),
+			Section()
+				.add_intro("Creating GUIs", "creating_zonkey_apps.zonk")
+				.add_subsection("The Page Object", "page_object.zonk")
+				.add_subsection("Reacting to events", "reacting_to_events.zonk")
+				.add_subsection("Overview of available GUI elements", "gui_elements.zonk"),
+			Section()
+				.add_intro("Reading and writing to files and network devices", "files_and_network.zonk"),
+			Section()
+				.add_intro("The Standard Prelude", "standard_prelude.zonk")
+				.add_subsection("Functions", "page_object.zonk")
+				.add_subsection("Objects", "objects.zonk")
+		];
+
+		@page = Page()
+			.set_title("Documentation")
+			.center()
+			.set_max_width(800.)
+			.add(Text("Zonkey Documentation").set_size(70.0))
+			.add(Hyperlink("Read from the start", "zonkey:documentation/learning_language.zonk"))
+			.add(Text("Contents").set_size(40.0));
+
+		for (let i = 0, i < @sections.len(), i += 1) {
+			let section = @sections.get(i);
+			@page.add(Row().add(Text(integer_to_string(i + 1))).add(section.get_intro()));
+
+			let subsections = section.get_subsections();
+
+			for (let j = 0, j < subsections.len(), j += 1) {
+				@page.add(
+					Row()
+						.add(Text(
+							"    " + 
+							integer_to_string(i + 1) +
+							"." + 
+							integer_to_string(j + 1)
+						))
+						.add(subsections.get(j))
+				);
+			}
+		}
+
+		set_page(@page);
+	}
+}
+
+start {
+	ZonkeyDocumentation();
+}

@@ -1,7 +1,0 @@
-baseURL = 'https://zonkey.sambowden.rocks'
-languageCode = 'en-us'
-title = 'Zonkey'
-theme = 'hugo-theme-learn'
-
-[params]
-themeVariant = "blue"

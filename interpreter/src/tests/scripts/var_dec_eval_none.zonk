@@ -1,0 +1,9 @@
+function test_one() {
+	return;
+}
+
+start {
+	let a = println("Hello world");
+
+	let b = test_one();
+}

@@ -1,0 +1,5 @@
+start {
+	for (i = 0, i < 10, i += 1) {
+		println(integer_to_string(i));
+	}
+}

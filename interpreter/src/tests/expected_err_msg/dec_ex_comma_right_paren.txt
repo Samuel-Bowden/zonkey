@@ -1,0 +1,16 @@
+(ERROR) Expected ',' to add another parameter or ')' to close parameter list after 'test'.
+	4 | 	constructor(String <test> {
+        But the next token was '{'.
+	4 | 	constructor(String test <{>
+
+(ERROR) Expected ',' to add another parameter or ')' to close parameter list after 'val'.
+	16 | 	method test(String <val> {
+        But the next token was '{'.
+	16 | 	method test(String val <{>
+
+(ERROR) Expected ',' to add another parameter or ')' to close parameter list after 'test'.
+	21 | function test_three(String <test> {
+        But the next token was '{'.
+	21 | function test_three(String test <{>
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

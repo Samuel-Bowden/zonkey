@@ -1,0 +1,16 @@
+start {
+	let array = Boolean[true, true, false];
+
+	array
+	 .push(true)
+	 .push(true)
+	 .push(true);
+
+	let and = true;
+
+	for (let i = 0, i < 6, i += 1) {
+		and = and & array.get(i);
+	}
+
+	println(and);
+}

@@ -1,0 +1,13 @@
+class Test { constructor() {} }
+
+start {
+	let a = "String" & false;
+
+	let b = false & Button("hello");
+
+	let c = false | true | Test();
+
+	let d = 1 | false;
+
+	let e = false & 0.123;
+}

@@ -1,0 +1,9 @@
+start {
+	while ((false) {
+		println("Hello");
+	}
+
+	while (false {
+		println("Goodbye");
+	}
+}

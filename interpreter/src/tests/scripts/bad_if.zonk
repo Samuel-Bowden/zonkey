@@ -1,0 +1,7 @@
+start {
+	test = true;
+	
+	if test:
+		if true:
+			println("true");
+}

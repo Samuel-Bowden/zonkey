@@ -1,0 +1,38 @@
+class Person {
+	String name;
+	Integer age;
+
+	constructor(String name, Integer age) {
+		@name = name;
+		@age = age;
+	}
+
+	method greet() {
+		println(
+			"Hello, I'm called " + 
+			@name +
+			" and I'm " + 
+			integer_to_string(@age) +
+			" years of age"
+		);
+	}
+}
+
+function add_person_n_times([Person] array, Person person, Integer n) -> [Person] {
+	for (Integer i = 0, i < n, i += 1) {
+		array.push(person);
+	}
+	return array;
+}
+
+start {
+	let person_array = Person[];
+	add_person_n_times(person_array, Person("Steve", 34), 3);
+	add_person_n_times(person_array, Person("John", 52), 4);
+
+	for (Integer i = 0, i < person_array.len(), i += 1) {
+		person_array.get(i).greet();
+	}
+}
+
+

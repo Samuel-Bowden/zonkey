@@ -1,0 +1,13 @@
+function test_one() {
+	{
+		{
+			loop 
+			}
+		}
+	}
+}
+
+start {
+	if (true) 
+	}
+}

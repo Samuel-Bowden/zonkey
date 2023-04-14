@@ -1,0 +1,16 @@
+(ERROR) Cannot perform comparision '&' for type Integer.
+	4 | 	let a = 123 <&> 321 | 45434;
+
+(ERROR) Cannot perform comparision '&' for type String.
+	6 | 	let b = "String" <&> "String";
+
+(ERROR) Cannot perform comparision '|' for type Float.
+	8 | 	let c = 41234.543258 <|> 584932.52345;
+
+(ERROR) Cannot perform comparision '|' for type Button.
+	10 | 	let d = Button("Hello") <|> Button("Goodbye");
+
+(ERROR) Cannot perform comparision '&' for type Test.
+	12 | 	let e = Test() <&> Test();
+
+(ABORTING) Cannot start execution of script due to 5 error(s).

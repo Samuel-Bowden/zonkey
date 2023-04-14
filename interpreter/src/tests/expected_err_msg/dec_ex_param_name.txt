@@ -1,0 +1,16 @@
+(ERROR) Expected the name of the parameter after type 'String'.
+	1 | function test_one(<String> []) {
+        But the next token was '['.
+	1 | function test_one(String <[>]) {
+
+(ERROR) Expected the name of the parameter after type 'String'.
+	5 | 	constructor(<String>) {
+        But the next token was ')'.
+	5 | 	constructor(String<)> {
+
+(ERROR) Expected the name of the parameter after type 'String'.
+	12 | 	method test_method(<String> *) {
+        But the next token was '*'.
+	12 | 	method test_method(String <*>) {
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

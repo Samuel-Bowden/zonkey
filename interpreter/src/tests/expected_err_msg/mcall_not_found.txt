@@ -1,0 +1,7 @@
+(ERROR) Method with name 'center' has not been declared for class 'Text'.
+	18 | 	page.add(Row(Text(test.get_name()).<center>()));
+
+(ERROR) Method with name 'get_nem' has not been declared for class 'Test'.
+	20 | 	let name = test.<get_nem>();
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

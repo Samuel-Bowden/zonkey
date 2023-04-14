@@ -1,0 +1,4 @@
+(ERROR) This return expression evaluates to type 'Integer', but the declaration it is defined in has a return type of 'none'.
+	5 | 	<return> a + b;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

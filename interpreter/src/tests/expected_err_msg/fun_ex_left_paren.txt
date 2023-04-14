@@ -1,0 +1,14 @@
+(ERROR) Expected '(' after 'name' to start parameter list of function declaration.
+	1 | function <name> {
+        But the next token was '{'.
+	1 | function name <{>
+
+(ERROR) Expected '(' after 'hello' to start parameter list of function declaration.
+	5 | function <hello> world() {
+        But the next token was 'world'.
+	5 | function hello <world>() {
+
+(ERROR) Could not find a variable with name 'hello' in the current scope.
+	10 | 	<hello> world();
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

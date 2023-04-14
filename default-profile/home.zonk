@@ -1,0 +1,20 @@
+start {
+    set_page(Page()
+        .set_title("Home Page")
+        .center()
+        .set_max_width(800.)
+        .add(Text("Home Page").set_size(100.))
+        .add(Text("Welcome to the Zonkey Browser. With this, you can browse applications made with Zonkey over the internet or your filesystem in an easy to use interface. Anything you see in this main frame of the browser is created with a Zonkey script."))
+        .add(Hyperlink("Click here to learn how to navigate the user interface of the browser.", "zonkey:documentation/navigating_browser_ui.zonk"))
+        .add(Text("Documentation").set_size(50.))
+        .add(Hyperlink("Learn how to write applications in the Zonkey language", "zonkey:documentation/index.zonk"))
+        .add(Text("Example apps").set_size(50.))
+        .add(Text("Here are some hyperlinks to example apps that I have made in Zonkey. These show the potential of what you can create with the Zonkey language. The source code is available for you to read in the browser below."))
+        .add(Text("Links to applications:").set_size(35.))
+        .add(Hyperlink("Calculator", "zonkey:calculator.zonk"))
+        .add(Hyperlink("Twigville Local News", "zonkey:news.zonk"))
+        .add(Hyperlink("Simple counter", "zonkey:counter.zonk"))
+        .add(Hyperlink("Guessing game", "zonkey:guessing_game.zonk"))
+        .add(Text("View the source code of these applications:").set_size(35.))
+        .add(Hyperlink("Source code viewer", "zonkey:source_code_viewer.zonk")));
+}

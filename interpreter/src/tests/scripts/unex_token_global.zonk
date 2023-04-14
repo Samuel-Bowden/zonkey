@@ -1,0 +1,9 @@
+a = 5
+
+println(5)
+
+function test_one(two):
+	println(two)
+
+start:
+	test_one

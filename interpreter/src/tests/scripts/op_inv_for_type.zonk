@@ -1,0 +1,9 @@
+start {
+	let a = "String" - "String" - "String";
+
+	let b = false + true;
+
+	let c = false - false;
+
+	let d = "String" * "String";
+}

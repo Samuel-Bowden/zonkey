@@ -1,0 +1,8 @@
+function add_one_$(Float $) {
+	return $ + 1;
+}
+
+start {
+	$ = 100.0;
+	$ = add_$($);
+}

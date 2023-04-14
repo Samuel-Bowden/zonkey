@@ -1,0 +1,21 @@
+(ERROR) Expected a function name after 'function'.
+	1 | <function> start(){
+        But the next token was 'start'.
+	1 | function <start>(){
+
+(ERROR) Expected a function name after 'function'.
+	5 | <function> function function name() {
+        But the next token was 'function'.
+	5 | function <function> function name() {
+
+(ERROR) Expected a function name after 'function'.
+	8 | <function> () {
+        But the next token was '('.
+	8 | function <(>) {
+
+(ERROR) Expected a value after '{'.
+	11 | start <{>
+        But the next token was 'start'.
+	12 | 	<start>();
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

@@ -1,0 +1,29 @@
+start {
+	let counter_btn = Button("Counter: 0");
+
+	let reset_btn = Button("Reset")
+		.set_background_colour("#FF0000");
+
+	# Add elements to the page
+	set_page(Page()
+		.set_title("Counter")
+		.add(Text("A simple counter").set_size(50.))
+		.add(Text("Click the button to increase the counter"))
+		.add(counter_btn)
+		.add(reset_btn));
+
+	let counter = 0;
+
+	while (wait_for_event()) {
+		# React to events
+		if (counter_btn.clicked()) {
+			counter += 1;
+		}
+
+		if (reset_btn.clicked()) {
+			counter = 0;
+		}
+
+		counter_btn.set_text("Counter: " + (integer_to_string(counter)));
+	}
+}

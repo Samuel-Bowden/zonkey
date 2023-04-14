@@ -1,0 +1,15 @@
+class Test {
+	[] test;
+
+	constructor([] test) {
+		@test = test;
+	}
+}
+
+function test([] test) -> [] {
+	return test;
+}
+
+start {
+	Test([]);
+}

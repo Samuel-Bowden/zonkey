@@ -1,0 +1,11 @@
+(ERROR) Expected '(' after 'for' to start the clauses of the for statement.
+	2 | 	<for> let i = 0, i < 10, i += 1 {
+        But the next token was 'let'.
+	2 | 	for <let> i = 0, i < 10, i += 1 {
+
+(ERROR) Expected ';' after '0' to end statement.
+	2 | 	for let i = <0>, i < 10, i += 1 {
+        But the next token was ','.
+	2 | 	for let i = 0<,> i < 10, i += 1 {
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

@@ -1,0 +1,6 @@
+(ERROR) Expected ')' to end expression group started with '(' located here.
+	2 | 	let a = <(>((((((2))))) + (((1))));
+        But the next token was ';'.
+	2 | 	let a = (((((((2))))) + (((1))))<;>
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

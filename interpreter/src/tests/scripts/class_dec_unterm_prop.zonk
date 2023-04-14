@@ -1,0 +1,11 @@
+class TestOne {
+	String one;
+	String two;
+	String three
+	String four;
+	String five
+
+	constructor() {}
+}
+
+start {}

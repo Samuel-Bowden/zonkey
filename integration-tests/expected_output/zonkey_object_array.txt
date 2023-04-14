@@ -1,0 +1,5 @@
+Steve
+John
+Jack
+Steve has just been removed
+John

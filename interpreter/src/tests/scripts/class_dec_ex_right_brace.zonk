@@ -1,0 +1,11 @@
+class TestOne {
+	String one;
+	String two;
+	constructor(String one, String two) {
+		@one = one;
+		@two = two;
+	}
+
+class TestTwo {
+	constructor() {
+}

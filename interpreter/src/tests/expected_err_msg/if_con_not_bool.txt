@@ -1,0 +1,4 @@
+(ERROR) The condition of the if statement does not evaluate to a boolean.
+	7 | 	if (<Test()>) {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

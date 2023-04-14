@@ -1,0 +1,21 @@
+class Test {
+	String name;
+
+	constructor(String name) {
+		@name = name;
+	}
+
+	method get_name() -> String {
+		return @name;
+	}
+}
+
+start {
+	let page = Page();
+
+	let test = Test("Steve");
+
+	page.add(Row(Text(test.get_name()).center()));
+
+	let name = test.get_nem();
+}

@@ -1,7 +1,0 @@
-(ERROR) Function declaration did not return the required type 'String' in all branches of code.
-	2 | function <test_two>() -> String {}
-
-(ERROR) A function with this name has already been declared.
-	3 | function <test_one>() -> String {}
-
-(ABORTING) Cannot start execution of script due to 2 error(s).

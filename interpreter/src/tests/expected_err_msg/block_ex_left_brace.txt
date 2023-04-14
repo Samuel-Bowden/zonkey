@@ -1,0 +1,19 @@
+(ERROR) Expected '{' after 'loop' to start block.
+	4 | 			<loop> 
+        But the next token was '}'.
+	5 | 			<}>
+
+(ERROR) Unexpected token '}' in global scope.
+	8 | <}>
+        Tip: There should only be start, function or class definitions in the global scope.
+
+(ERROR) Expected '{' after ')' to start block.
+	11 | 	if (true<)> 
+        But the next token was '}'.
+	12 | 	<}>
+
+(ERROR) Unexpected token '}' in global scope.
+	13 | <}>
+        Tip: There should only be start, function or class definitions in the global scope.
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

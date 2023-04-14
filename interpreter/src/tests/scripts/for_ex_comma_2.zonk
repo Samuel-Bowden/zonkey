@@ -1,0 +1,25 @@
+function call_one() {
+	let sum = 0;
+
+	for (let i = 1, i < 10 i += 1) {
+		sum += i
+	}
+}
+
+function call_two() {
+	let sum = 0;
+
+	for (let i = 1, i < 10; i += 1) {
+		sum += i
+	}
+}
+
+start {
+	let sum = 0;
+	for (let i = 0, i < 10) {
+		sum += i;
+	}
+
+	call_one();
+	call_two();
+}

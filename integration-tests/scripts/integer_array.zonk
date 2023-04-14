@@ -1,0 +1,16 @@
+start {
+	let array = Integer[1, 2, 3];
+	
+	array
+	 .push(4)
+	 .push(5)
+	 .push(6);
+
+	let sum = 0;
+
+	for (let i = 0, i < 6, i += 1) {
+		sum += array.get(i);
+	}
+
+	println(sum);
+}

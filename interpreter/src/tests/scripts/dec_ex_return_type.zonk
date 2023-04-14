@@ -1,0 +1,11 @@
+function test_one() -> {
+
+}
+
+class TestTwo {
+	method test() -> {
+	}
+	constructor() {}
+}
+
+function test_two() ->

@@ -1,0 +1,6 @@
+start {
+	println("Hello"]);
+}
+
+function test_one() {
+	Button("Test"

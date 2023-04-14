@@ -1,0 +1,20 @@
+start {
+	let button = Button("Hello");
+
+	if (!button) {
+	}
+
+	if (!"Hello") {
+	}
+
+	if (!1) {
+	}
+
+	while (-false) {
+	}
+
+	while (!!!false) {
+	}
+
+	let test = --button;
+}

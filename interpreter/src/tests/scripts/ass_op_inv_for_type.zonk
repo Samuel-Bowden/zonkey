@@ -1,0 +1,15 @@
+class Test { constructor() {} }
+
+start {
+	let name = "String";
+	name -= "String";
+
+	let a = Page();
+	a += Page();
+
+	let test = false;
+	test += true;
+
+	let b = Test();
+	b += Test();
+}

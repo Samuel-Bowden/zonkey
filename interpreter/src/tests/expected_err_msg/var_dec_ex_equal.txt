@@ -1,0 +1,25 @@
+(ERROR) Expected '=' after 'a' to assign a value to the declared variable.
+	2 | 	for (let <a> 1, a < 3, a += 1) {
+        But the next token was '1'.
+	2 | 	for (let a <1>, a < 3, a += 1) {
+        Tip: All variables must be assigned a value when they are declared.
+
+(ERROR) Expected '=' after 'a' to assign a value to the declared variable.
+	8 | 	let <a> 1 + 2 + 3 + 4;
+        But the next token was '1'.
+	8 | 	let a <1> + 2 + 3 + 4;
+        Tip: All variables must be assigned a value when they are declared.
+
+(ERROR) Expected '=' after 'b' to assign a value to the declared variable.
+	10 | 	let <b> Button("new");
+        But the next token was 'Button'.
+	10 | 	let b <Button>("new");
+        Tip: All variables must be assigned a value when they are declared.
+
+(ERROR) Expected '=' after 'c' to assign a value to the declared variable.
+	12 | 	let <c>;
+        But the next token was ';'.
+	12 | 	let c<;>
+        Tip: All variables must be assigned a value when they are declared.
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

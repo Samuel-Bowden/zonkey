@@ -1,0 +1,4 @@
+(ERROR) Failed to parse the integer provided: number too large to fit in target type.
+	2 | 	let integer = <1239824283708273407234097230942039487502938475029387450928734590273478340598723095723409857>;
+
+(ABORTING) Cannot start execution of script due to lexical error.

@@ -1,0 +1,34 @@
+start {
+	let password = Input("Guess the password");
+	let status = Text("No password entered yet");
+	let exit = Button("Exit");
+
+	let title = "Password Guessing Game";
+
+	set_page(Page()	
+		.set_title(title)
+		.center()
+		.set_max_width(600.)
+		.add(Text(title).set_size(40.))
+		.add(status)
+		.add(password)
+		.add(exit));
+
+	while (wait_for_event()) {
+		if (password.confirmed()) {
+			if (password.get_text() == "password1234") {
+				status	
+					.set_text("You guessed the correct password!")
+					.set_colour("#00aa00");
+			} else {
+				status	
+					.set_text("That wasn't the right password")
+					.set_colour("#ff0000");
+			}
+		}
+
+		if (exit.clicked()) {
+			close_tab();
+		}
+	}
+}

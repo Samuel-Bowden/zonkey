@@ -1,0 +1,16 @@
+(ERROR) Expected ',' after '1' to separate initialiser statement from test statement in for declaration.
+	4 | 	for (let i = <1> i < 10 i += 1) {
+        But the next token was 'i'.
+	4 | 	for (let i = 1 <i> < 10 i += 1) {
+
+(ERROR) Expected ',' after '1' to separate initialiser statement from test statement in for declaration.
+	12 | 	for (let i = <1> i < 10, i += 1) {
+        But the next token was 'i'.
+	12 | 	for (let i = 1 <i> < 10, i += 1) {
+
+(ERROR) Expected ',' after '0' to separate initialiser statement from test statement in for declaration.
+	19 | 	for (let i = <0>; i < 10; i += 1) {
+        But the next token was ';'.
+	19 | 	for (let i = 0<;> i < 10; i += 1) {
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

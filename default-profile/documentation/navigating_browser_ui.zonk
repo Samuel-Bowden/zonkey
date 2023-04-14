@@ -1,0 +1,9 @@
+start {
+	let page = Page()
+		.set_title("Navigating The Browser User Interface")
+		.center()
+		.set_max_width(800.)
+		.add(Text("Navigating The Browser User Interface").set_size(40.0));
+
+	set_page(page);
+}

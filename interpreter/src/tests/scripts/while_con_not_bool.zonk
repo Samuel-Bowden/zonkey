@@ -1,0 +1,9 @@
+function test_call(String condition) {
+	while (condition + "false") {
+		println("false");
+	}
+}
+
+start {
+	test_call("true");
+}

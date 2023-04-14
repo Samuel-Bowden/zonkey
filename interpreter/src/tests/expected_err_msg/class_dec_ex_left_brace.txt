@@ -1,0 +1,12 @@
+(ERROR) Expected '{' after 'TestOne' to start body of class.
+	1 | class <TestOne> 
+        But the next token was 'String'.
+	2 | 	<String> test;
+
+(ERROR) Expected '{' after 'TestTwo' to start body of class.
+	7 | class <TestTwo>
+        But the end of the file was reached.
+
+(ERROR) No start block was found in the source file.
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

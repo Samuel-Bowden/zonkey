@@ -1,0 +1,18 @@
+(ERROR) Expected the type of value this type of array will store.
+	2 | 	<[>] test;
+        But the next token was ']'.
+	2 | 	[<]> test;
+        Tip: An array type must have a type inside '[]', e.g. '[Integer]'.
+
+(ERROR) Expected the type of value this type of array will store.
+	9 | function test(<[>] test) -> [] {
+        But the next token was ']'.
+	9 | function test([<]> test) -> [] {
+        Tip: An array type must have a type inside '[]', e.g. '[Integer]'.
+
+(ERROR) Expected a value after '('.
+	14 | 	Test<(>[]);
+        But the next token was '['.
+	14 | 	Test(<[>]);
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

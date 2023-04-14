@@ -1,0 +1,7 @@
+class TestOne 
+	String test;
+	constructor() {
+	}
+}
+
+class TestTwo

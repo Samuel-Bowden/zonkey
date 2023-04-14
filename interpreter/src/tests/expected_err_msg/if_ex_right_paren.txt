@@ -1,0 +1,9 @@
+(ERROR) Expected ')' after ')' to end the condition of the if statement.
+	2 | 	if ((true & true | false & false<)>
+        But the end of the file was reached.
+
+(ERROR) Expected block to be closed with '}', but the end of the file was reached.
+        The block was opened here:
+	1 | start <{>
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

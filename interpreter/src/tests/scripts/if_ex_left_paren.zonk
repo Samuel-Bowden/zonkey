@@ -1,0 +1,6 @@
+start {
+	let test = true;
+	if test) {
+		println("True");
+	}
+}

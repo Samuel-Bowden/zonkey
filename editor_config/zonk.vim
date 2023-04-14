@@ -14,4 +14,4 @@ syntax keyword Keyword class start function let return break continue method con
 syntax keyword Repeat for while loop
 syntax keyword Boolean true false
 syntax keyword Conditional if else
-syntax keyword Type Integer Float String Boolean Button Page Text Input Column Row Hyperlink Image
+syntax keyword Type Integer Float String Boolean

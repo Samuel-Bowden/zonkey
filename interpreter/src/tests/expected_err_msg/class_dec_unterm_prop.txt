@@ -1,0 +1,6 @@
+(ERROR) Expected ';' after 'three' to end property declaration.
+	4 | 	String <three>
+        But the next token was 'String'.
+	5 | 	<String> four;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

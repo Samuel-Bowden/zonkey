@@ -1,0 +1,6 @@
+(ERROR) Expected ',' to add another value or ']' to close the array after '4'.
+	2 | 	let array = Integer[1, 2, 3, <4>;
+        But the next token was ';'.
+	2 | 	let array = Integer[1, 2, 3, 4<;>
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

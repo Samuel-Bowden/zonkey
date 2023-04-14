@@ -1,0 +1,16 @@
+(ERROR) Expected class body to be closed with '}'.
+        The body was opened here:
+	1 | class TestOne <{>
+        '}' was expected as the next token to close the opened body.
+        But the next token was 'class'.
+	9 | <class> TestTwo {
+
+(ERROR) Expected class body to be closed with '}'.
+        The body was opened here:
+	9 | class TestTwo <{>
+        '}' was expected as the next token to close the opened body.
+        But the end of the file was reached.
+
+(ERROR) No start block was found in the source file.
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

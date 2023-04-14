@@ -1,0 +1,13 @@
+(ERROR) This return expression evaluates to type 'Integer', but the declaration it is defined in has a return type of 'String'.
+	2 | 	<return> 1;
+
+(ERROR) Declaration did not return the required type 'String' in all branches of code block.
+	1 | function <test_one>() -> String {
+
+(ERROR) This return expression evaluates to type 'Button', but the declaration it is defined in has a return type of 'Page'.
+	9 | 		<return> Button("Hello");
+
+(ERROR) Declaration did not return the required type 'Page' in all branches of code block.
+	8 | 	method <test>() -> Page {
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

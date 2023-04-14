@@ -1,0 +1,25 @@
+(ERROR) Callable println does not accept a value of type Button for the parameter at position 0.
+	12 | 	<println>(Button("Test"));
+
+(ERROR) Callable println does not accept a value of type Page for the parameter at position 0.
+	13 | 	<println>(Page());
+
+(ERROR) Callable prompt does not accept a value of type Integer for the parameter at position 0.
+	15 | 	<prompt>(1);
+
+(ERROR) Callable integer_to_string does not accept a value of type String for the parameter at position 0.
+	17 | 	let integer = <integer_to_string>("String");
+
+(ERROR) Callable println does not accept a value of type Test for the parameter at position 0.
+	19 | 	<println>(Test());
+
+(ERROR) Callable Test does not accept a value of type String for the parameter at position 1.
+	21 | 	sleep(Test().<Test>("String", "String"));
+
+(ERROR) Callable test_fun does not accept a value of type String for the parameter at position 2.
+	23 | 	<test_fun>(1, 2, "String", 4, 5);
+
+(ERROR) Callable test_fun does not accept a value of type String for the parameter at position 2.
+	24 | 	<test_fun>(1, 2, "String", 4, "String");
+
+(ABORTING) Cannot start execution of script due to 8 error(s).

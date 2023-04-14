@@ -1,0 +1,24 @@
+(ERROR) Expected a value after '{'.
+	1 | function test_one() <{>
+        But the next token was 'start'.
+	2 | 	<start> {
+
+(ERROR) Expected a value after ';'.
+	8 | 	println("Function inside function")<;>
+        But the next token was 'function'.
+	10 | 	<function> test_three() {
+
+(ERROR) Expected a value after '{'.
+	17 | function test_four() <{>
+        But the next token was 'class'.
+	18 | 	<class> Test {
+
+(ERROR) Expected a value after '{'.
+	29 | function test_five() <{>
+        But the next token was 'start'.
+	30 | 	<start> {
+
+(ERROR) Callable 'test_three' has not been declared.
+	42 | 	<test_three>();
+
+(ABORTING) Cannot start execution of script due to 5 error(s).

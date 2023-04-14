@@ -1,0 +1,5 @@
+(ERROR) Unsupported character '$' found whilst scanning source file.
+	1 | function add_one_<$>(Float $) {
+        Tip: A valid Zonkey program must only contain specific unicode characters. Please refer to the documentation to see which characters can be used
+
+(ABORTING) Cannot start execution of script due to lexical error.

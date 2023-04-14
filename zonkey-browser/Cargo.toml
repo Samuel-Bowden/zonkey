@@ -1,0 +1,9 @@
+[package]
+name = "zonkey-browser"
+version = "0.1.0"
+edition = "2021"
+description = "Browser that run programs written in Zonkey script over the internet"
+authors = ["Sam Bowden"]
+
+[dependencies]
+tab = { path = "../tab" }

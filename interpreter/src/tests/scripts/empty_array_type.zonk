@@ -1,0 +1,15 @@
+class Test {
+	[] array;
+
+	constructor([] array) {
+		@array = array;
+	}
+}
+
+function test_function([] array) -> [] {
+	return array;
+}
+
+start {
+	test_function([]);
+}

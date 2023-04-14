@@ -1,0 +1,16 @@
+(ERROR) Cannot perform unary operation '!' on type Button.
+	4 | 	if (<!>button) {
+
+(ERROR) Cannot perform unary operation '!' on type String.
+	7 | 	if (<!>"Hello") {
+
+(ERROR) Cannot perform unary operation '!' on type Integer.
+	10 | 	if (<!>1) {
+
+(ERROR) Cannot perform unary operation '-' on type Boolean.
+	13 | 	while (<->false) {
+
+(ERROR) Cannot perform unary operation '-' on type Button.
+	19 | 	let test = -<->button;
+
+(ABORTING) Cannot start execution of script due to 5 error(s).

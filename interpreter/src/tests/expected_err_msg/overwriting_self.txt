@@ -1,0 +1,4 @@
+(ERROR) Cannot create a variable with name 'self'. This name is reserved to reference the current object inside a constructor or method.
+	12 | 		let <self> = 1;
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

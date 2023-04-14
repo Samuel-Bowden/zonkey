@@ -1,0 +1,6 @@
+(ERROR) Expected 'let' after '(' to initialise variable in first section of for statement.
+	2 | 	for <(>i = 0, i < 10, i += 1) {
+        But the next token was 'i'.
+	2 | 	for (<i> = 0, i < 10, i += 1) {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

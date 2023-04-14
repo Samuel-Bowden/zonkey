@@ -1,0 +1,4 @@
+(ERROR) Expected values of array to be of type 'Integer', but the value in array position 2 evaluates to type 'String'.
+	2 | 	let array = <Integer>[1, 2, "Hello"];
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

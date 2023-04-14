@@ -1,0 +1,19 @@
+(ERROR) Expected a data type for a parameter after '('.
+	2 | 	method name<(>,test) {
+        But the next token was ','.
+	2 | 	method name(<,>test) {
+
+(ERROR) Expected a data type for a parameter after '('.
+	9 | 	constructor<(>&one) {}
+        But the next token was '&'.
+	9 | 	constructor(<&>one) {}
+
+(ERROR) Expected a data type for a parameter after '('.
+	12 | function name<(>]one) {
+        But the next token was ']'.
+	12 | function name(<]>one) {
+
+(ERROR) Callable 'Test' has not been declared.
+	15 | start { <Test>() }
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

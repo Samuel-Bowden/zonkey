@@ -1,0 +1,28 @@
+function test_one() {
+	let sum = 0;
+	for (let i = 0, println(integer_to_string(i)), i += 10) {
+		sum += 1;
+	}
+}
+
+class Object { constructor() {} }
+
+function test_two(Object test) {
+	let sum = 0;
+	for (let i = 0, test, i += 10) {
+		sum += 1;
+	}
+}
+
+function test_three(String test) {
+	let sum = 0;
+	for (let i = 0, test < "three", i += 10) {
+		sum += 1;
+	}
+}
+
+start {
+	test_one();
+	test_two(Object());
+	test_three("one");
+}

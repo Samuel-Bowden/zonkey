@@ -1,0 +1,15 @@
+class TestOne {
+	method name(,test) {
+	}
+
+	constructor() {}
+}
+
+class TestTwo {
+	constructor(&one) {}
+}
+
+function name(]one) {
+}
+
+start { Test() }

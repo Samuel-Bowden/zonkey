@@ -1,0 +1,14 @@
+function test_call(Integer value) {
+	for (let i = value, i < 10, i += 1 {
+		println(integer_to_string(i));
+	}
+}
+
+start {
+	for ((let i = 0, i < 10, i += 1) {
+		println(integer_to_string(i));
+	}
+
+	test_call(3);
+	test_call(5);
+}

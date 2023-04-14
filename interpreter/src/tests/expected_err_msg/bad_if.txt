@@ -1,0 +1,14 @@
+(ERROR) Could not find a variable with name 'test' in the current scope.
+	2 | 	<test> = true;
+
+(ERROR) Expected '(' after 'if' to start the condition of the if statement.
+	4 | 	<if> test:
+        But the next token was 'test'.
+	4 | 	if <test>:
+
+(ERROR) Expected '(' after 'if' to start the condition of the if statement.
+	5 | 		<if> true:
+        But the next token was 'true'.
+	5 | 		if <true>:
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

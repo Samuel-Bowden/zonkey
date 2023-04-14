@@ -1,0 +1,14 @@
+(ERROR) Expected ',' to add another argument or ')' to close argument list after 'Hello'.
+	2 | 	println(<"Hello">]);
+        But the next token was ']'.
+	2 | 	println("Hello"<]>);
+
+(ERROR) Expected ',' to add another argument or ')' to close argument list after 'Test'.
+	6 | 	Button(<"Test">
+        But the end of the file was reached.
+
+(ERROR) Expected block to be closed with '}', but the end of the file was reached.
+        The block was opened here:
+	5 | function test_one() <{>
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

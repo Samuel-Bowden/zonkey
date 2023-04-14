@@ -1,0 +1,10 @@
+start {
+	let n_class = Input[Input("1234"), Input("4321")];
+	n_class.get(0).set_text("first set text");
+	n_class.get(1).set_text("second set text");
+	println(n_class.get(0).get_text());
+	println(n_class.get(1).get_text());
+	n_class.push(Input("8765").set_text("third set text"));
+	n_class.remove(1);
+	println(n_class.get(1).get_text());
+}

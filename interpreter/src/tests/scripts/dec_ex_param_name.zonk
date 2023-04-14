@@ -1,0 +1,16 @@
+function test_one(String []) {
+}
+
+class TestTwo {
+	constructor(String) {
+	}
+}
+
+class TestThree {
+	constructor() {}
+
+	method test_method(String *) {
+	}
+}
+
+start {}

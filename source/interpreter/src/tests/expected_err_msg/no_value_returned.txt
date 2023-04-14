@@ -1,7 +1,0 @@
-(ERROR) Function declaration did not return the required type 'Person' in all branches of code.
-	9 | function <test_function_one>() -> Person {
-
-(ERROR) Callable 'test_function' has not been declared.
-	13 | 	let a = <test_function>();
-
-(ABORTING) Cannot start execution of script due to 2 error(s).

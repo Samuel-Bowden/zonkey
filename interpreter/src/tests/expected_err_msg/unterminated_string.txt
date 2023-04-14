@@ -1,0 +1,4 @@
+(ERROR) String literal was not closed before starting a new line.
+	2 | 	let a = "hello worl<d>
+
+(ABORTING) Cannot start execution of script due to lexical error.

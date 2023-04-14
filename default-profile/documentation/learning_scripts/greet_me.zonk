@@ -1,0 +1,8 @@
+# My first Zonkey program
+start {
+	let name = prompt("What is your name?");
+	println("Hello " + name);
+}
+
+
+

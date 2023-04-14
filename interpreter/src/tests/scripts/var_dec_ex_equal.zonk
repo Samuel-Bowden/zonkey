@@ -1,0 +1,13 @@
+function test_one() {
+	for (let a 1, a < 3, a += 1) {
+		println("Hello");
+	}
+}
+
+start {
+	let a 1 + 2 + 3 + 4;
+
+	let b Button("new");
+
+	let c;
+}

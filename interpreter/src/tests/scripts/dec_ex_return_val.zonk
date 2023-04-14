@@ -1,0 +1,26 @@
+class TestOne {
+	method test() -> Boolean {
+		if (true) {
+			if (false) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	constructor() {}
+}
+
+function test_two() -> Page {
+	while (true) {
+		return Page();
+	}
+}
+
+function test_three() -> Button {
+	for (let i = 0, i < 4, i += 1) {
+		return Button("Hello");
+	}
+}
+
+start {}

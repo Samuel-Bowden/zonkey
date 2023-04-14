@@ -1,0 +1,13 @@
+(ERROR) Cannot use assignment operator '-=' with value of type 'String'.
+	5 | 	name <-=> "String";
+
+(ERROR) Cannot use assignment operator '+=' with value of type 'Page'.
+	8 | 	a <+=> Page();
+
+(ERROR) Cannot use assignment operator '+=' with value of type 'Boolean'.
+	11 | 	test <+=> true;
+
+(ERROR) Cannot use assignment operator '+=' with value of type 'Test'.
+	14 | 	b <+=> Test();
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

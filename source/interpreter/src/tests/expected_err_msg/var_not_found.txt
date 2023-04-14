@@ -1,4 +1,0 @@
-(ERROR) Could not find a variable with name 'namr' in the current scope.
-	2 | 	return <namr> += "Hello ";
-
-(ABORTING) Cannot start execution of script due to 1 error(s).

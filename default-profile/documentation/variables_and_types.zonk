@@ -1,0 +1,10 @@
+start {
+	let page = Page()
+		.set_title("Variables And Types")
+		.center()
+		.set_max_width(800.)
+		.add(Text("Variables And Types").set_size(40.0))
+		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+	set_page(page);
+}

@@ -1,0 +1,11 @@
+(ERROR) Expected ')' after ')' to end the condition of the while statement.
+	2 | 	while ((false<)> {
+        But the next token was '{'.
+	2 | 	while ((false) <{>
+
+(ERROR) Expected ')' after 'false' to end the condition of the while statement.
+	6 | 	while (<false> {
+        But the next token was '{'.
+	6 | 	while (false <{>
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

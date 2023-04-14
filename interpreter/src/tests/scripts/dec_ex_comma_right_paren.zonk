@@ -1,0 +1,26 @@
+class TestOne {
+	String test;
+
+	constructor(String test {
+		@test = test;
+	}
+}
+
+class TestTwo {
+	String test;
+
+	constructor(String test) {
+		@test = test;
+	}
+
+	method test(String val {
+		@test = val;
+	}
+}
+
+function test_three(String test {
+	println("Hello world");	
+})
+
+start {
+}

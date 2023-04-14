@@ -1,0 +1,13 @@
+(ERROR) Expression to assign to variable with operator '+=' evaluated to the type 'Integer', but the variable is type 'String'.
+	5 | 	a <+=> 123;
+
+(ERROR) Expression to assign to variable with operator '+=' evaluated to the type 'Button', but the variable is type 'Page'.
+	8 | 	b <+=> Button("Hello");
+
+(ERROR) Expression to assign to variable with operator '-=' evaluated to the type 'String', but the variable is type 'Test'.
+	11 | 	c <-=> "String";
+
+(ERROR) Expression to assign to variable with operator '*=' evaluated to the type 'Float', but the variable is type 'Integer'.
+	14 | 	d <*=> 53.0;
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

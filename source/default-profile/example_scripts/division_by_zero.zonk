@@ -1,7 +1,0 @@
-start {
-	let b = 19 / 0;
-
-	println("This shouldn't be printed");
-
-	println(b);
-}

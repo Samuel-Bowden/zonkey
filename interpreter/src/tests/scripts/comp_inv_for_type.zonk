@@ -1,0 +1,13 @@
+class Test { constructor() {} }
+
+start {
+	let a = 123 & 321 | 45434;
+
+	let b = "String" & "String";
+
+	let c = 41234.543258 | 584932.52345;
+
+	let d = Button("Hello") | Button("Goodbye");
+
+	let e = Test() & Test();
+}

@@ -1,0 +1,13 @@
+(ERROR) Cannot perform operation '-' on type String.
+	2 | 	let a = "String" <-> "String" - "String";
+
+(ERROR) Cannot perform operation '+' on type Boolean.
+	4 | 	let b = false <+> true;
+
+(ERROR) Cannot perform operation '-' on type Boolean.
+	6 | 	let c = false <-> false;
+
+(ERROR) Cannot perform operation '*' on type String.
+	8 | 	let d = "String" <*> "String";
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

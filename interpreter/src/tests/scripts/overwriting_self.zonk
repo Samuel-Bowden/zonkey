@@ -1,0 +1,20 @@
+class OverwritingSelf {
+	String value;
+
+	constructor() {
+	}
+
+	method other_call() {
+		println("Hello");
+	}
+
+	method overwrite_self() {
+		let self = 1;
+		@value = "Hello";
+		self.other_call();
+	}
+}
+
+start {
+	OverwritingSelf();
+}

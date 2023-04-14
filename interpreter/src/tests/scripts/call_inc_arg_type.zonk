@@ -1,0 +1,25 @@
+class Test {
+	constructor() {}
+
+	method Test(String test, Integer num) {
+	}
+}
+
+function test_fun(Integer one, Integer two, Integer three, Integer four, Integer five) {
+}
+
+start {
+	println(Button("Test"));
+	println(Page());
+
+	prompt(1);
+
+	let integer = integer_to_string("String");
+
+	println(Test());
+
+	sleep(Test().Test("String", "String"));
+
+	test_fun(1, 2, "String", 4, 5);
+	test_fun(1, 2, "String", 4, "String");
+}

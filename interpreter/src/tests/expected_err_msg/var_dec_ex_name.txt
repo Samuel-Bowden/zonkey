@@ -1,0 +1,16 @@
+(ERROR) Expected a variable name after 'let'.
+	2 | 	for (<let> = 3, i < 4, i += 1) {
+        But the next token was '='.
+	2 | 	for (let <=> 3, i < 4, i += 1) {
+
+(ERROR) Expected a variable name after 'let'.
+	8 | 	<let> = false;
+        But the next token was '='.
+	8 | 	let <=> false;
+
+(ERROR) Expected a variable name after 'let'.
+	10 | 	<let> function = true;
+        But the next token was 'function'.
+	10 | 	let <function> = true;
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

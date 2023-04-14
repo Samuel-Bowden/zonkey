@@ -1,0 +1,9 @@
+function get_name() -> String {
+	let a = prompt("Enter first name:");
+	let b = prompt("Enter second name:");
+	return a + b;
+}
+
+start {
+	let b = get_name() + get_nme() + get_name();
+}

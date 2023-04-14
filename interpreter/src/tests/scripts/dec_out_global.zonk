@@ -1,0 +1,45 @@
+function test_one() {
+	start {
+		println("Hello world");
+	}
+}
+
+function test_two() {
+	println("Function inside function");
+
+	function test_three() {
+		println("Goodbye");
+	}
+
+	test_three();
+}
+
+function test_four() {
+	class Test {
+		String hello;
+		method one() {}
+		constructor(String test) {
+			@hello = hello;
+		}
+	}
+
+	Test("Hello");
+}
+
+function test_five() {
+	start {
+		start {
+			start {
+				println("Hello world");
+			}
+		}
+	}
+}
+
+start {
+	test_one();
+	test_two();
+	test_three();
+	test_four();
+	test_five();
+}

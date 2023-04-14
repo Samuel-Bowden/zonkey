@@ -1,0 +1,15 @@
+start {
+	let array = String["the", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog"];
+
+	array.remove(1);
+	array.remove(1);
+	array.remove(5);
+
+	let sentence = array.get(0);
+
+	for (let i = 1, i < 6, i += 1) {
+		sentence += " " + array.get(i);
+	}
+
+	println(sentence);
+}

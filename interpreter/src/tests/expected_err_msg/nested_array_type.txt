@@ -1,0 +1,9 @@
+(ERROR) Expected a value after '='.
+	8 | 	let array <=> [Integer][Integer[1, 2], Integer[3, 4,]];
+        But the next token was '['.
+	8 | 	let array = <[>Integer][Integer[1, 2], Integer[3, 4,]];
+
+(ERROR) Could not find a variable with name 'array' in the current scope.
+	9 | 	test_function(<array>);
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

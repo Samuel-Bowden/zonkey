@@ -1,0 +1,6 @@
+(ERROR) Expected '(' after 'while' to start the condition of the while statement.
+	2 | 	<while> true {
+        But the next token was 'true'.
+	2 | 	while <true> {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

@@ -1,0 +1,4 @@
+(ERROR) While statement condition does not evaluate to a boolean.
+	2 | 	while (<condition + "false">) {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

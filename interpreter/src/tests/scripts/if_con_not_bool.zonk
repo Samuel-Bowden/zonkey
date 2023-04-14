@@ -1,0 +1,10 @@
+class Test {
+	constructor() {
+	}
+}
+
+start {
+	if (Test()) {
+		println("true");
+	}
+}

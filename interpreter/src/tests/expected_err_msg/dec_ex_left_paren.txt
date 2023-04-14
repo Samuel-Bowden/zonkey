@@ -1,0 +1,22 @@
+(ERROR) Expected '(' after 'name' to start parameter list of declaration.
+	2 | 	method <name> String one, Integer two {
+        But the next token was 'String'.
+	2 | 	method name <String> one, Integer two {
+
+(ERROR) Expected '(' after 'test_two' to start parameter list of declaration.
+	8 | function <test_two> Integer val) {
+        But the next token was 'Integer'.
+	8 | function test_two <Integer> val) {
+
+(ERROR) Expected '(' after 'constructor' to start parameter list of declaration.
+	16 | 	<constructor> String one, Integer two {
+        But the next token was 'String'.
+	16 | 	constructor <String> one, Integer two {
+
+(ERROR) Callable 'TestOne' has not been declared.
+	23 | 	<TestOne>():
+
+(ERROR) Callable 'TestThree' has not been declared.
+	25 | 	<TestThree>();
+
+(ABORTING) Cannot start execution of script due to 5 error(s).

@@ -1,0 +1,7 @@
+(ERROR) Could not find a variable with name 'namr' in the current scope.
+	2 | 	return <namr> += "Hello ";
+
+(ERROR) Declaration did not return the required type 'String' in all branches of code block.
+	1 | function <greet>(String name) -> String {
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

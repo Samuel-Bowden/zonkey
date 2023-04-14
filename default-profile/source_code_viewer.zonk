@@ -1,0 +1,75 @@
+class Application {
+    String name;
+    String location;
+    Button button;
+    String source_code;
+
+    constructor(String name, String location) {
+        @name = name;
+        @location = location;
+        @button = Button(name);
+    }
+
+    method clicked() -> Boolean {
+        return @button.clicked();
+    }
+
+    method get_source_code() -> String {
+        if (@source_code == "") {
+            @source_code = read_string(@location);
+        }
+        return @source_code;
+    }
+
+    method get_button() -> Button {
+        return @button;
+    }
+}
+
+class SourceCodeViewer {
+    Page page;
+    [Application] applications;
+    Text source_code_view;
+
+    constructor() {
+        @source_code_view = Text("Not viewing any source code yet");
+
+        @applications = Application[
+            Application("Home App", "zonkey:home.zonk"),
+            Application("Calculator App", "zonkey:calculator.zonk"),
+            Application("Source Code Viewer App", "zonkey:source_code_viewer.zonk")
+        ];
+
+        let button_row = Row();
+
+        for (let i = 0, i < 3, i += 1) {
+            button_row.add(@applications.get(i).get_button());
+        }
+
+        @page = Page()
+            .center()
+            .set_max_width(1500.)
+            .set_title("Source Code Viewer")
+            .add(Text("Source Code Viewer").set_size(40.))
+            .add(button_row)
+            .add(@source_code_view);
+
+        set_page(@page);
+    }
+
+    method run() {
+        while (wait_for_event()) {
+            for (let i = 0, i < @applications.len(), i += 1) {
+                let application = @applications.get(i);
+
+                if (application.clicked()) {
+                    @source_code_view.set_text(application.get_source_code());
+                }
+            }
+        }
+    }
+}
+
+start {
+    SourceCodeViewer().run();
+}

@@ -1,0 +1,13 @@
+(ERROR) Unexpected token 'a' in global scope.
+	1 | <a> = 5
+        Tip: There should only be start, function or class definitions in the global scope.
+
+(ERROR) A class with this name has not been declared.
+	5 | function test_one(<two>):
+
+(ERROR) Expected '{' after 'start' to start block.
+	8 | <start>:
+        But the next token was ':'.
+	8 | start<:>
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

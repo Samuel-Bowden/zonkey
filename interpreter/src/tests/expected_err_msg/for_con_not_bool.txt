@@ -1,0 +1,10 @@
+(ERROR) For statement test condition does not evaluate to a boolean.
+	3 | 	for (let i = 0,< println(integer_to_string(i))>, i += 10) {
+
+(ERROR) For statement test condition does not evaluate to a boolean.
+	12 | 	for (let i = 0,< test>, i += 10) {
+
+(ERROR) Cannot perform comparision '<' for type String.
+	19 | 	for (let i = 0, test <<> "three", i += 10) {
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

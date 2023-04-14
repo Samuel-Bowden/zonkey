@@ -1,0 +1,21 @@
+(ERROR) Cannot compare two values of different types.
+	4 | 	let a = "String" <&> false;
+        Left expression evaluates to type String, while the right expression evaluates to type Boolean.
+
+(ERROR) Cannot compare two values of different types.
+	6 | 	let b = false <&> Button("hello");
+        Left expression evaluates to type Boolean, while the right expression evaluates to type Button.
+
+(ERROR) Cannot compare two values of different types.
+	8 | 	let c = false | true <|> Test();
+        Left expression evaluates to type Boolean, while the right expression evaluates to type Test.
+
+(ERROR) Cannot compare two values of different types.
+	10 | 	let d = 1 <|> false;
+        Left expression evaluates to type Integer, while the right expression evaluates to type Boolean.
+
+(ERROR) Cannot compare two values of different types.
+	12 | 	let e = false <&> 0.123;
+        Left expression evaluates to type Boolean, while the right expression evaluates to type Float.
+
+(ABORTING) Cannot start execution of script due to 5 error(s).

@@ -1,0 +1,17 @@
+(ERROR) Expected a return data type for the declaration after '->'.
+	1 | function test_one() <->> {
+        But the next token was '{'.
+	1 | function test_one() -> <{>
+
+(ERROR) Expected a return data type for the declaration after '->'.
+	6 | 	method test() <->> {
+        But the next token was '{'.
+	6 | 	method test() -> <{>
+
+(ERROR) Expected a return data type for the declaration after '->'.
+	11 | function test_two() <->>
+        But the end of the file was reached.
+
+(ERROR) No start block was found in the source file.
+
+(ABORTING) Cannot start execution of script due to 4 error(s).

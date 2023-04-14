@@ -1,0 +1,4 @@
+(ERROR) Callable 'get_nme' has not been declared.
+	8 | 	let b = get_name() + <get_nme>() + get_name();
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

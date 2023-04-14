@@ -1,0 +1,10 @@
+(ERROR) Declaration did not return the required type 'Boolean' in all branches of code block.
+	2 | 	method <test>() -> Boolean {
+
+(ERROR) Declaration did not return the required type 'Page' in all branches of code block.
+	14 | function <test_two>() -> Page {
+
+(ERROR) Declaration did not return the required type 'Button' in all branches of code block.
+	20 | function <test_three>() -> Button {
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

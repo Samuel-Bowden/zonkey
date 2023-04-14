@@ -1,0 +1,10 @@
+# Zonkey does not support nested arrays
+
+function test_function([[Integer]] array) -> [[Integer]] {
+	return array;
+}
+
+start {
+	let array = [Integer][Integer[1, 2], Integer[3, 4,]];
+	test_function(array);
+}

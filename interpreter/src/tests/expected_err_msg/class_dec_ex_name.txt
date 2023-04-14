@@ -1,0 +1,16 @@
+(ERROR) Expected a class name after 'class'.
+	1 | <class> {
+        But the next token was '{'.
+	1 | class <{>
+
+(ERROR) Expected a class name after 'class'.
+	4 | <class> function {
+        But the next token was 'function'.
+	4 | class <function> {
+
+(ERROR) Expected a class name after 'class'.
+	7 | <class>:
+        But the next token was ':'.
+	7 | class<:>
+
+(ABORTING) Cannot start execution of script due to 3 error(s).

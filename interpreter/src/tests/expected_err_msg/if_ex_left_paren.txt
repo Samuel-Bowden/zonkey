@@ -1,0 +1,6 @@
+(ERROR) Expected '(' after 'if' to start the condition of the if statement.
+	3 | 	<if> test) {
+        But the next token was 'test'.
+	3 | 	if <test>) {
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

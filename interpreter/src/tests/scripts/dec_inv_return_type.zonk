@@ -1,0 +1,13 @@
+function test_one() -> String {
+	return 1;
+}
+
+class TestTwo {
+	constructor() {}
+
+	method test() -> Page {
+		return Button("Hello");
+	}
+}
+
+start {}

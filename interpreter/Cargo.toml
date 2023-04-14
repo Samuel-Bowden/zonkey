@@ -1,0 +1,16 @@
+[package]
+name = "interpreter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+numtoa = "0.2.4"
+ryu = "1.0"
+rustc-hash = "1.1"
+indexmap = "1.9.2"
+unicode-segmentation = "1.10.0"
+termcolor = "1.2.0"
+iced = { version = "0.9", features = ["image", "svg"] }
+iced_native = "0.10.1"
+resource-loader = { path = "../resource-loader" }
+colorsys = "0.6.7"
