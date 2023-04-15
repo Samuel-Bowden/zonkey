@@ -1,10 +1,12 @@
 use super::Object;
 use crate::{
+    err::tree_walker::TreeWalkerErr,
     expr::{
         BooleanAssignmentOperator, NumericAssignmentOperator, ObjectAssignmentOperator,
         StringAssignmentOperator,
     },
-    stack::Stack, err::tree_walker::TreeWalkerErr, token::Token,
+    stack::Stack,
+    token::Token,
 };
 
 #[derive(Debug)]
@@ -158,7 +160,9 @@ impl Environment {
     pub fn get_object(&self, id: usize) -> Result<Object, TreeWalkerErr> {
         match &self.object_stack[id] {
             NullableReference::Some(object) => Ok(object.clone()),
-            NullableReference::None(prop_name) => Err(TreeWalkerErr::PropertyNotInitialised(prop_name.clone())),
+            NullableReference::None(prop_name) => {
+                Err(TreeWalkerErr::PropertyNotInitialised(prop_name.clone()))
+            }
         }
     }
 }

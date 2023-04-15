@@ -9,12 +9,20 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
-                let array = array_obj.extract_native_object().extract_integer_array().lock().unwrap();
+                let array = array_obj
+                    .extract_native_object()
+                    .extract_integer_array()
+                    .lock()
+                    .unwrap();
 
                 if let Some(element) = array.get(index) {
                     Ok(*element)
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                    Err(TreeWalkerErr::IndexOutOfRange(
+                        index,
+                        array.len(),
+                        token.clone(),
+                    ))
                 }
             }
 
@@ -22,12 +30,20 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
-                let mut array = array_obj.extract_native_object().extract_integer_array().lock().unwrap();
+                let mut array = array_obj
+                    .extract_native_object()
+                    .extract_integer_array()
+                    .lock()
+                    .unwrap();
 
                 if index < array.len() {
                     Ok(array.remove(index))
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                    Err(TreeWalkerErr::IndexOutOfRange(
+                        index,
+                        array.len(),
+                        token.clone(),
+                    ))
                 }
             }
 
@@ -55,9 +71,7 @@ impl<'a> TreeWalker<'a> {
                 }
             }
 
-            NativeCallInteger::FromFloat(float) => {
-                Ok(self.eval_float(float)? as i64)
-            }
+            NativeCallInteger::FromFloat(float) => Ok(self.eval_float(float)? as i64),
         }
     }
 }

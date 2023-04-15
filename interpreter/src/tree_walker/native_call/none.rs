@@ -1,7 +1,11 @@
-use std::{time::Duration, thread::sleep, io::{stdout, Write}};
-use numtoa::NumToA;
-use crate::standard_prelude::calls::NativeCallNone;
 use super::prelude::*;
+use crate::standard_prelude::calls::NativeCallNone;
+use numtoa::NumToA;
+use std::{
+    io::{stdout, Write},
+    thread::sleep,
+    time::Duration,
+};
 
 impl<'a> TreeWalker<'a> {
     pub fn native_call_none(&mut self, call: &NativeCallNone) -> Result<(), TreeWalkerErr> {
@@ -40,14 +44,18 @@ impl<'a> TreeWalker<'a> {
                 stdout().write_all(&self.stdout.as_slice()).ok();
                 stdout().flush().ok();
                 self.stdout.clear();
-                self.interpreter_event_sender.send(InterpreterEvent::Update).ok();
+                self.interpreter_event_sender
+                    .send(InterpreterEvent::Update)
+                    .ok();
             }
 
             NativeCallNone::SetPage(page) => {
                 let mut page = self.eval_object(page)?;
 
                 self.interpreter_event_sender
-                    .send(InterpreterEvent::SetPage(Arc::clone(page.extract_native_object().extract_page())))
+                    .send(InterpreterEvent::SetPage(Arc::clone(
+                        page.extract_native_object().extract_page(),
+                    )))
                     .ok();
             }
 

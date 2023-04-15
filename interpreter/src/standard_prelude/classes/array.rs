@@ -39,7 +39,5 @@ pub fn new(array_class: Rc<String>, element: ValueType) -> ClassDeclaration {
         }),
     );
 
-    ClassDeclaration {
-        methods,
-    }
+    ClassDeclaration { methods }
 }

@@ -1,4 +1,4 @@
-use crate::{standard_prelude::calls::*, parser::declaration::ConstructionType, token::Token};
+use crate::{parser::declaration::ConstructionType, standard_prelude::calls::*, token::Token};
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]

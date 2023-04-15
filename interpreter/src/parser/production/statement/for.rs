@@ -39,7 +39,7 @@ impl Parser {
                 ));
                 return Err(ParserStatus::End);
             }
-        } 
+        }
 
         let initialiser_statement = match self.variable_init() {
             Ok(is) => is,

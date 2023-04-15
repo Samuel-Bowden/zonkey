@@ -14,7 +14,9 @@ impl PageViewer {
                 }
                 None
             }
-            Message::HyperlinkPressed(location) => Some(PageViewerEvent::HyperlinkPressed(location)),
+            Message::HyperlinkPressed(location) => {
+                Some(PageViewerEvent::HyperlinkPressed(location))
+            }
             Message::InputChanged(text, input) => {
                 input.lock().unwrap().text = text;
                 None

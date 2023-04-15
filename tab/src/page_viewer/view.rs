@@ -1,12 +1,15 @@
 use super::{message::Message, PageErr, PageViewer};
-use interpreter::{iced::{
-    alignment::{Horizontal, Vertical},
-    widget::{text, Button, Column, Container, Image, Row, Scrollable, Space, Text, TextInput},
-    Color, Element, Length, Padding,
-}, iced_native::Alignment};
-use interpreter::iced_native::{image::Handle, theme};
-use std::sync::{Arc, Mutex};
 use interpreter::element::{self, ElementType};
+use interpreter::iced_native::{image::Handle, theme};
+use interpreter::{
+    iced::{
+        alignment::{Horizontal, Vertical},
+        widget::{text, Button, Column, Container, Image, Row, Scrollable, Space, Text, TextInput},
+        Color, Element, Length, Padding,
+    },
+    iced_native::Alignment,
+};
+use std::sync::{Arc, Mutex};
 
 impl PageViewer {
     pub fn view(&self) -> Element<Message> {
@@ -50,34 +53,28 @@ pub fn build_page<'a>(page: &Arc<Mutex<element::Page>>) -> Element<'a, Message> 
         page_content.push(build_calls(element));
     }
 
-    let mut column = Column::with_children(page_content)
-            .padding(30)
-            .spacing(20);
+    let mut column = Column::with_children(page_content).padding(30).spacing(20);
 
     if let Some(max_width) = page.max_width {
         column = column.max_width(max_width);
     }
 
-    let mut container = Container::new(column)
-        .width(Length::Fill);
+    let mut container = Container::new(column).width(Length::Fill);
 
     if page.center {
         container = container.center_x();
     }
 
     Container::new(Scrollable::new(container))
-        .style(theme::Container::Custom(Box::new(
-            page.clone(),
-        )))
+        .style(theme::Container::Custom(Box::new(page.clone())))
         .height(Length::Fill)
         .into()
 }
 
 fn build_text<'a>(text: Arc<Mutex<element::Text>>) -> Element<'a, Message> {
     let text = text.lock().unwrap();
-    let mut text_ui = Text::new(text.value.clone())
-        .size(text.size);
-    
+    let mut text_ui = Text::new(text.value.clone()).size(text.size);
+
     if let Some(colour) = text.colour {
         text_ui = text_ui.style(Color::from_rgb8(colour.0, colour.1, colour.2));
     }
@@ -118,9 +115,7 @@ fn build_input<'a>(obj: Arc<Mutex<element::Input>>) -> Element<'a, Message> {
         input.placeholder.to_string().as_str(),
         input.text.to_string().as_str(),
     )
-    .on_input(
-        move |new_value| -> Message { Message::InputChanged(new_value, Arc::clone(&obj)) },
-    )
+    .on_input(move |new_value| -> Message { Message::InputChanged(new_value, Arc::clone(&obj)) })
     .on_submit(Message::InputSubmit(Arc::clone(&obj_ref)))
     .into()
 }
@@ -156,8 +151,7 @@ fn build_column<'a>(column: Arc<Mutex<element::Column>>) -> Element<'a, Message>
         column_content.push(build_calls(element));
     }
 
-    let mut column = Column::with_children(column_content)
-        .spacing(10);
+    let mut column = Column::with_children(column_content).spacing(10);
 
     if let Some(max_width) = column_obj.max_width {
         column = column.max_width(max_width);

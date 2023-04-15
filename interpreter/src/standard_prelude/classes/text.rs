@@ -30,7 +30,5 @@ pub fn new(text: Rc<String>) -> ClassDeclaration {
         }),
     );
 
-    ClassDeclaration {
-        methods,
-    }
+    ClassDeclaration { methods }
 }

@@ -6,7 +6,7 @@
     "x-forwarded-proto": "https",
     "x-forwarded-port": "443",
     "host": "postman-echo.com",
-    "x-amzn-trace-id": "Root=1-643abc4f-2baa5e1922ad405f22334dbe",
+    "x-amzn-trace-id": "Root=1-643ad1ef-452f50a75bc7dce40eca18b5",
     "accept": "*/*"
   },
   "url": "https://postman-echo.com/get?arg1=hello"

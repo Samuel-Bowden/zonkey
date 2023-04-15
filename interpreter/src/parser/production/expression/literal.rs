@@ -120,9 +120,7 @@ impl Parser {
                     }
 
                     // Creating an array of objects
-                    Some(TokenType::LeftBracket) => {
-                        self.array_constructor(Rc::clone(&name))
-                    }
+                    Some(TokenType::LeftBracket) => self.array_constructor(Rc::clone(&name)),
 
                     // Calling a method of an object variable
                     Some(TokenType::Dot) => match self.find_value(Rc::clone(&name)) {
@@ -145,16 +143,14 @@ impl Parser {
                         }
                     },
                     // Getting a variable
-                    _ => {
-                        match self.find_value(Rc::clone(&name)) {
-                            Some(value) => Ok(self.get_variable_expr(&value)),
-                            None => {
-                                self.error.add(ParserErrType::VariableNotFound(
-                                    self.tokens[self.current - 1].clone(),
-                                    name.to_string(),
-                                ));
-                                Err(ParserStatus::Unwind)
-                            }
+                    _ => match self.find_value(Rc::clone(&name)) {
+                        Some(value) => Ok(self.get_variable_expr(&value)),
+                        None => {
+                            self.error.add(ParserErrType::VariableNotFound(
+                                self.tokens[self.current - 1].clone(),
+                                name.to_string(),
+                            ));
+                            Err(ParserStatus::Unwind)
                         }
                     },
                 }

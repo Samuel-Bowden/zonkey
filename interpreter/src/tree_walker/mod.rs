@@ -4,7 +4,14 @@ use self::{
     status::TreeWalkerStatus,
 };
 use crate::{
-    element::*, ast::AST, err::tree_walker::TreeWalkerErr, expr::*, stmt::Stmt, event::{InterpreterEvent, PageEvent}, parser::declaration::ConstructionType, tree_walker_debug, PermissionLevel,
+    ast::AST,
+    element::*,
+    err::tree_walker::TreeWalkerErr,
+    event::{InterpreterEvent, PageEvent},
+    expr::*,
+    parser::declaration::ConstructionType,
+    stmt::Stmt,
+    tree_walker_debug, PermissionLevel,
 };
 use std::{
     cell::RefCell,
@@ -15,9 +22,9 @@ use std::{
 };
 
 mod environment;
+mod native_call;
 mod object;
 pub mod status;
-mod native_call;
 
 pub struct TreeWalker<'a> {
     environment: Environment,
@@ -152,7 +159,8 @@ impl<'a> TreeWalker<'a> {
             // Class statements
             Stmt::ObjectVariableInitialisation(expr) => {
                 let object = self.eval_object(expr)?;
-                self.environment.push_object(NullableReference::Some(object));
+                self.environment
+                    .push_object(NullableReference::Some(object));
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::SelfInitialisation(expr) => {
@@ -476,7 +484,9 @@ impl<'a> TreeWalker<'a> {
                         ConstructionType::Float => object.push_float(0.),
                         ConstructionType::String => object.push_string(String::new()),
                         ConstructionType::Boolean => object.push_boolean(false),
-                        ConstructionType::NullPointer(prop_name) => object.push_object(NullableReference::None(prop_name.clone())),
+                        ConstructionType::NullPointer(prop_name) => {
+                            object.push_object(NullableReference::None(prop_name.clone()))
+                        }
                     }
                 }
 
@@ -490,7 +500,6 @@ impl<'a> TreeWalker<'a> {
                 .get_object(*id)?),
         }
     }
-
 
     fn native_obj_to_element(obj: &NativeObject) -> ElementType {
         match obj {

@@ -49,7 +49,7 @@ impl Parser {
                     self.error.add(ParserErrType::BreakOutsideLoop(
                         self.tokens[self.current].clone(),
                     ));
-                    return Err(ParserStatus::Unwind)
+                    return Err(ParserStatus::Unwind);
                 }
             }
             Some(TokenType::Continue) => {
@@ -60,7 +60,7 @@ impl Parser {
                     self.error.add(ParserErrType::ContinueOutsideLoop(
                         self.tokens[self.current].clone(),
                     ));
-                    return Err(ParserStatus::Unwind)
+                    return Err(ParserStatus::Unwind);
                 }
             }
             Some(TokenType::Let) => self.variable_init()?,

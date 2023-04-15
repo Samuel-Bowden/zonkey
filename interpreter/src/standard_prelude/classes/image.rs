@@ -12,7 +12,5 @@ pub fn new(image: Rc<String>) -> ClassDeclaration {
         }),
     );
 
-    ClassDeclaration {
-        methods,
-    }
+    ClassDeclaration { methods }
 }

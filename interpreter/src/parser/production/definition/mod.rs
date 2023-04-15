@@ -6,34 +6,36 @@ mod start;
 use std::rc::Rc;
 
 use crate::{
-    parser::production::definition::prelude::*, parser::value::{Value, print_type}, parser::value::ValueType, standard_prelude::classes::array};
+    parser::production::definition::prelude::*,
+    parser::value::ValueType,
+    parser::value::{print_type, Value},
+    standard_prelude::classes::array,
+};
 
 impl Parser {
     // Helper functions used by some definitions to convert token_type to a value_type
     fn data_type(&mut self) -> Result<Option<ValueType>, ParserStatus> {
         match self.current_token_type() {
-            Some(TokenType::Identifier(value_type)) => {
-                match value_type.as_str() {
-                    "Integer" => Ok(Some(ValueType::Integer)),
-                    "Float" => Ok(Some(ValueType::Float)),
-                    "String" => Ok(Some(ValueType::String)),
-                    "Boolean" => Ok(Some(ValueType::Boolean)),
-                    _ => match self.class_declarations.get(value_type) {
-                        Some(_) => Ok(Some(ValueType::Class(Rc::clone(&value_type)))),
-                        None => {
-                            self.error.add(ParserErrType::ClassNotFound(
-                                self.tokens[self.current].clone(),
-                            ));
-                            Err(ParserStatus::Unwind)
-                        }
+            Some(TokenType::Identifier(value_type)) => match value_type.as_str() {
+                "Integer" => Ok(Some(ValueType::Integer)),
+                "Float" => Ok(Some(ValueType::Float)),
+                "String" => Ok(Some(ValueType::String)),
+                "Boolean" => Ok(Some(ValueType::Boolean)),
+                _ => match self.class_declarations.get(value_type) {
+                    Some(_) => Ok(Some(ValueType::Class(Rc::clone(&value_type)))),
+                    None => {
+                        self.error.add(ParserErrType::ClassNotFound(
+                            self.tokens[self.current].clone(),
+                        ));
+                        Err(ParserStatus::Unwind)
                     }
-                }
-            }
+                },
+            },
             Some(TokenType::LeftBracket) => {
                 // An array type
                 self.current += 1;
                 let data_type = self.data_type()?;
-                
+
                 let value_type = match &data_type {
                     Some(vt) => vt,
                     None => {
@@ -41,8 +43,8 @@ impl Parser {
                             self.tokens[self.current - 1].clone(),
                             self.tokens.get(self.current).cloned(),
                         ));
-                        return Err(ParserStatus::Unwind)
-                    },
+                        return Err(ParserStatus::Unwind);
+                    }
                 };
 
                 self.current += 1;
@@ -50,19 +52,19 @@ impl Parser {
                     Some(TokenType::RightBracket) => {
                         let class_name = Rc::new(format!("[{}]", print_type(&data_type)));
 
-                        self.class_declarations
-                            .insert(Rc::clone(&class_name), array::new(class_name.clone(), value_type.clone()));
+                        self.class_declarations.insert(
+                            Rc::clone(&class_name),
+                            array::new(class_name.clone(), value_type.clone()),
+                        );
 
-                        Ok(Some(ValueType::Class(
-                            Rc::clone(&class_name)
-                        )))
+                        Ok(Some(ValueType::Class(Rc::clone(&class_name))))
                     }
                     _ => {
                         self.error.add(ParserErrType::ArrayTypeNotClosed(
                             self.tokens[self.current - 1].clone(),
                             self.tokens.get(self.current).cloned(),
                         ));
-                        return Err(ParserStatus::Unwind)
+                        return Err(ParserStatus::Unwind);
                     }
                 }
             }
@@ -80,11 +82,10 @@ impl Parser {
                     Ok(Some(return_type))
                 }
                 None => {
-                    self.error
-                        .add(ParserErrType::DeclarationExpectedReturnType(
-                            self.tokens[self.current - 1].clone(),
-                            self.tokens.get(self.current).cloned(),
-                        ));
+                    self.error.add(ParserErrType::DeclarationExpectedReturnType(
+                        self.tokens[self.current - 1].clone(),
+                        self.tokens.get(self.current).cloned(),
+                    ));
                     Err(ParserStatus::Unwind)
                 }
             }
@@ -97,11 +98,10 @@ impl Parser {
         match self.consume_token_type() {
             Some(TokenType::LeftParen) => (),
             _ => {
-                self.error
-                    .add(ParserErrType::DeclarationExpectedLeftParen(
-                        self.tokens[self.current - 2].clone(),
-                        self.tokens.get(self.current - 1).cloned(),
-                    ));
+                self.error.add(ParserErrType::DeclarationExpectedLeftParen(
+                    self.tokens[self.current - 2].clone(),
+                    self.tokens.get(self.current - 1).cloned(),
+                ));
                 return Err(ParserStatus::Unwind);
             }
         };
@@ -144,12 +144,11 @@ impl Parser {
                     Some(TokenType::Comma) => continue,
                     Some(TokenType::RightParen) => break,
                     _ => {
-                        self.error.add(
-                            ParserErrType::DeclarationExpectedCommaOrRightParen(
+                        self.error
+                            .add(ParserErrType::DeclarationExpectedCommaOrRightParen(
                                 self.tokens[self.current - 2].clone(),
                                 self.tokens.get(self.current - 1).cloned(),
-                            ),
-                        );
+                            ));
                         return Err(ParserStatus::Unwind);
                     }
                 };

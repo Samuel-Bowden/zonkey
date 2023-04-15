@@ -66,7 +66,5 @@ pub fn new(page: Rc<String>) -> ClassDeclaration {
         }),
     );
 
-    ClassDeclaration {
-        methods,
-    }
+    ClassDeclaration { methods }
 }

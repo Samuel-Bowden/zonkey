@@ -43,7 +43,11 @@ impl Parser {
         }
     }
 
-    fn to_obj_asgmt_op(&mut self, pos: usize, variable_class: Rc<String>) -> Result<ObjectAssignmentOperator, ParserStatus> {
+    fn to_obj_asgmt_op(
+        &mut self,
+        pos: usize,
+        variable_class: Rc<String>,
+    ) -> Result<ObjectAssignmentOperator, ParserStatus> {
         match self.tokens[pos].token_type {
             TokenType::Equal => Ok(ObjectAssignmentOperator::Equal),
             _ => {

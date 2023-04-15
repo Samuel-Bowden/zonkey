@@ -1,5 +1,5 @@
 use crate::{
-    err::{self, parser::ParserErr, lexer::LexerErr},
+    err::{self, lexer::LexerErr, parser::ParserErr},
     lexer::Lexer,
     parser::Parser,
     token::Token,
@@ -7,8 +7,7 @@ use crate::{
 use unicode_segmentation::UnicodeSegmentation;
 
 fn get_tokens(graphemes: &Vec<&str>) -> Result<Vec<Token>, LexerErr> {
-    let lexer = Lexer::new(graphemes)
-        .run();
+    let lexer = Lexer::new(graphemes).run();
     match lexer {
         Ok(lexer) => Ok(lexer.tokens),
         Err(e) => Err(e),
@@ -27,7 +26,6 @@ macro_rules! test_script_error {
         let graphemes =
             UnicodeSegmentation::graphemes(include_str!(concat!("scripts/", $x, ".zonk")), true)
                 .collect::<Vec<&str>>();
-    
 
         let error = match get_tokens(&graphemes) {
             Ok(tokens) => err::InterpreterErr::ParserFailed(get_failed_parser_err(tokens)),

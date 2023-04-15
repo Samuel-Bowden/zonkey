@@ -1,5 +1,8 @@
 use super::err_reporter::ErrReporter;
-use crate::{err::parser::{ParserErr, ParserErrType}, parser::value::print_type};
+use crate::{
+    err::parser::{ParserErr, ParserErrType},
+    parser::value::print_type,
+};
 
 pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
     let len = parser_err.get_length();
@@ -36,12 +39,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
 
             ParserErrType::BreakOutsideLoop(location) => {
-                err_reporter.writeln(
-                    format!(
-                        "Cannot break outside of a loop.",
-                    )
-                    .as_str(),
-                );
+                err_reporter.writeln(format!("Cannot break outside of a loop.",).as_str());
                 err_reporter.report_token(location);
             }
 
@@ -56,12 +54,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
 
             ParserErrType::ContinueOutsideLoop(location) => {
-                err_reporter.writeln(
-                    format!(
-                        "Cannot use continue outside of a loop.",
-                    )
-                    .as_str(),
-                );
+                err_reporter.writeln(format!("Cannot use continue outside of a loop.",).as_str());
                 err_reporter.report_token(location);
             }
 
@@ -84,7 +77,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
 
             // Array errors
-            ParserErrType::ArrayNonMatchingValue(array_type_token, arg_pos, expected_type, arg_type) => {
+            ParserErrType::ArrayNonMatchingValue(
+                array_type_token,
+                arg_pos,
+                expected_type,
+                arg_type,
+            ) => {
                 err_reporter
                     .writeln(format!(
                         "Expected values of array to be of type '{:?}', but the value in array position {} evaluates to type '{}'.",
@@ -109,14 +107,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
 
             ParserErrType::ArrayEmptyType(before, after) => {
                 err_reporter.writeln(
-                    format!(
-                        "Expected the type of value this type of array will store.",
-                    )
-                    .as_str(),
+                    format!("Expected the type of value this type of array will store.",).as_str(),
                 );
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
-                err_reporter.give_tip("An array type must have a type inside '[]', e.g. '[Integer]'.")
+                err_reporter
+                    .give_tip("An array type must have a type inside '[]', e.g. '[Integer]'.")
             }
 
             ParserErrType::ArrayTypeNotClosed(before, after) => {
@@ -269,7 +265,6 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.report_section(start, end);
             }
             //
-            
             ParserErrType::ForExpectedLet(before, after) => {
                 err_reporter.writeln(
                     format!(
@@ -630,12 +625,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
 
             ParserErrType::ClassDeclarationExpectedRightBrace(before, after) => {
-                err_reporter.writeln(
-                    "Expected class body to be closed with '}'.",
-                );
+                err_reporter.writeln("Expected class body to be closed with '}'.");
                 err_reporter.writeln("        The body was opened here:");
                 err_reporter.report_token(before);
-                err_reporter.writeln("        '}' was expected as the next token to close the opened body.");
+                err_reporter.writeln(
+                    "        '}' was expected as the next token to close the opened body.",
+                );
                 err_reporter.report_next_token(after);
             }
 

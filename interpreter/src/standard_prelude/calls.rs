@@ -1,4 +1,7 @@
-use crate::{expr::{Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr, BooleanExpr}, token::Token};
+use crate::{
+    expr::{BooleanExpr, Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr},
+    token::Token,
+};
 
 // Standard prelude calls (Separated by return types)
 #[derive(Debug, Clone)]

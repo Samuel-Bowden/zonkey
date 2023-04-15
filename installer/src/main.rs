@@ -1,17 +1,18 @@
 use fs_extra::dir::CopyOptions;
 
-fn main() {
+fn main() { 
     let directories =
         directories::ProjectDirs::from("rocks.sambowden", "", "zonkey-browser").unwrap();
 
-    std::fs::create_dir_all(directories.data_dir()).unwrap();
+    std::fs::remove_dir_all(directories.data_dir()).ok();
+    std::fs::create_dir_all(directories.data_dir()).ok();
 
     fs_extra::dir::copy(
-        "default-profile",
+        "zonkey-data",
         directories.data_dir(),
         &CopyOptions::new().content_only(true),
     )
     .unwrap();
 
-    println!("Installed profile successfully");
+    println!("Installed the required zonkey data files successfully");
 }

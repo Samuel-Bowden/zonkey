@@ -57,7 +57,5 @@ pub fn new(button: Rc<String>) -> ClassDeclaration {
         }),
     );
 
-    ClassDeclaration {
-        methods,
-    }
+    ClassDeclaration { methods }
 }

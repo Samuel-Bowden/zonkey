@@ -1,5 +1,4 @@
 use crate::{message::Message, ZonkeyBrowser};
-use tab::{iced, iced_native::color};
 use iced::{
     alignment::{Horizontal, Vertical},
     theme,
@@ -9,6 +8,7 @@ use iced::{
     },
     Alignment, Background, Length, Theme,
 };
+use tab::{iced, iced_native::color};
 
 pub enum TabButton {
     Selected,
@@ -82,8 +82,7 @@ pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
         );
     }
 
-    let content = Row::new()
-        .push(Row::with_children(tab_buttons).width(Length::FillPortion(1)));
+    let content = Row::new().push(Row::with_children(tab_buttons).width(Length::FillPortion(1)));
 
     Container::new(content)
         .width(Length::Fill)

@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
-use std::{error::Error, path::Path, process::Command, fs::read_to_string};
+use std::{error::Error, fs::read_to_string, path::Path, process::Command};
 
 fn test_file(script_name: &str, argument: &str, success: bool) -> Result<(), Box<dyn Error>> {
     let mut cmd = Command::cargo_bin("zonkey")?;
@@ -42,12 +42,20 @@ fn and_or_script() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn add_and_remove_elements_from_page() -> Result<(), Box<dyn Error>> {
-    test_file("add_remove_el_page", "scripts/add_remove_el_page.zonk", true)
+    test_file(
+        "add_remove_el_page",
+        "scripts/add_remove_el_page.zonk",
+        true,
+    )
 }
 
 #[test]
 fn add_and_remove_elements_from_row_and_column() -> Result<(), Box<dyn Error>> {
-    test_file("add_remove_el_row_col", "scripts/add_remove_el_row_col.zonk", true)
+    test_file(
+        "add_remove_el_row_col",
+        "scripts/add_remove_el_row_col.zonk",
+        true,
+    )
 }
 
 #[test]
@@ -72,12 +80,20 @@ fn boolean_array() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn zonkey_object_array() -> Result<(), Box<dyn Error>> {
-    test_file("zonkey_object_array", "scripts/zonkey_object_array.zonk", true)
+    test_file(
+        "zonkey_object_array",
+        "scripts/zonkey_object_array.zonk",
+        true,
+    )
 }
 
 #[test]
 fn native_object_array() -> Result<(), Box<dyn Error>> {
-    test_file("native_object_array", "scripts/native_object_array.zonk", true)
+    test_file(
+        "native_object_array",
+        "scripts/native_object_array.zonk",
+        true,
+    )
 }
 
 #[test]
@@ -87,12 +103,20 @@ fn good_casting() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn failed_string_to_float_cast() -> Result<(), Box<dyn Error>> {
-    test_file("string_to_float_cast_failed", "scripts/string_to_float_cast_failed.zonk", false)
+    test_file(
+        "string_to_float_cast_failed",
+        "scripts/string_to_float_cast_failed.zonk",
+        false,
+    )
 }
 
 #[test]
 fn failed_string_to_integer_cast() -> Result<(), Box<dyn Error>> {
-    test_file("string_to_integer_cast_failed", "scripts/string_to_integer_cast_failed.zonk", false)
+    test_file(
+        "string_to_integer_cast_failed",
+        "scripts/string_to_integer_cast_failed.zonk",
+        false,
+    )
 }
 
 #[test]
@@ -107,12 +131,20 @@ fn fibonacci() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn property_not_initialised() -> Result<(), Box<dyn Error>> {
-    test_file("property_not_initialised", "scripts/property_not_initialised.zonk", false)
+    test_file(
+        "property_not_initialised",
+        "scripts/property_not_initialised.zonk",
+        false,
+    )
 }
 
 #[test]
 fn index_invalid_position() -> Result<(), Box<dyn Error>> {
-    test_file("index_invalid_position", "scripts/index_invalid_position.zonk", false)
+    test_file(
+        "index_invalid_position",
+        "scripts/index_invalid_position.zonk",
+        false,
+    )
 }
 
 #[test]
@@ -138,14 +170,27 @@ fn post_request() -> Result<(), Box<dyn Error>> {
 
 #[test]
 fn insufficient_permission_level_for_network_script() -> Result<(), Box<dyn Error>> {
-    test_file("insufficient_perm_level", "https://codeberg.org/Sam-Bowden/pages/raw/branch/master/insufficient_perm_level.zonk", false)
+    test_file(
+        "insufficient_perm_level",
+        "https://codeberg.org/Sam-Bowden/pages/raw/branch/master/insufficient_perm_level.zonk",
+        false,
+    )
 }
 
 #[test]
 fn read_and_write_file() -> Result<(), Box<dyn Error>> {
-    std::fs::write("test.txt", "Here is a sequence of numbers from 1 to 10:").expect("Unable to write file");
-    test_file("read_and_write_file", "scripts/read_and_write_file.zonk", true).expect("Unexpected output");
+    std::fs::write("test.txt", "Here is a sequence of numbers from 1 to 10:")
+        .expect("Unable to write file");
+    test_file(
+        "read_and_write_file",
+        "scripts/read_and_write_file.zonk",
+        true,
+    )
+    .expect("Unexpected output");
     let written_data = read_to_string("test.txt").expect("Unable to read file");
-    assert_eq!("Here is a sequence of numbers from 1 to 10: 1 2 3 4 5 6 7 8 9 10", written_data);
+    assert_eq!(
+        "Here is a sequence of numbers from 1 to 10: 1 2 3 4 5 6 7 8 9 10",
+        written_data
+    );
     Ok(())
 }

@@ -1,5 +1,4 @@
 use crate::{message::Message, ZonkeyBrowser};
-use tab::{iced, iced_native::color};
 use iced::{
     widget::{
         container::{Appearance, StyleSheet},
@@ -8,6 +7,7 @@ use iced::{
     widget::{svg::Handle, Container, Row, Svg},
     Alignment, Background, Length, Theme,
 };
+use tab::{iced, iced_native::color};
 
 // Icons from remixicon.com
 pub const HOME: &'static str = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'><path fill='none' d='M0 0h24v24H0z'/><path d='M21 20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.49a1 1 0 0 1 .386-.79l8-6.222a1 1 0 0 1 1.228 0l8 6.222a1 1 0 0 1 .386.79V20zm-2-1V9.978l-7-5.444-7 5.444V19h14z'/></svg>";
@@ -37,12 +37,9 @@ impl From<TopBarStyle> for iced::theme::Container {
 }
 
 pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
-    let search_box = TextInput::new(
-        "Enter address",
-        &browser.current_tab().address_field,
-    )
-    .on_input(Message::AddressChanged)
-    .on_submit(Message::AddressConfirmed);
+    let search_box = TextInput::new("Enter address", &browser.current_tab().address_field)
+        .on_input(Message::AddressChanged)
+        .on_submit(Message::AddressConfirmed);
 
     let home_svg = Svg::new(Handle::from_memory(HOME.as_bytes()));
     let home_button = Button::new(home_svg).on_press(Message::HomePressed);

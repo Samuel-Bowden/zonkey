@@ -1,8 +1,8 @@
-use std::io::{stdout, Write};
 use resource_loader::Address;
+use std::io::{stdout, Write};
 
-use crate::{standard_prelude::calls::NativeCallString, PermissionLevel};
 use super::prelude::*;
+use crate::{standard_prelude::calls::NativeCallString, PermissionLevel};
 
 impl<'a> TreeWalker<'a> {
     pub fn native_call_string(&mut self, call: &NativeCallString) -> Result<String, TreeWalkerErr> {
@@ -40,9 +40,10 @@ impl<'a> TreeWalker<'a> {
                 let location = self.eval_string(location)?;
                 let address = Address::new(&location);
 
-                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) 
-                    = (&self.permission_level, &address) {
-                    return Err(TreeWalkerErr::InsufficientPermissionLevel)
+                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) =
+                    (&self.permission_level, &address)
+                {
+                    return Err(TreeWalkerErr::InsufficientPermissionLevel);
                 }
 
                 let string = match address.read_string() {
@@ -58,9 +59,10 @@ impl<'a> TreeWalker<'a> {
                 let string = self.eval_string(string)?;
                 let address = Address::new(&location);
 
-                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) 
-                    = (&self.permission_level, &address) {
-                    return Err(TreeWalkerErr::InsufficientPermissionLevel)
+                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) =
+                    (&self.permission_level, &address)
+                {
+                    return Err(TreeWalkerErr::InsufficientPermissionLevel);
                 }
 
                 match address.write_string(string) {
@@ -73,12 +75,20 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
-                let array = array_obj.extract_native_object().extract_string_array().lock().unwrap();
+                let array = array_obj
+                    .extract_native_object()
+                    .extract_string_array()
+                    .lock()
+                    .unwrap();
 
                 if let Some(element) = array.get(index) {
                     Ok(element.clone())
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                    Err(TreeWalkerErr::IndexOutOfRange(
+                        index,
+                        array.len(),
+                        token.clone(),
+                    ))
                 }
             }
 
@@ -86,22 +96,26 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
-                let mut array = array_obj.extract_native_object().extract_string_array().lock().unwrap();
+                let mut array = array_obj
+                    .extract_native_object()
+                    .extract_string_array()
+                    .lock()
+                    .unwrap();
 
                 if index < array.len() {
                     Ok(array.remove(index))
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                    Err(TreeWalkerErr::IndexOutOfRange(
+                        index,
+                        array.len(),
+                        token.clone(),
+                    ))
                 }
             }
 
-            NativeCallString::FromInteger(integer) => {
-                Ok(self.eval_int(integer)?.to_string())
-            }
+            NativeCallString::FromInteger(integer) => Ok(self.eval_int(integer)?.to_string()),
 
-            NativeCallString::FromFloat(float) => {
-                Ok(self.eval_float(float)?.to_string())
-            }
+            NativeCallString::FromFloat(float) => Ok(self.eval_float(float)?.to_string()),
         }
     }
 }

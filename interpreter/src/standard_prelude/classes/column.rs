@@ -30,7 +30,5 @@ pub fn new(column: Rc<String>) -> ClassDeclaration {
         }),
     );
 
-    ClassDeclaration {
-        methods,
-    }
+    ClassDeclaration { methods }
 }

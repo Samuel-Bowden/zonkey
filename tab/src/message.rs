@@ -1,6 +1,6 @@
 use crate::page_viewer;
-use std::sync::{mpsc::Sender, Arc, Mutex};
 use interpreter::{element::Page, event::PageEvent, Address};
+use std::sync::{mpsc::Sender, Arc, Mutex};
 
 #[derive(Debug, Clone)]
 pub enum Message {

@@ -1,19 +1,21 @@
 use self::{err::InterpreterErr, lexer::Lexer, token::Token};
-use crate::{parser::Parser, tree_walker::TreeWalker, err::tree_walker::TreeWalkerErr};
+use crate::{err::tree_walker::TreeWalkerErr, parser::Parser, tree_walker::TreeWalker};
 use ast::AST;
 use event::{InterpreterEvent, PageEvent};
+pub use iced;
+pub use iced_native;
 pub use resource_loader::Address;
 use std::sync::mpsc::{Receiver, Sender};
 pub use unicode_segmentation::UnicodeSegmentation;
-pub use iced;
-pub use iced_native;
 
 #[cfg(test)]
 mod tests;
 
 mod ast;
 mod debugger;
+pub mod element;
 pub mod err;
+pub mod event;
 mod expr;
 mod lexer;
 mod parser;
@@ -22,8 +24,6 @@ mod standard_prelude;
 mod stmt;
 mod token;
 mod tree_walker;
-pub mod element;
-pub mod event;
 
 pub enum PermissionLevel {
     All,

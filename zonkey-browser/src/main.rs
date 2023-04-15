@@ -1,14 +1,16 @@
-use tab::iced;
-use tab::iced_native;
+#![windows_subsystem = "windows"]
+
 use iced::{
     executor, theme::Palette, widget::Column, Application, Color, Command, Element, Length,
     Settings, Subscription, Theme,
 };
 use iced_native::command::Action;
 use message::Message;
-use tab::Address;
-use tab::iced_native::color;
 use std::{collections::BTreeMap, env::args, process::ExitCode};
+use tab::iced;
+use tab::iced_native;
+use tab::iced_native::color;
+use tab::Address;
 use tab::{Tab, TabEvent};
 
 mod control_bar;

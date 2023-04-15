@@ -1,5 +1,5 @@
-use std::sync::mpsc::Receiver;
 use interpreter::{event::InterpreterEvent, Address};
+use std::sync::mpsc::Receiver;
 
 pub type SubscriptionState = (usize, SubscriptionStateVariant);
 

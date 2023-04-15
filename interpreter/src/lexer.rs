@@ -132,17 +132,22 @@ impl<'a> Lexer<'a> {
             }
             // Comments - ignore all characters until the next line
             "#" => {
-                while !self.is_at_end() && self.graphemes[self.current] != "\n" {
+                while !self.is_at_end() && !self.new_line_char() {
                     self.current += 1
                 }
             }
             // Whitespace and newlines
-            " " | "\r" | "\t" => (),
-            "\n" => (),
+            " " | "\r" | "\t" | "\r\n" | "\n" => (),
             _ => return Err(LexerErr::UnexpectedGrapheme(self.current - 1)),
         }
 
         Ok(())
+    }
+
+    fn new_line_char(&self) -> bool {
+        self.graphemes[self.current] == "\r\n"
+            || self.graphemes[self.current] == "\n"
+            || self.graphemes[self.current] == "\r"
     }
 
     fn is_at_end(&self) -> bool {

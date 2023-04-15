@@ -1,6 +1,9 @@
 use std::rc::Rc;
 
-use crate::{parser::{production::expression::prelude::*, value::print_type}, standard_prelude::{calls::NativeCallObject, classes::array}};
+use crate::{
+    parser::{production::expression::prelude::*, value::print_type},
+    standard_prelude::{calls::NativeCallObject, classes::array},
+};
 
 impl Parser {
     pub fn array_constructor(&mut self, value_type: Rc<String>) -> Result<Expr, ParserStatus> {
@@ -21,7 +24,7 @@ impl Parser {
                     ));
                     return Err(ParserStatus::Unwind);
                 }
-            }
+            },
         };
 
         self.current += 1;
@@ -56,33 +59,34 @@ impl Parser {
                     Some(TokenType::Comma) => continue,
                     Some(TokenType::RightBracket) => break,
                     _ => {
-                        self.error.add(ParserErrType::ArrayExpectedCommaOrRightBracket(
-                            self.tokens[self.current - 2].clone(),
-                            self.tokens.get(self.current - 1).cloned(),
-                        ));
+                        self.error
+                            .add(ParserErrType::ArrayExpectedCommaOrRightBracket(
+                                self.tokens[self.current - 2].clone(),
+                                self.tokens.get(self.current - 1).cloned(),
+                            ));
                         return Err(ParserStatus::Unwind);
                     }
                 };
             },
         }
 
-        let class_name = Rc::new(format!("[{}]", print_type(&Some(value_type.clone())))); 
+        let class_name = Rc::new(format!("[{}]", print_type(&Some(value_type.clone()))));
 
-        self.class_declarations
-            .insert(Rc::clone(&class_name), array::new(class_name.clone(), value_type.clone()));
+        self.class_declarations.insert(
+            Rc::clone(&class_name),
+            array::new(class_name.clone(), value_type.clone()),
+        );
 
         Ok(Expr::Object(
             Rc::clone(&class_name),
-            ObjectExpr::NativeCall(
-                match value_type {
-                    ValueType::Integer => NativeCallObject::IntegerArrayConstructor(elements),
-                    ValueType::Float => NativeCallObject::FloatArrayConstructor(elements),
-                    ValueType::String => NativeCallObject::StringArrayConstructor(elements),
-                    ValueType::Boolean => NativeCallObject::BooleanArrayConstructor(elements),
-                    ValueType::Class(_) => NativeCallObject::ObjectArrayConstructor(elements),
-                    _ => unreachable!(),
-                }
-            )
+            ObjectExpr::NativeCall(match value_type {
+                ValueType::Integer => NativeCallObject::IntegerArrayConstructor(elements),
+                ValueType::Float => NativeCallObject::FloatArrayConstructor(elements),
+                ValueType::String => NativeCallObject::StringArrayConstructor(elements),
+                ValueType::Boolean => NativeCallObject::BooleanArrayConstructor(elements),
+                ValueType::Class(_) => NativeCallObject::ObjectArrayConstructor(elements),
+                _ => unreachable!(),
+            }),
         ))
     }
 }

@@ -32,7 +32,8 @@ pub fn err_handler(err_reporter: &mut ErrReporter, lexer_err: LexerErr) {
         }
 
         LexerErr::FailedToParseInteger(start, end, error) => {
-            err_reporter.writeln(format!("Failed to parse the integer provided: {error}.").as_str());
+            err_reporter
+                .writeln(format!("Failed to parse the integer provided: {error}.").as_str());
 
             err_reporter.report_section(start, end);
         }

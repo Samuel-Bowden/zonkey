@@ -7,7 +7,13 @@ pub fn err_handler(err_reporter: &mut ErrReporter, tree_walker_err: TreeWalkerEr
     match tree_walker_err {
         TreeWalkerErr::PropertyNotInitialised(prop_name) => {
             err_reporter.writeln("PropertyNotInitialised");
-            err_reporter.writeln(format!("  Attempted to access property with name '{}' without initialising it first.", prop_name.token_type).as_str());
+            err_reporter.writeln(
+                format!(
+                    "  Attempted to access property with name '{}' without initialising it first.",
+                    prop_name.token_type
+                )
+                .as_str(),
+            );
             err_reporter.report_token(prop_name);
         }
         TreeWalkerErr::IndexOutOfRange(index, len, location) => {
@@ -28,16 +34,12 @@ pub fn err_handler(err_reporter: &mut ErrReporter, tree_walker_err: TreeWalkerEr
         }
         TreeWalkerErr::FailedStringToIntegerCast(location) => {
             err_reporter.writeln("FailedStringToIntegerCast");
-            err_reporter.writeln(
-                "  Failed to convert the provided String value into an Integer.",
-            );
+            err_reporter.writeln("  Failed to convert the provided String value into an Integer.");
             err_reporter.report_token(location);
         }
         TreeWalkerErr::FailedStringToFloatCast(location) => {
             err_reporter.writeln("FailedStringToFloatCast");
-            err_reporter.writeln(
-                "  Failed to convert the provided String value into a Float.",
-            );
+            err_reporter.writeln("  Failed to convert the provided String value into a Float.");
             err_reporter.report_token(location);
         }
         TreeWalkerErr::InsufficientPermissionLevel => {

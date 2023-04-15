@@ -1,10 +1,14 @@
-use interpreter::iced::{subscription, Element};
 pub use interpreter::iced;
+use interpreter::iced::{subscription, Element};
 pub use interpreter::iced_native;
+pub use interpreter::Address;
+pub use interpreter::{
+    element::Page,
+    event::{InterpreterEvent, PageEvent},
+};
 pub use message::Message;
 use non_empty_vec::NonEmpty;
-use page_viewer::{PageViewer, update::PageViewerEvent};
-pub use interpreter::Address;
+use page_viewer::{update::PageViewerEvent, PageViewer};
 use std::{
     sync::{
         mpsc::{self, Receiver, Sender},
@@ -13,7 +17,6 @@ use std::{
     thread,
 };
 use subscription_state::{SubscriptionState, SubscriptionStateVariant};
-pub use interpreter::{element::Page, event::{PageEvent, InterpreterEvent}};
 
 mod message;
 mod page_viewer;
@@ -114,9 +117,7 @@ impl Tab {
                 self.page_viewer.load_address_error(error);
             }
             Message::Finished => return Some(TabEvent::Finished),
-            Message::OpenLink(link) => {
-                self.open_address_from_string(link)
-            }
+            Message::OpenLink(link) => self.open_address_from_string(link),
             Message::None => (),
         }
 
@@ -153,7 +154,10 @@ impl Tab {
                     let source = if let Ok(s) = receiver.recv() {
                         s
                     } else {
-                        return ((index, Message::None), (index, SubscriptionStateVariant::Finished));
+                        return (
+                            (index, Message::None),
+                            (index, SubscriptionStateVariant::Finished),
+                        );
                     };
 
                     let (interpreter_sender, tab_receiver) = mpsc::channel();
@@ -177,21 +181,15 @@ impl Tab {
                     Ok(event) => (
                         match event {
                             InterpreterEvent::Update => (index, Message::Update),
-                            InterpreterEvent::SetPage(page) => {
-                                (index, Message::SetPage(page))
-                            }
+                            InterpreterEvent::SetPage(page) => (index, Message::SetPage(page)),
                             InterpreterEvent::ScriptError(error) => {
                                 (index, Message::ScriptError(error))
                             }
                             InterpreterEvent::LoadAddressError(error) => {
                                 (index, Message::LoadAddressErr(error))
                             }
-                            InterpreterEvent::CloseTab => {
-                                (index, Message::Finished)
-                            }
-                            InterpreterEvent::OpenLink(link) => {
-                                (index, Message::OpenLink(link))
-                            }
+                            InterpreterEvent::CloseTab => (index, Message::Finished),
+                            InterpreterEvent::OpenLink(link) => (index, Message::OpenLink(link)),
                         },
                         (index, SubscriptionStateVariant::RunningScript(receiver)),
                     ),

@@ -1,10 +1,10 @@
 use super::environment::Environment;
+use crate::element::*;
 use std::{
     cell::RefCell,
     rc::Rc,
     sync::{Arc, Mutex},
 };
-use crate::element::*;
 
 #[derive(Debug, Clone)]
 pub enum NativeObject {
@@ -82,15 +82,17 @@ impl NativeObject {
 
     pub fn extract_integer_array(&mut self) -> &mut Arc<Mutex<Vec<i64>>> {
         if let NativeObject::IntegerArray(array) = self {
-           array 
+            array
         } else {
-            panic!("Attempted to extract type [Integer] from a native object that was not that type")
+            panic!(
+                "Attempted to extract type [Integer] from a native object that was not that type"
+            )
         }
     }
 
     pub fn extract_float_array(&mut self) -> &mut Arc<Mutex<Vec<f64>>> {
         if let NativeObject::FloatArray(array) = self {
-           array 
+            array
         } else {
             panic!("Attempted to extract type [Float] from a native object that was not that type")
         }
@@ -98,23 +100,28 @@ impl NativeObject {
 
     pub fn extract_string_array(&mut self) -> &mut Arc<Mutex<Vec<String>>> {
         if let NativeObject::StringArray(array) = self {
-           array 
+            array
         } else {
-            panic!("Attempted to extract type [String] from a native object that was {:?}", self)
+            panic!(
+                "Attempted to extract type [String] from a native object that was {:?}",
+                self
+            )
         }
     }
 
     pub fn extract_boolean_array(&mut self) -> &mut Arc<Mutex<Vec<bool>>> {
         if let NativeObject::BooleanArray(array) = self {
-           array 
+            array
         } else {
-            panic!("Attempted to extract type [Boolean] from a native object that was not that type")
+            panic!(
+                "Attempted to extract type [Boolean] from a native object that was not that type"
+            )
         }
     }
 
     pub fn extract_object_array(&mut self) -> &mut Arc<Mutex<Vec<Object>>> {
         if let NativeObject::ObjectArray(array) = self {
-           array 
+            array
         } else {
             panic!("Attempted to extract type [Object] from a native object that was not that type")
         }
@@ -146,7 +153,10 @@ impl Object {
         if let Object::Zonkey(env) = self {
             env
         } else {
-            panic!("Attempted to extract native object into a zonkey object, {:?}", self)
+            panic!(
+                "Attempted to extract native object into a zonkey object, {:?}",
+                self
+            )
         }
     }
 
@@ -158,4 +168,3 @@ impl Object {
         }
     }
 }
-

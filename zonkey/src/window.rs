@@ -1,17 +1,17 @@
-use tab::iced;
-use tab::iced_native;
 use iced::{executor, Application, Command, Renderer, Theme};
 use iced_native::command::Action;
-use tab::Address;
-use std::sync::{
-    mpsc::{Receiver, Sender},
-    Arc, Mutex,
-};
-use tab::{Tab, TabEvent};
 use interpreter::{
     element::Page,
     event::{InterpreterEvent, PageEvent},
 };
+use std::sync::{
+    mpsc::{Receiver, Sender},
+    Arc, Mutex,
+};
+use tab::iced;
+use tab::iced_native;
+use tab::Address;
+use tab::{Tab, TabEvent};
 
 pub struct Window {
     tab: Tab,
@@ -51,9 +51,7 @@ impl Application for Window {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         let (_, msg) = message;
         if let Some(TabEvent::Finished) = self.tab.update(msg) {
-            Command::single(Action::Window(
-                iced_native::window::Action::Close,
-            ))
+            Command::single(Action::Window(iced_native::window::Action::Close))
         } else {
             Command::none()
         }

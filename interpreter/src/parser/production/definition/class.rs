@@ -108,7 +108,9 @@ impl Parser {
                         Value::Object(Rc::clone(&class), class_object_next_id),
                     );
                     class_object_next_id += 1;
-                    property_default_expressions.push(ConstructionType::NullPointer(self.tokens[property_name_pos].clone()));
+                    property_default_expressions.push(ConstructionType::NullPointer(
+                        self.tokens[property_name_pos].clone(),
+                    ));
                 }
                 ValueType::Printable | ValueType::Element | ValueType::Generic => {
                     unreachable!("Zonkey code cannot use these types")
@@ -132,9 +134,7 @@ impl Parser {
 
         let property_default_expressions = Rc::new(property_default_expressions);
 
-        let class_declaration = ClassDeclaration {
-            methods,
-        };
+        let class_declaration = ClassDeclaration { methods };
 
         self.current_properties = Some(properties);
 

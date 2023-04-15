@@ -1,8 +1,10 @@
-use tab::iced;
+#![windows_subsystem = "windows"]
+
 use iced::{Application, Settings};
-use tab::Address;
-use std::{env::args, process::ExitCode, sync::mpsc, thread};
 use interpreter::event::InterpreterEvent;
+use std::{env::args, process::ExitCode, sync::mpsc, thread};
+use tab::iced;
+use tab::Address;
 use window::Window;
 
 mod window;

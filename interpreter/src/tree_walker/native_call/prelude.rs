@@ -1,2 +1,4 @@
-pub use crate::{tree_walker::TreeWalker, err::tree_walker::TreeWalkerErr, expr::Expr, event::InterpreterEvent};
+pub use crate::{
+    err::tree_walker::TreeWalkerErr, event::InterpreterEvent, expr::Expr, tree_walker::TreeWalker,
+};
 pub use std::sync::{Arc, Mutex};

@@ -2,7 +2,7 @@ use directories::ProjectDirs;
 use reqwest::blocking::Response;
 use std::{
     fmt,
-    fs::{read_to_string, File, self},
+    fs::{self, read_to_string, File},
     io::{BufReader, Read},
     path::PathBuf,
 };
@@ -211,7 +211,7 @@ pub fn network_write(protocol: &str, location: &str, string: String) -> Result<S
                 Err(e) => Err(AddressErr::NetworkFailure(e)),
             },
             Err(e) => Err(AddressErr::NetworkFailure(e)),
-        }
+        },
         Err(e) => Err(AddressErr::NetworkFailure(e)),
     }
 }

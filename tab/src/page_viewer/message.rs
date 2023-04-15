@@ -1,5 +1,5 @@
-use std::sync::{Arc, Mutex};
 use interpreter::element::*;
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Debug)]
 pub enum Message {

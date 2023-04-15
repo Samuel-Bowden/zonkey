@@ -214,27 +214,21 @@ impl Parser {
                         )),
                         "center" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(NativeCallObject::PageCenter(
-                                Box::new(object),
-                            )),
+                            ObjectExpr::NativeCall(NativeCallObject::PageCenter(Box::new(object))),
                         )),
                         "add" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(
-                                NativeCallObject::PageAddElement(
-                                    Box::new(object),
-                                    Box::new(arguments.remove(0).to_object_expr()),
-                                )
-                            ),
+                            ObjectExpr::NativeCall(NativeCallObject::PageAddElement(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_object_expr()),
+                            )),
                         )),
                         "remove" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(
-                                NativeCallObject::PageRemoveElement(
-                                    Box::new(object),
-                                    Box::new(arguments.remove(0).to_object_expr()),
-                                )
-                            ),
+                            ObjectExpr::NativeCall(NativeCallObject::PageRemoveElement(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_object_expr()),
+                            )),
                         )),
                         "set_background_colour" => Ok(Expr::Object(
                             Rc::clone(&class),
@@ -255,21 +249,17 @@ impl Parser {
                     "Row" => match name.as_str() {
                         "add" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(
-                                NativeCallObject::RowAddElement(
-                                    Box::new(object),
-                                    Box::new(arguments.remove(0).to_object_expr()),
-                                )
-                            ),
+                            ObjectExpr::NativeCall(NativeCallObject::RowAddElement(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_object_expr()),
+                            )),
                         )),
                         "remove" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(
-                                NativeCallObject::RowRemoveElement(
-                                    Box::new(object),
-                                    Box::new(arguments.remove(0).to_object_expr()),
-                                )
-                            ),
+                            ObjectExpr::NativeCall(NativeCallObject::RowRemoveElement(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_object_expr()),
+                            )),
                         )),
                         "center" => Ok(Expr::Object(
                             Rc::clone(&class),
@@ -280,21 +270,17 @@ impl Parser {
                     "Column" => match name.as_str() {
                         "add" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(
-                                NativeCallObject::ColumnAddElement(
-                                    Box::new(object),
-                                    Box::new(arguments.remove(0).to_object_expr()),
-                                )
-                            ),
+                            ObjectExpr::NativeCall(NativeCallObject::ColumnAddElement(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_object_expr()),
+                            )),
                         )),
                         "remove" => Ok(Expr::Object(
                             Rc::clone(&class),
-                            ObjectExpr::NativeCall(
-                                NativeCallObject::ColumnRemoveElement(
-                                    Box::new(object),
-                                    Box::new(arguments.remove(0).to_object_expr()),
-                                )
-                            ),
+                            ObjectExpr::NativeCall(NativeCallObject::ColumnRemoveElement(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_object_expr()),
+                            )),
                         )),
                         "set_max_width" => Ok(Expr::Object(
                             Rc::clone(&class),
@@ -317,13 +303,13 @@ impl Parser {
                     },
                     array_object => {
                         match (name.as_str(), &array_object[1..array_object.len() - 1]) {
-                            ("get", "Integer") => Ok(Expr::Integer(
-                                IntegerExpr::NativeCall(NativeCallInteger::IntegerArrayGet(
+                            ("get", "Integer") => Ok(Expr::Integer(IntegerExpr::NativeCall(
+                                NativeCallInteger::IntegerArrayGet(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
+                                ),
+                            ))),
                             ("push", "Integer") => Ok(Expr::Object(
                                 Rc::clone(&class),
                                 ObjectExpr::NativeCall(NativeCallObject::IntegerArrayPush(
@@ -331,20 +317,20 @@ impl Parser {
                                     arguments.remove(0).to_integer_expr(),
                                 )),
                             )),
-                            ("remove", "Integer") => Ok(Expr::Integer(
-                                IntegerExpr::NativeCall(NativeCallInteger::IntegerArrayRemove(
+                            ("remove", "Integer") => Ok(Expr::Integer(IntegerExpr::NativeCall(
+                                NativeCallInteger::IntegerArrayRemove(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
-                            ("get", "Float") => Ok(Expr::Float(
-                                FloatExpr::NativeCall(NativeCallFloat::FloatArrayGet(
+                                ),
+                            ))),
+                            ("get", "Float") => Ok(Expr::Float(FloatExpr::NativeCall(
+                                NativeCallFloat::FloatArrayGet(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
+                                ),
+                            ))),
                             ("push", "Float") => Ok(Expr::Object(
                                 Rc::clone(&class),
                                 ObjectExpr::NativeCall(NativeCallObject::FloatArrayPush(
@@ -352,20 +338,20 @@ impl Parser {
                                     arguments.remove(0).to_float_expr(),
                                 )),
                             )),
-                            ("remove", "Float") => Ok(Expr::Float(
-                                FloatExpr::NativeCall(NativeCallFloat::FloatArrayRemove(
+                            ("remove", "Float") => Ok(Expr::Float(FloatExpr::NativeCall(
+                                NativeCallFloat::FloatArrayRemove(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
-                            ("get", "Boolean") => Ok(Expr::Boolean(
-                                BooleanExpr::NativeCall(NativeCallBoolean::BooleanArrayGet(
+                                ),
+                            ))),
+                            ("get", "Boolean") => Ok(Expr::Boolean(BooleanExpr::NativeCall(
+                                NativeCallBoolean::BooleanArrayGet(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
+                                ),
+                            ))),
                             ("push", "Boolean") => Ok(Expr::Object(
                                 Rc::clone(&class),
                                 ObjectExpr::NativeCall(NativeCallObject::BooleanArrayPush(
@@ -373,20 +359,20 @@ impl Parser {
                                     Box::new(arguments.remove(0).to_boolean_expr()),
                                 )),
                             )),
-                            ("remove", "Boolean") => Ok(Expr::Boolean(
-                                BooleanExpr::NativeCall(NativeCallBoolean::BooleanArrayRemove(
+                            ("remove", "Boolean") => Ok(Expr::Boolean(BooleanExpr::NativeCall(
+                                NativeCallBoolean::BooleanArrayRemove(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
-                            ("get", "String") => Ok(Expr::String(
-                                StringExpr::NativeCall(NativeCallString::StringArrayGet(
+                                ),
+                            ))),
+                            ("get", "String") => Ok(Expr::String(StringExpr::NativeCall(
+                                NativeCallString::StringArrayGet(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
+                                ),
+                            ))),
                             ("push", "String") => Ok(Expr::Object(
                                 Rc::clone(&class),
                                 ObjectExpr::NativeCall(NativeCallObject::StringArrayPush(
@@ -394,13 +380,13 @@ impl Parser {
                                     Box::new(arguments.remove(0).to_string_expr()),
                                 )),
                             )),
-                            ("remove", "String") => Ok(Expr::String(
-                                StringExpr::NativeCall(NativeCallString::StringArrayRemove(
+                            ("remove", "String") => Ok(Expr::String(StringExpr::NativeCall(
+                                NativeCallString::StringArrayRemove(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
                                     self.tokens[token_pos + 1].clone(),
-                                )),
-                            )),
+                                ),
+                            ))),
                             ("get", object_name) => Ok(Expr::Object(
                                 Rc::new(object_name.into()),
                                 ObjectExpr::NativeCall(NativeCallObject::ObjectArrayGet(
@@ -424,12 +410,12 @@ impl Parser {
                                     self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
-                            ("len", _) => Ok(Expr::Integer(
-                                IntegerExpr::NativeCall(NativeCallInteger::ArrayLength(Box::new(object)))
-                            )),
+                            ("len", _) => Ok(Expr::Integer(IntegerExpr::NativeCall(
+                                NativeCallInteger::ArrayLength(Box::new(object)),
+                            ))),
                             p => unreachable!("Expected an array object but found {:?}", p),
                         }
-                    },
+                    }
                 },
                 CallableType::Zonkey(id) => {
                     arguments.insert(0, Expr::Object(Rc::clone(&class), object));

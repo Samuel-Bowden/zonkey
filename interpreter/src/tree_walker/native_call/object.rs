@@ -1,8 +1,12 @@
-use std::thread;
+use super::prelude::*;
+use crate::{
+    element::*,
+    standard_prelude::calls::NativeCallObject,
+    tree_walker::object::{NativeObject, Object},
+};
 use colorsys::Rgb;
 use resource_loader::Address;
-use crate::{standard_prelude::calls::NativeCallObject, tree_walker::object::{Object, NativeObject}, element::*};
-use super::prelude::*;
+use std::thread;
 
 impl<'a> TreeWalker<'a> {
     pub fn native_call_object(&mut self, call: &NativeCallObject) -> Result<Object, TreeWalkerErr> {
@@ -86,7 +90,7 @@ impl<'a> TreeWalker<'a> {
 
                     let element = element_obj.extract_native_object();
 
-                    let pos = row 
+                    let pos = row
                         .elements
                         .iter()
                         .position(|&(id, _)| id == element.get_id());
@@ -112,7 +116,8 @@ impl<'a> TreeWalker<'a> {
 
                     let element = element_obj.extract_native_object();
 
-                    column.elements
+                    column
+                        .elements
                         .push((element.get_id(), Self::native_obj_to_element(element)));
                 }
 
@@ -132,7 +137,7 @@ impl<'a> TreeWalker<'a> {
 
                     let element = element_obj.extract_native_object();
 
-                    let pos = column 
+                    let pos = column
                         .elements
                         .iter()
                         .position(|&(id, _)| id == element.get_id());
@@ -179,7 +184,7 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let element = self.eval_object(element)?;
 
-                array_obj 
+                array_obj
                     .extract_native_object()
                     .extract_object_array()
                     .lock()
@@ -193,12 +198,20 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
-                let array = array_obj.extract_native_object().extract_object_array().lock().unwrap();
+                let array = array_obj
+                    .extract_native_object()
+                    .extract_object_array()
+                    .lock()
+                    .unwrap();
 
                 if let Some(element) = array.get(index) {
                     Ok(element.clone())
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                    Err(TreeWalkerErr::IndexOutOfRange(
+                        index,
+                        array.len(),
+                        token.clone(),
+                    ))
                 }
             }
 
@@ -206,12 +219,20 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
-                let mut array = array_obj.extract_native_object().extract_object_array().lock().unwrap();
+                let mut array = array_obj
+                    .extract_native_object()
+                    .extract_object_array()
+                    .lock()
+                    .unwrap();
 
                 if index < array.len() {
                     Ok(array.remove(index))
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                    Err(TreeWalkerErr::IndexOutOfRange(
+                        index,
+                        array.len(),
+                        token.clone(),
+                    ))
                 }
             }
 
@@ -231,7 +252,7 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let element = self.eval_int(element)?;
 
-                array_obj 
+                array_obj
                     .extract_native_object()
                     .extract_integer_array()
                     .lock()
@@ -257,7 +278,7 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let element = self.eval_float(element)?;
 
-                array_obj 
+                array_obj
                     .extract_native_object()
                     .extract_float_array()
                     .lock()
@@ -283,7 +304,7 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let element = self.eval_string(element)?;
 
-                array_obj 
+                array_obj
                     .extract_native_object()
                     .extract_string_array()
                     .lock()
@@ -309,7 +330,7 @@ impl<'a> TreeWalker<'a> {
                 let mut array_obj = self.eval_object(&array)?;
                 let element = self.eval_boolean(element)?;
 
-                array_obj 
+                array_obj
                     .extract_native_object()
                     .extract_boolean_array()
                     .lock()
@@ -633,8 +654,7 @@ impl<'a> TreeWalker<'a> {
             NativeCallObject::PageCenter(page) => {
                 let mut page = self.eval_object(page)?;
 
-                page 
-                    .extract_native_object()
+                page.extract_native_object()
                     .extract_page()
                     .lock()
                     .unwrap()
@@ -647,8 +667,7 @@ impl<'a> TreeWalker<'a> {
                 let mut page = self.eval_object(page)?;
                 let max_width = self.eval_float(max_width)?;
 
-                page 
-                    .extract_native_object()
+                page.extract_native_object()
                     .extract_page()
                     .lock()
                     .unwrap()
@@ -661,7 +680,7 @@ impl<'a> TreeWalker<'a> {
                 let mut input = self.eval_object(input)?;
                 let text = self.eval_string(text)?;
 
-                input 
+                input
                     .extract_native_object()
                     .extract_input()
                     .lock()

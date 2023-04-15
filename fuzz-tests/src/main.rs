@@ -1,11 +1,10 @@
 use afl::fuzz;
-use interpreter::{UnicodeSegmentation, run_lexer, run_parser};
+use interpreter::{run_lexer, run_parser, UnicodeSegmentation};
 
 fn main() {
     fuzz!(|data: &[u8]| {
         if let Ok(s) = std::str::from_utf8(data) {
-            let graphemes = UnicodeSegmentation::graphemes(s, true)
-                .collect::<Vec<&str>>();
+            let graphemes = UnicodeSegmentation::graphemes(s, true).collect::<Vec<&str>>();
 
             let lexer_result = run_lexer(&graphemes);
 

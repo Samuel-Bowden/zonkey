@@ -20,7 +20,7 @@ impl Parser {
                 return Err(ParserStatus::Unwind);
             }
         };
-        
+
         if name.as_str() == "self" {
             self.error
                 .add(ParserErrType::CannotCreateVariableCalledSelf(
