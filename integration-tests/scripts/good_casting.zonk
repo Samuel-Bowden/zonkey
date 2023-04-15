@@ -1,0 +1,19 @@
+start {
+	# String to Integer and Integer to String
+	let integer_string = "1";
+	let integer = string_to_integer(integer_string);
+	integer += 1;
+	println("Integer: " + integer_to_string(integer));
+
+	# String to Float and Float to String
+	let float_string = "2.1234";
+	let float = string_to_float(float_string);
+	float *= 4.0;
+	println("Float: " + float_to_string(float));
+
+	# Integer to Float and Float to Integer
+	integer = 328498;
+	float = integer_to_float(integer);
+	float /= 32.0;
+	println("Integer: " + integer_to_string(float_to_integer(float)));
+}

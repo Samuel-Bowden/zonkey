@@ -1,0 +1,7 @@
+start {
+	let array = Integer[1, 2, 3, 4];
+	
+	for (let i = 0, i < 5, i += 1) {
+		println(integer_to_string(array.get(i)));
+	}
+}

@@ -99,7 +99,7 @@ impl Parser {
                 self.error
                     .add(ParserErrType::VariableDeclarationExprEvalNone(
                         self.tokens[equal_pos].end,
-                        self.tokens[self.current].end,
+                        self.tokens[self.current - 1].end,
                     ));
                 Err(ParserStatus::Unwind)
             }

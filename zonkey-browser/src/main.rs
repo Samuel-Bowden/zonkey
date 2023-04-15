@@ -7,6 +7,7 @@ use iced::{
 use iced_native::command::Action;
 use message::Message;
 use tab::Address;
+use tab::iced_native::color;
 use std::{collections::BTreeMap, env::args, process::ExitCode};
 use tab::{Tab, TabEvent};
 
@@ -18,6 +19,7 @@ pub struct ZonkeyBrowser {
     tabs: BTreeMap<usize, Tab>,
     current_tab: usize,
     next_tab_id: usize,
+    zoom_level: f64,
 }
 
 impl Application for ZonkeyBrowser {
@@ -36,6 +38,7 @@ impl Application for ZonkeyBrowser {
                 tabs,
                 current_tab: 0,
                 next_tab_id: 0,
+                zoom_level: 1.0,
             },
             Command::none(),
         )
@@ -48,8 +51,8 @@ impl Application for ZonkeyBrowser {
     fn theme(&self) -> Self::Theme {
         iced::Theme::custom(Palette {
             background: Color::WHITE,
+            primary: color!(0xe1e2e2),
             text: Color::BLACK,
-            primary: Color::from_rgb8(50, 50, 50),
             success: Color::from_rgb8(255, 255, 255),
             danger: Color::from_rgb8(0, 0, 0),
         })
@@ -117,6 +120,12 @@ impl Application for ZonkeyBrowser {
             Message::TabClosePressed(index) => {
                 self.tabs.get_mut(&index).unwrap().close();
             }
+            Message::ZoomIn => {
+                self.zoom_level += 0.1;
+            }
+            Message::ZoomOut => {
+                self.zoom_level -= 0.1;
+            }
         }
 
         Command::none()
@@ -144,6 +153,10 @@ impl Application for ZonkeyBrowser {
                 .iter()
                 .map(|(_, tab)| tab.subscription().map(Message::Tab)),
         )
+    }
+
+    fn scale_factor(&self) -> f64 {
+        self.zoom_level
     }
 }
 

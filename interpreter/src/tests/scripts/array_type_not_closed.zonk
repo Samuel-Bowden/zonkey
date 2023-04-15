@@ -1,0 +1,7 @@
+function test_one([Integer array) -> [Integer] {
+	return array;
+}
+
+start {
+	test_one(Integer[]);
+}

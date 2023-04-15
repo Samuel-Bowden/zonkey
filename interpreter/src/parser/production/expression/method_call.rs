@@ -321,6 +321,7 @@ impl Parser {
                                 IntegerExpr::NativeCall(NativeCallInteger::IntegerArrayGet(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("push", "Integer") => Ok(Expr::Object(
@@ -334,12 +335,14 @@ impl Parser {
                                 IntegerExpr::NativeCall(NativeCallInteger::IntegerArrayRemove(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("get", "Float") => Ok(Expr::Float(
                                 FloatExpr::NativeCall(NativeCallFloat::FloatArrayGet(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("push", "Float") => Ok(Expr::Object(
@@ -353,12 +356,14 @@ impl Parser {
                                 FloatExpr::NativeCall(NativeCallFloat::FloatArrayRemove(
                                     Box::new(object),
                                     Box::new(arguments.remove(0).to_integer_expr()),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("get", "Boolean") => Ok(Expr::Boolean(
                                 BooleanExpr::NativeCall(NativeCallBoolean::BooleanArrayGet(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("push", "Boolean") => Ok(Expr::Object(
@@ -372,12 +377,14 @@ impl Parser {
                                 BooleanExpr::NativeCall(NativeCallBoolean::BooleanArrayRemove(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("get", "String") => Ok(Expr::String(
                                 StringExpr::NativeCall(NativeCallString::StringArrayGet(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("push", "String") => Ok(Expr::Object(
@@ -391,6 +398,7 @@ impl Parser {
                                 StringExpr::NativeCall(NativeCallString::StringArrayRemove(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("get", object_name) => Ok(Expr::Object(
@@ -398,6 +406,7 @@ impl Parser {
                                 ObjectExpr::NativeCall(NativeCallObject::ObjectArrayGet(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("push", _) => Ok(Expr::Object(
@@ -412,6 +421,7 @@ impl Parser {
                                 ObjectExpr::NativeCall(NativeCallObject::ObjectArrayRemove(
                                     Box::new(object),
                                     arguments.remove(0).to_integer_expr(),
+                                    self.tokens[token_pos + 1].clone(),
                                 )),
                             )),
                             ("len", _) => Ok(Expr::Integer(

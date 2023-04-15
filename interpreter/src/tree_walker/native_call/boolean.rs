@@ -55,20 +55,20 @@ impl<'a> TreeWalker<'a> {
                 }
             }
 
-            NativeCallBoolean::BooleanArrayGet(array, index) => {
+            NativeCallBoolean::BooleanArrayGet(array, index, token) => {
                 let mut array_obj = self.eval_object(&array)?;
-                let index = self.eval_int(index)?;
+                let index = self.eval_int(index)? as usize;
 
                 let array = array_obj.extract_native_object().extract_boolean_array().lock().unwrap();
 
-                if let Some(element) = array.get(index as usize) {
+                if let Some(element) = array.get(index) {
                     Ok(element.clone())
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange)
+                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
                 }
             }
 
-            NativeCallBoolean::BooleanArrayRemove(array, index) => {
+            NativeCallBoolean::BooleanArrayRemove(array, index, token) => {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
@@ -77,7 +77,7 @@ impl<'a> TreeWalker<'a> {
                 if index < array.len() {
                     Ok(array.remove(index))
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange)
+                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
                 }
             }
 

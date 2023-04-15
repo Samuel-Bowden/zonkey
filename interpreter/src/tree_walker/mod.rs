@@ -4,7 +4,7 @@ use self::{
     status::TreeWalkerStatus,
 };
 use crate::{
-    element::*, ast::AST, err::tree_walker::TreeWalkerErr, expr::*, stmt::Stmt, event::{InterpreterEvent, PageEvent}, parser::declaration::ConstructionType, tree_walker_debug,
+    element::*, ast::AST, err::tree_walker::TreeWalkerErr, expr::*, stmt::Stmt, event::{InterpreterEvent, PageEvent}, parser::declaration::ConstructionType, tree_walker_debug, PermissionLevel,
 };
 use std::{
     cell::RefCell,
@@ -26,6 +26,7 @@ pub struct TreeWalker<'a> {
     interpreter_event_sender: &'a mut Sender<InterpreterEvent>,
     page_event_receiver: Receiver<PageEvent>,
     element_id: u64,
+    permission_level: PermissionLevel,
 }
 
 impl<'a> TreeWalker<'a> {
@@ -33,6 +34,7 @@ impl<'a> TreeWalker<'a> {
         ast: AST,
         interpreter_event_sender: &'a mut Sender<InterpreterEvent>,
         page_event_receiver: Receiver<PageEvent>,
+        permission_level: PermissionLevel,
     ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         let mut tree_walker = Self {
             environment: Environment::new(),
@@ -41,6 +43,7 @@ impl<'a> TreeWalker<'a> {
             interpreter_event_sender,
             page_event_receiver,
             element_id: 0,
+            permission_level,
         };
 
         let result = tree_walker.interpret(&ast.start);
@@ -283,12 +286,12 @@ impl<'a> TreeWalker<'a> {
                 NumericOperator::Add => Ok(self.eval_int(left)? + self.eval_int(right)?),
                 NumericOperator::Subtract => Ok(self.eval_int(left)? - self.eval_int(right)?),
                 NumericOperator::Multiply => Ok(self.eval_int(left)? * self.eval_int(right)?),
-                NumericOperator::Divide => {
+                NumericOperator::Divide(token) => {
                     let left = self.eval_int(left)?;
                     let right = self.eval_int(right)?;
 
                     if right == 0 {
-                        Err(TreeWalkerErr::DivisionByZero)
+                        Err(TreeWalkerErr::DivisionByZero(token.clone()))
                     } else {
                         Ok(left / right)
                     }
@@ -302,12 +305,6 @@ impl<'a> TreeWalker<'a> {
             IntegerExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnInt(v) => Ok(v),
                 _ => panic!("Call did not return correct type"),
-            },
-            IntegerExpr::FloatCast(expr) => Ok(self.eval_float(expr)? as i64),
-            IntegerExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64),
-            IntegerExpr::StringCast(expr) => match self.eval_string(expr)?.parse() {
-                Err(_) => Err(TreeWalkerErr::FailedStringToIntegerCast),
-                Ok(val) => Ok(val),
             },
             IntegerExpr::Property(obj_id, id) => Ok(self
                 .environment
@@ -329,7 +326,7 @@ impl<'a> TreeWalker<'a> {
                 NumericOperator::Add => Ok(self.eval_float(left)? + self.eval_float(right)?),
                 NumericOperator::Subtract => Ok(self.eval_float(left)? - self.eval_float(right)?),
                 NumericOperator::Multiply => Ok(self.eval_float(left)? * self.eval_float(right)?),
-                NumericOperator::Divide => Ok(self.eval_float(left)? / self.eval_float(right)?),
+                NumericOperator::Divide(_) => Ok(self.eval_float(left)? / self.eval_float(right)?),
             },
             FloatExpr::Unary(unary_operator, expr) => match unary_operator {
                 NumericUnaryOperator::Minus => Ok(-self.eval_float(expr)?),
@@ -339,12 +336,6 @@ impl<'a> TreeWalker<'a> {
             FloatExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnFloat(v) => Ok(v),
                 _ => panic!("Call did not return correct type"),
-            },
-            FloatExpr::IntegerCast(expr) => Ok(self.eval_int(expr)? as f64),
-            FloatExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)? as i64 as f64),
-            FloatExpr::StringCast(expr) => match self.eval_string(expr)?.parse() {
-                Err(_) => Err(TreeWalkerErr::FailedStringToFloatCast),
-                Ok(val) => Ok(val),
             },
             FloatExpr::NativeCall(call) => self.native_call_float(call),
             FloatExpr::Property(obj_id, id) => Ok(self
@@ -371,9 +362,6 @@ impl<'a> TreeWalker<'a> {
                 TreeWalkerStatus::ReturnString(v) => Ok(v),
                 _ => panic!("Call did not return correct type"),
             },
-            StringExpr::IntegerCast(expr) => Ok(self.eval_int(expr)?.to_string()),
-            StringExpr::FloatCast(expr) => Ok(self.eval_float(expr)?.to_string()),
-            StringExpr::BooleanCast(expr) => Ok(self.eval_boolean(expr)?.to_string()),
             StringExpr::NativeCall(call) => self.native_call_string(call),
             StringExpr::Property(obj_id, id) => Ok(self
                 .environment
@@ -450,12 +438,6 @@ impl<'a> TreeWalker<'a> {
             },
             BooleanExpr::Unary(unary_operator, expr) => match unary_operator {
                 BooleanUnaryOperator::Bang => Ok(!self.eval_boolean(expr)?),
-            },
-            BooleanExpr::IntegerCast(expr) => Ok(self.eval_int(expr)? != 0),
-            BooleanExpr::FloatCast(expr) => Ok(self.eval_float(expr)? != 0.),
-            BooleanExpr::StringCast(expr) => match self.eval_string(expr)?.parse() {
-                Err(_) => Err(TreeWalkerErr::FailedStringToBooleanCast),
-                Ok(val) => Ok(val),
             },
             BooleanExpr::NativeCall(call) => self.native_call_boolean(call),
             BooleanExpr::Property(obj_id, id) => Ok(self

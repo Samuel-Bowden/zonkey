@@ -1,0 +1,17 @@
+class Section {
+	Boolean built;
+	[Text] children;
+
+	constructor() {}
+
+	method build() -> [Text] {	
+		for (let i = 0, i < @children.len(), i += 1) {
+			@children.get(i).set_text(integer_to_string(i));
+		}
+		return @children;
+	}
+}
+
+start {
+	Section().build();
+}

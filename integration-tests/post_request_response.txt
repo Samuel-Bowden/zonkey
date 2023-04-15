@@ -1,0 +1,17 @@
+{
+  "args": {},
+  "data": "Hello from the client",
+  "files": {},
+  "form": {},
+  "headers": {
+    "x-forwarded-proto": "https",
+    "x-forwarded-port": "443",
+    "host": "postman-echo.com",
+    "x-amzn-trace-id": "Root=1-643abc4f-140b284717d9220c77c9aead",
+    "content-length": "21",
+    "accept": "*/*",
+    "content-type": "application/json"
+  },
+  "json": null,
+  "url": "https://postman-echo.com/post"
+}

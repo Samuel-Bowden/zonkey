@@ -21,7 +21,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             operator: match operator_type {
                                 TokenType::Star => NumericOperator::Multiply,
-                                _ => NumericOperator::Divide,
+                                _ => NumericOperator::Divide(self.tokens[operator_token_pos].clone()),
                             },
                             right: Box::new(right_inside),
                         })
@@ -31,7 +31,7 @@ impl Parser {
                             left: Box::new(left_inside),
                             operator: match operator_type {
                                 TokenType::Star => NumericOperator::Multiply,
-                                _ => NumericOperator::Divide,
+                                _ => NumericOperator::Divide(self.tokens[operator_token_pos].clone()),
                             },
                             right: Box::new(right_inside),
                         })

@@ -1,9 +1,9 @@
 use super::{message::Message, PageErr, PageViewer};
-use interpreter::iced::{
+use interpreter::{iced::{
     alignment::{Horizontal, Vertical},
     widget::{text, Button, Column, Container, Image, Row, Scrollable, Space, Text, TextInput},
     Color, Element, Length, Padding,
-};
+}, iced_native::Alignment};
 use interpreter::iced_native::{image::Handle, theme};
 use std::sync::{Arc, Mutex};
 use interpreter::element::{self, ElementType};
@@ -144,6 +144,7 @@ fn build_row<'a>(row: Arc<Mutex<element::Row>>) -> Element<'a, Message> {
     Row::with_children(row_content)
         .spacing(10)
         .width(Length::Fill)
+        .align_items(Alignment::Center)
         .into()
 }
 

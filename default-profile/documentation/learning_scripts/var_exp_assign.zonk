@@ -1,0 +1,15 @@
+start {
+	let a = "String" == "String"; # Checks if both values are equal.
+	# In this case they are, so a is assigned the Boolean true.
+
+	let b = "Foo" != "Bar"; # Check if both values are not equal.
+	# In this case they aren't equal, so b is assigned the Boolean true as well.
+
+	# Print a on a new line
+	println(a);
+
+	# Print b on a new line
+	println(b);
+}
+
+

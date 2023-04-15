@@ -1,5 +1,7 @@
 #[derive(Debug, Clone)]
 pub enum Message {
+    ZoomIn,
+    ZoomOut,
     AddressConfirmed,
     AddressChanged(String),
     HomePressed,

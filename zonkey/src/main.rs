@@ -64,7 +64,7 @@ fn run(address: Address) -> ExitCode {
             return ExitCode::FAILURE;
         }
         Ok(InterpreterEvent::LoadAddressError(error)) => {
-            eprintln!("{}", error);
+            eprint!("{}", error);
             return ExitCode::FAILURE;
         }
         _ => (),

@@ -1,0 +1,3 @@
+(EXCEPTION) DivisionByZero
+  Attempted to divide the left of this operator by the evaluated value of 0 on the right.
+	5 | 		println(i </> divisor);

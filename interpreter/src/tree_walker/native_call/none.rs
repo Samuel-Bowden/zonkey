@@ -1,6 +1,5 @@
 use std::{time::Duration, thread::sleep, io::{stdout, Write}};
 use numtoa::NumToA;
-use resource_loader::Address;
 use crate::standard_prelude::calls::NativeCallNone;
 use super::prelude::*;
 
@@ -57,16 +56,6 @@ impl<'a> TreeWalker<'a> {
                     .send(InterpreterEvent::CloseTab)
                     .ok();
                 return Err(TreeWalkerErr::Exit);
-            }
-
-            NativeCallNone::WriteString(location, string) => {
-                let location = self.eval_string(location)?;
-                let string = self.eval_string(string)?;
-
-                match Address::new(&location).write_string(string) {
-                    Ok(string) => string,
-                    Err(e) => return Err(TreeWalkerErr::WriteAddressFailed(e.to_string())),
-                };
             }
 
             NativeCallNone::OpenLink(link) => {

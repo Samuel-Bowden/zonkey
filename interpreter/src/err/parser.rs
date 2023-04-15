@@ -47,6 +47,7 @@ pub enum ParserErrType {
     ArrayNonMatchingValue(Token, usize, ValueType, Option<ValueType>),
     ArrayExpectedCommaOrRightBracket(Token, Option<Token>),
     ArrayEmptyType(Token, Option<Token>),
+    ArrayTypeNotClosed(Token, Option<Token>),
 
     // Block errors
     BlockExpectedLeftBrace(Token, Option<Token>),

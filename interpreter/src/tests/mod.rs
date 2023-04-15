@@ -213,6 +213,11 @@ fn array_value_wrong_type() {
 }
 
 #[test]
+fn array_type_not_closed() {
+    test_script_error!("array_type_not_closed");
+}
+
+#[test]
 fn array_expected_comma_or_right_bracket_to_close() {
     test_script_error!("array_ex_comma_or_end");
 }

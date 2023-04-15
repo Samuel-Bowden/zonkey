@@ -1,0 +1,2 @@
+(EXCEPTION) InsufficientPermissionLevel
+  Cannot read or write data to the file system when the script is loaded over a network.

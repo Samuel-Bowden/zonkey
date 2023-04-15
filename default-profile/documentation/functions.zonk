@@ -1,0 +1,36 @@
+start {
+	let page = Page()
+			.set_title("Functions")
+			.center()
+			.set_max_width(800.)
+			.set_background_colour("#FDF6E3")
+			.set_text_colour("#5C6A72")
+			.add(Text("Functions").set_size(40.0))
+			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+	page.add(Text("Functions allow you to reuse code in other sections of your program and abstract the underlying implementation of some functionality. You have already seen this with the println function used previously - you didn't need to worry about how this actually works internally."));
+
+	page.add(Text("The function println is part of the standard prelude, which is a set of functions and classes that are automatically imported for you to use in your scripts."));
+
+	page.add(Text("You can also define your own functions using the syntax below."));
+
+	page.add(Image("zonkey:documentation/pictures/function.png"));
+
+	page.add(Text("On line 1, you see the definition of the function. '(Integer a, Integer b)' specifies that 'a_plus_b' requires two parameters, a and b, which both have the type Integer. The section '-> Integer' specifies that 'a_plus_b' returns an Integer value to the caller."));
+
+	page.add(Text("You can call this function using the syntax seen previously, passing values of the correct type as arguments for a and b."));
+
+	page.add(Image("zonkey:documentation/pictures/calling_function.png"));
+
+	page.add(Text("Note that in Zonkey you must always place the function definition above where it is called, e.g. the following is invalid."));
+
+	page.add(Image("zonkey:documentation/pictures/call_below_function.png"));
+
+	page.add(Text("Here is another function definition. Note that this does not return a value - this is valid in Zonkey, however, you cannot use the call in an expression (as no value is returned)."));
+
+	page.add(Image("zonkey:documentation/pictures/function_without_return.png"));
+
+	page.add(Hyperlink("Next page", "zonkey:documentation/classes.zonk"));
+
+	set_page(page);
+}

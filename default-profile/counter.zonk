@@ -7,6 +7,8 @@ start {
 	# Add elements to the page
 	set_page(Page()
 		.set_title("Counter")
+		.center()
+		.set_max_width(400.)
 		.add(Text("A simple counter").set_size(50.))
 		.add(Text("Click the button to increase the counter"))
 		.add(counter_btn)

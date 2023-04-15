@@ -22,8 +22,8 @@ impl<'a> ErrReporter<'a> {
         write!(&mut self.stderr, "(ABORTING) ").unwrap();
     }
 
-    pub fn uncaught_exception_prefix(&mut self) {
-        write!(&mut self.stderr, "(UNCAUGHT EXCEPTION) ").unwrap();
+    pub fn exception_prefix(&mut self) {
+        write!(&mut self.stderr, "(EXCEPTION) ").unwrap();
     }
 
     pub fn writeln(&mut self, line: &str) {

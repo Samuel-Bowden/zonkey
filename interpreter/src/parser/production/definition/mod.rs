@@ -57,7 +57,13 @@ impl Parser {
                             Rc::clone(&class_name)
                         )))
                     }
-                    t => panic!("Expected another brace to close array type, found {:?}", t)
+                    _ => {
+                        self.error.add(ParserErrType::ArrayTypeNotClosed(
+                            self.tokens[self.current - 1].clone(),
+                            self.tokens.get(self.current).cloned(),
+                        ));
+                        return Err(ParserStatus::Unwind)
+                    }
                 }
             }
             _ => Ok(None),

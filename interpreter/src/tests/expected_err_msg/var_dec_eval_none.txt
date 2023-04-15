@@ -1,9 +1,9 @@
 (ERROR) The expression to assign to the variable does not evaluate to a value.
-	6 | 	let a =< println("Hello world");>
+	6 | 	let a =< println("Hello world")>;
         Tip: An expression to assign to a variable must evaluate to a value such as an Integer, Float, String or Boolean. You may have assigned the result of a callable that does not return a value by mistake.
 
 (ERROR) The expression to assign to the variable does not evaluate to a value.
-	8 | 	let b =< test_one();>
+	8 | 	let b =< test_one()>;
         Tip: An expression to assign to a variable must evaluate to a value such as an Integer, Float, String or Boolean. You may have assigned the result of a callable that does not return a value by mistake.
 
 (ABORTING) Cannot start execution of script due to 2 error(s).

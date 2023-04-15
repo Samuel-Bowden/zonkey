@@ -3,6 +3,8 @@ start {
 		.set_title("Learning The Basics Of The Language")
 		.center()
 		.set_max_width(800.)
+		.set_background_colour("#FDF6E3")
+		.set_text_colour("#5C6A72")
 		.add(Text("Learning The Basics Of The Language").set_size(40.0))
 		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 
@@ -12,7 +14,7 @@ start {
 
 	page.add(Text("In order to learn how to create GUIs with Zonkey, it is necessary to learn the basics of the programming language first. Experienced programmers may be able to skim through this, however, this guide assumes no programming experience, so those new to development should be able to get acquainted with this as well."));
 	
-	page.add(Text("Here is a taste of what the programming language looks like. If your new to programming, don't be scared, all will be explained in the following sections."));
+	page.add(Text("Here is a taste of what the programming language looks like. If you're new to programming, don't be scared, all will be explained in the following sections."));
 
 	page.add(Image("zonkey:documentation/pictures/a_taste_of_zonkey.png"));
 

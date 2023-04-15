@@ -120,6 +120,17 @@ impl button::StyleSheet for Button {
             ..Default::default()
         }
     }
+    fn hovered(&self, _: &Self::Style) -> button::Appearance {
+        button::Appearance {
+            background: Some(iced::Background::Color(Color::from_rgb8(
+                self.bg_red.saturating_add(10), self.bg_green.saturating_add(10), self.bg_blue.saturating_add(10),
+            ))),
+            text_color: Color::from_rgb8(
+                self.txt_red, self.txt_green, self.txt_blue,
+            ),
+            ..Default::default()
+        }
+    }
 }
 
 impl button::StyleSheet for Hyperlink {

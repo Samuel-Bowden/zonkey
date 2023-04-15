@@ -117,6 +117,42 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
     );
 
     functions.insert(
+        Rc::new("string_to_integer".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String],
+            return_type: Some(ValueType::Integer),
+        },
+    );
+
+    functions.insert(
+        Rc::new("string_to_float".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String],
+            return_type: Some(ValueType::Float),
+        },
+    );
+
+    functions.insert(
+        Rc::new("integer_to_float".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Integer],
+            return_type: Some(ValueType::Float),
+        },
+    );
+
+    functions.insert(
+        Rc::new("float_to_integer".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Float],
+            return_type: Some(ValueType::Integer),
+        },
+    );
+
+    functions.insert(
         Rc::new("Button".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,

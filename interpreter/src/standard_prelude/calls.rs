@@ -1,4 +1,4 @@
-use crate::expr::{Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr, BooleanExpr};
+use crate::{expr::{Expr, FloatExpr, IntegerExpr, ObjectExpr, StringExpr, BooleanExpr}, token::Token};
 
 // Standard prelude calls (Separated by return types)
 #[derive(Debug, Clone)]
@@ -7,21 +7,24 @@ pub enum NativeCallNone {
     Sleep(IntegerExpr),
     SetPage(ObjectExpr),
     CloseTab,
-    WriteString(Box<StringExpr>, Box<StringExpr>),
     OpenLink(Box<StringExpr>),
 }
 
 #[derive(Debug, Clone)]
 pub enum NativeCallInteger {
-    IntegerArrayGet(Box<ObjectExpr>, Box<IntegerExpr>),
-    IntegerArrayRemove(Box<ObjectExpr>, Box<IntegerExpr>),
+    IntegerArrayGet(Box<ObjectExpr>, Box<IntegerExpr>, Token),
+    IntegerArrayRemove(Box<ObjectExpr>, Box<IntegerExpr>, Token),
     ArrayLength(Box<ObjectExpr>),
+    FromString(Box<StringExpr>, Token),
+    FromFloat(Box<FloatExpr>),
 }
 
 #[derive(Debug, Clone)]
 pub enum NativeCallFloat {
-    FloatArrayGet(Box<ObjectExpr>, Box<IntegerExpr>),
-    FloatArrayRemove(Box<ObjectExpr>, Box<IntegerExpr>),
+    FloatArrayGet(Box<ObjectExpr>, Box<IntegerExpr>, Token),
+    FloatArrayRemove(Box<ObjectExpr>, Box<IntegerExpr>, Token),
+    FromString(Box<StringExpr>, Token),
+    FromInteger(Box<IntegerExpr>),
 }
 
 #[derive(Debug, Clone)]
@@ -31,8 +34,9 @@ pub enum NativeCallString {
     FromFloat(FloatExpr),
     GetInputText(ObjectExpr),
     ReadString(Box<StringExpr>),
-    StringArrayGet(Box<ObjectExpr>, IntegerExpr),
-    StringArrayRemove(Box<ObjectExpr>, IntegerExpr),
+    WriteString(Box<StringExpr>, Box<StringExpr>),
+    StringArrayGet(Box<ObjectExpr>, IntegerExpr, Token),
+    StringArrayRemove(Box<ObjectExpr>, IntegerExpr, Token),
 }
 
 #[derive(Debug, Clone)]
@@ -40,8 +44,8 @@ pub enum NativeCallBoolean {
     WaitForEvent,
     ButtonClicked(ObjectExpr),
     InputConfirmed(ObjectExpr),
-    BooleanArrayGet(Box<ObjectExpr>, IntegerExpr),
-    BooleanArrayRemove(Box<ObjectExpr>, IntegerExpr),
+    BooleanArrayGet(Box<ObjectExpr>, IntegerExpr, Token),
+    BooleanArrayRemove(Box<ObjectExpr>, IntegerExpr, Token),
 }
 
 #[derive(Debug, Clone)]
@@ -99,6 +103,6 @@ pub enum NativeCallObject {
 
     ObjectArrayConstructor(Vec<Expr>),
     ObjectArrayPush(Box<ObjectExpr>, Box<ObjectExpr>),
-    ObjectArrayGet(Box<ObjectExpr>, IntegerExpr),
-    ObjectArrayRemove(Box<ObjectExpr>, IntegerExpr),
+    ObjectArrayGet(Box<ObjectExpr>, IntegerExpr, Token),
+    ObjectArrayRemove(Box<ObjectExpr>, IntegerExpr, Token),
 }

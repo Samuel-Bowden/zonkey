@@ -19,7 +19,7 @@ class Person {
 }
 
 function add_person_n_times([Person] array, Person person, Integer n) -> [Person] {
-	for (Integer i = 0, i < n, i += 1) {
+	for (let i = 0, i < n, i += 1) {
 		array.push(person);
 	}
 	return array;
@@ -30,9 +30,8 @@ start {
 	add_person_n_times(person_array, Person("Steve", 34), 3);
 	add_person_n_times(person_array, Person("John", 52), 4);
 
-	for (Integer i = 0, i < person_array.len(), i += 1) {
+	for (let i = 0, i < person_array.len(), i += 1) {
 		person_array.get(i).greet();
 	}
 }
-
 

@@ -1,0 +1,9 @@
+(ERROR) Expected ']' to close array type after the type this array will hold.
+	1 | function test_one([<Integer> array) -> [Integer] {
+        But the next token was 'array'.
+	1 | function test_one([Integer <array>) -> [Integer] {
+
+(ERROR) Callable 'test_one' has not been declared.
+	6 | 	<test_one>(Integer[]);
+
+(ABORTING) Cannot start execution of script due to 2 error(s).

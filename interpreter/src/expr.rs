@@ -1,4 +1,4 @@
-use crate::{standard_prelude::calls::*, parser::declaration::ConstructionType};
+use crate::{standard_prelude::calls::*, parser::declaration::ConstructionType, token::Token};
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
@@ -103,9 +103,6 @@ pub enum IntegerExpr {
     Literal(i64),
     Variable(usize),
     Property(usize, usize), // Object address, property address
-    FloatCast(Box<FloatExpr>),
-    BooleanCast(Box<BooleanExpr>),
-    StringCast(Box<StringExpr>),
     Unary(NumericUnaryOperator, Box<IntegerExpr>),
     Call(usize, Vec<Expr>), // Call address, argument expressions
     NativeCall(NativeCallInteger),
@@ -121,9 +118,6 @@ pub enum FloatExpr {
     Literal(f64),
     Variable(usize),
     Property(usize, usize), // Object address, property address
-    IntegerCast(Box<IntegerExpr>),
-    BooleanCast(Box<BooleanExpr>),
-    StringCast(Box<StringExpr>),
     Unary(NumericUnaryOperator, Box<FloatExpr>),
     Call(usize, Vec<Expr>), // Call address, argument expressions
     NativeCall(NativeCallFloat),
@@ -139,9 +133,6 @@ pub enum StringExpr {
     Literal(Rc<String>),
     Variable(usize),
     Property(usize, usize), // Object address, property address
-    IntegerCast(Box<IntegerExpr>),
-    FloatCast(Box<FloatExpr>),
-    BooleanCast(Box<BooleanExpr>),
     Call(usize, Vec<Expr>), // Call address, argument expressions
     NativeCall(NativeCallString),
 }
@@ -171,9 +162,6 @@ pub enum BooleanExpr {
     Literal(bool),
     Variable(usize),
     Property(usize, usize), // Object address, property address
-    IntegerCast(Box<IntegerExpr>),
-    FloatCast(Box<FloatExpr>),
-    StringCast(Box<StringExpr>),
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
     NativeCall(NativeCallBoolean),
     Call(usize, Vec<Expr>), // Call address, argument expressions
@@ -198,7 +186,7 @@ pub enum ObjectExpr {
 pub enum NumericOperator {
     Add,
     Subtract,
-    Divide,
+    Divide(Token),
     Multiply,
 }
 

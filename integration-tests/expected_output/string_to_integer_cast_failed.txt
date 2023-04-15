@@ -1,0 +1,3 @@
+(EXCEPTION) FailedStringToIntegerCast
+  Failed to convert the provided String value into an Integer.
+	2 | 	println(string_to_integer(<"125984259487520938457029387450928734502983475209347852093874509283745">));

@@ -1,5 +1,5 @@
 use crate::{message::Message, ZonkeyBrowser};
-use tab::iced;
+use tab::{iced, iced_native::color};
 use iced::{
     alignment::{Horizontal, Vertical},
     theme,
@@ -7,7 +7,7 @@ use iced::{
         button::{Appearance, StyleSheet},
         text, Button, Container, Row, Space,
     },
-    Alignment, Background, Color, Length, Theme,
+    Alignment, Background, Length, Theme,
 };
 
 pub enum TabButton {
@@ -20,13 +20,11 @@ impl StyleSheet for TabButton {
     fn active(&self, _: &Self::Style) -> Appearance {
         match self {
             Self::Selected => Appearance {
-                background: Some(Background::Color(Color::from_rgb8(100, 100, 100))),
-                text_color: Color::WHITE,
+                background: Some(Background::Color(color!(0xe1e2e2))),
                 ..Default::default()
             },
             Self::NotSelected => Appearance {
-                background: Some(Background::Color(Color::from_rgb8(150, 150, 150))),
-                text_color: Color::WHITE,
+                background: Some(Background::Color(color!(0xcbcdcd))),
                 ..Default::default()
             },
         }
@@ -39,20 +37,6 @@ impl StyleSheet for CloseButton {
     fn active(&self, _: &Self::Style) -> Appearance {
         Appearance {
             background: None,
-            text_color: Color::WHITE,
-            ..Default::default()
-        }
-    }
-}
-
-pub struct AddButton;
-impl StyleSheet for AddButton {
-    type Style = Theme;
-    fn active(&self, _: &Self::Style) -> Appearance {
-        Appearance {
-            background: Some(Background::Color(Color::from_rgb8(75, 75, 75))),
-            text_color: Color::WHITE,
-            border_radius: 0.,
             ..Default::default()
         }
     }
@@ -99,20 +83,7 @@ pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
     }
 
     let content = Row::new()
-        .push(Row::with_children(tab_buttons).width(Length::FillPortion(1)))
-        .push(
-            Button::new(
-                text("+")
-                    .size(30)
-                    .vertical_alignment(Vertical::Center)
-                    .horizontal_alignment(Horizontal::Center)
-                    .height(Length::Fill),
-            )
-            .on_press(Message::NewTab)
-            .style(theme::Button::Custom(Box::new(AddButton)))
-            .width(Length::Fixed(40.))
-            .height(Length::Fill),
-        );
+        .push(Row::with_children(tab_buttons).width(Length::FillPortion(1)));
 
     Container::new(content)
         .width(Length::Fill)

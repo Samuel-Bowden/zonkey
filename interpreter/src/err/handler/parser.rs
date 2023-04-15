@@ -119,6 +119,17 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.give_tip("An array type must have a type inside '[]', e.g. '[Integer]'.")
             }
 
+            ParserErrType::ArrayTypeNotClosed(before, after) => {
+                err_reporter.writeln(
+                    format!(
+                        "Expected ']' to close array type after the type this array will hold.",
+                    )
+                    .as_str(),
+                );
+                err_reporter.report_token(before);
+                err_reporter.report_next_token(after);
+            }
+
             // Block errors
             ParserErrType::BlockExpectedLeftBrace(before, after) => {
                 err_reporter.writeln(

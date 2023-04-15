@@ -1,0 +1,62 @@
+start {
+	let page = Page()
+		.set_title("Variables And Types")
+		.center()
+		.set_max_width(800.)
+		.set_background_colour("#FDF6E3")
+		.set_text_colour("#5C6A72")
+		.add(Text("Variables And Types").set_size(40.0))
+		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+
+	page.add(Text("Variables are named locations of memory that store data. You can declare a variable using the let statement shown below. Zonkey executes statements from the top of the start block to the bottom. We will cover many other statements that are offered by Zonkey soon."));
+
+	page.add(Image("zonkey:documentation/pictures/variable_dec.png"));
+
+	page.add(Text("Here, you can see the value '5' is assigned to the variable with name 'a'. In Zonkey, each value has a specific type. The type of 5 is Integer."));
+
+	page.add(Text("You can assign another value to 'a' with the following assignment statements."));
+
+	page.add(Image("zonkey:documentation/pictures/variable_ass.png"));
+
+	set_page(page);
+
+	page.add(Text("The first assignment statement simple assigns '1' to 'a', whilst the last four statements are slightly more complex - they are shorthand for the following assignment statements below."));
+
+	page.add(Image("zonkey:documentation/pictures/variable_long_ass.png"));
+
+	page.add(Text("As you can see, anything on the right of the equals sign is an expression, and you can calculate complex expressions like so, changing the order of evaluation with brackets."));
+
+	page.add(Image("zonkey:documentation/pictures/eval_order.png"));
+
+	page.add(Text("However, in Zonkey, you cannot do the following."));
+
+	page.add(Image("zonkey:documentation/pictures/variable_non_match_types.png"));
+
+	page.add(Text("Why not? The error given when trying to run the script gives some insight."));
+
+	page.add(Image("zonkey:documentation/pictures/type_error.png"));
+
+	page.add(Text("Essentially, when you declare a variable and assign a value to it, you set the type of the variable. Zonkey is smart enough to infer the type for you. You cannot change the type of a variable after declaring it. Therefore, you can only assign values to it of the same type after the declaration."));
+
+	page.add(Text("This might seem like an inconvenience intially. Other languages don't bother enforcing this, like Python or Javascript, but the system implemented by Zonkey can help you catch errors more easily later on. This system is called static typing. Python and Javascript implement dynamic typing."));
+
+	page.add(Text("It is a good idea to get familiar with the types available in Zonkey, but don't worry, there are not many. The most important ones you need to know are."));
+
+	page.add(Image("zonkey:documentation/pictures/available_types.png"));
+
+	page.add(Text("The following operators can be applied to booleans."));
+
+	page.add(Image("zonkey:documentation/pictures/boolean_operations.png"));
+
+	page.add(Text("And values can be compared with the following operators."));
+	
+	page.add(Image("zonkey:documentation/pictures/comp_op.png"));
+
+	page.add(Text("Have a go at writing some variables and expressions yourself. You can use the print function to see the result like so. Don't worry, you don't need to understand functions yet to use this."));
+
+	page.add(Image("zonkey:documentation/pictures/printing_val.png"));
+	page.add(Image("zonkey:documentation/pictures/printing_val_term.png"));
+
+	page.add(Hyperlink("Next page", "zonkey:documentation/functions.zonk"));
+}

@@ -1,0 +1,3 @@
+The factorial of 13 is 6227020800
+The factorial of 15 is 1307674368000
+The factorial of 9 is 362880

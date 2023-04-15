@@ -1,0 +1,3 @@
+start {
+	println(string_to_float("23548.2482345.2345234f"));
+}

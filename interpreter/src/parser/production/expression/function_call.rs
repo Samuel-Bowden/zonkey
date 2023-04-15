@@ -88,8 +88,8 @@ impl Parser {
                     "read_string" => Ok(Expr::String(StringExpr::NativeCall(
                         NativeCallString::ReadString(Box::new(arguments.remove(0).to_string_expr())),
                     ))),
-                    "write_string" => Ok(Expr::None(NoneExpr::NativeCall(
-                        NativeCallNone::WriteString(
+                    "write_string" => Ok(Expr::String(StringExpr::NativeCall(
+                        NativeCallString::WriteString(
                             Box::new(arguments.remove(0).to_string_expr()),
                             Box::new(arguments.remove(0).to_string_expr()),
                         )),
@@ -105,6 +105,28 @@ impl Parser {
                     "float_to_string" => Ok(Expr::String(StringExpr::NativeCall(
                         NativeCallString::FromFloat(
                             arguments.remove(0).to_float_expr(),
+                        ),
+                    ))),
+                    "string_to_integer" => Ok(Expr::Integer(IntegerExpr::NativeCall(
+                        NativeCallInteger::FromString(
+                            Box::new(arguments.remove(0).to_string_expr()),
+                            self.tokens[token_pos + 1].clone(),
+                        ),
+                    ))),
+                    "string_to_float" => Ok(Expr::Float(FloatExpr::NativeCall(
+                        NativeCallFloat::FromString(
+                            Box::new(arguments.remove(0).to_string_expr()),
+                            self.tokens[token_pos + 1].clone(),
+                        ),
+                    ))),
+                    "integer_to_float" => Ok(Expr::Float(FloatExpr::NativeCall(
+                        NativeCallFloat::FromInteger(
+                            Box::new(arguments.remove(0).to_integer_expr()),
+                        ),
+                    ))),
+                    "float_to_integer" => Ok(Expr::Integer(IntegerExpr::NativeCall(
+                        NativeCallInteger::FromFloat(
+                            Box::new(arguments.remove(0).to_float_expr()),
                         ),
                     ))),
                     "close_tab" => Ok(Expr::None(NoneExpr::NativeCall(

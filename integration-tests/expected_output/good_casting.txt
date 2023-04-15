@@ -1,0 +1,3 @@
+Integer: 2
+Float: 8.4936
+Integer: 10265

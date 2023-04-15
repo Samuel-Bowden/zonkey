@@ -1,0 +1,3 @@
+(EXCEPTION) FailedStringToFloatCast
+  Failed to convert the provided String value into a Float.
+	2 | 	println(string_to_float(<"23548.2482345.2345234f">));

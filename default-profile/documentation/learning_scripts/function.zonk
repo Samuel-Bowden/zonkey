@@ -1,0 +1,12 @@
+function greet(String name) {
+	println("Hello" + name);
+}
+
+start {
+	greet("Sam");
+
+	# This is invalid
+	let result = greet("Sam");
+}
+
+

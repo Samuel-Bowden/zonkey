@@ -1,0 +1,11 @@
+start {
+	let page = Page();
+
+	let text = Text("Hello world!");
+
+	page.add(text);
+
+	set_page(page);
+}
+
+

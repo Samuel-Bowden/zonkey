@@ -1,0 +1,559 @@
+class TypeDef {
+	String name;
+	String description;
+
+	constructor(String name) {
+		@name = name;
+	}
+
+	method add_description(String description) -> TypeDef {
+		@description = description;
+		return self;
+	}
+
+	method build() -> Column {
+		let declaration = Text("type " + @name).set_size(25.).set_colour("#6a0dad");
+		let description = Text(@description);
+		return Column().add(declaration).add(description);
+	}
+}
+
+class Parameter {
+	String type;
+	String name;
+
+	constructor(String type, String name) {
+		@type = type;
+		@name = name;
+	}
+
+	method to_string() -> String {
+		return @type + " " + @name;
+	}
+}
+
+function construct_parameters_string([Parameter] params) -> String {
+	let string = "(";	
+
+	for (let i = 0, i < params.len(), i += 1) {
+		let param = params.get(i);
+		string += param.to_string();
+		if (i + 1 < params.len()) {
+			string += ", ";
+		}
+	}
+
+	return string + ")";
+}
+
+class CallableDef {
+	String callable_dec_name;
+	String name;
+	[Parameter] parameters;
+	String return_type_name;
+	Boolean return_type_present;
+	[String] exceptions;
+
+	String description;
+
+	constructor(String name) {
+		@name = name;
+		@parameters = Parameter[];
+		# Default to function def
+		@callable_dec_name = "function";
+		@exceptions = String[];
+	}
+
+	method set_method() -> CallableDef {
+		@callable_dec_name = "method";
+		return self;
+	}
+
+	method add_param(String type, String name) -> CallableDef {
+		@parameters.push(Parameter(type, name));
+		return self;
+	}
+
+	method add_return_type(String return_type) -> CallableDef {
+		@return_type_name = return_type;
+		@return_type_present = true;
+		return self;
+	}
+
+	method add_description(String description) -> CallableDef {
+		@description = description;
+		return self;
+	}
+
+	method add_exception(String exception) -> CallableDef {
+		@exceptions.push(exception);
+		return self;
+	}
+
+	method build() -> Column {
+		let declaration = @callable_dec_name + " ";
+		declaration += @name;
+
+		declaration += construct_parameters_string(@parameters);
+
+		if (@return_type_present) {
+			declaration += " -> " + @return_type_name;
+		}
+
+		let text = Text(declaration).set_colour("#6a0dad").set_size(25.);
+		let description = Text(@description);
+
+		let title_row = Row().add(text);
+
+		if (@exceptions.len() > 0) {
+			title_row.add(Text("Throws exceptions: ").set_colour("#FF0000"));
+		}
+
+		for (let i = 0, i < @exceptions.len(), i += 1) {
+			title_row.add(Text(@exceptions.get(i)).set_colour("#FF0000"));
+
+			if (i + 1 < @exceptions.len()) {
+				title_row.add(Text("+").set_colour("#FF0000"));
+			}
+		}
+		
+		return Column().add(title_row).add(description);
+	}
+}
+
+class ConstructorDef {
+	[Parameter] parameters;
+	String description;
+
+	constructor() {
+		@parameters = Parameter[];
+	}
+
+	method add_param(String type, String name) -> ConstructorDef {
+		@parameters.push(Parameter(type, name));
+		return self;
+	}
+
+	method add_description(String description) -> ConstructorDef {
+		@description = description;
+		return self;
+	}
+
+	method build() -> Column {
+		let declaration = "constructor ";
+		declaration += construct_parameters_string(@parameters);
+
+		let text = Text(declaration).set_colour("#6a0dad").set_size(25.);
+		let description = Text(@description);
+
+		return Column()
+			.add(text)
+			.add(description)
+		;
+	}
+}
+
+class ClassDef {
+	String name;
+	ConstructorDef constructor_def;
+	Boolean constructor_present;
+	[CallableDef] methods_def;
+
+	String description;
+
+	constructor(String name) {
+		@methods_def = CallableDef[];
+		@name = name;
+	}
+
+	method add_constructor(ConstructorDef constructor_def) -> ClassDef {
+		@constructor_def = constructor_def;
+		@constructor_present = true;
+		return self;
+	}
+
+	method add_description(String description) -> ClassDef {
+		@description = description;
+		return self;
+	}
+
+	method add_method(CallableDef method_def) -> ClassDef {
+		@methods_def.push(method_def);
+		return self;
+	}
+
+	method build() -> Column {
+		let title = Text("class " + @name).set_size(40.).set_colour("#00008b");
+		let description = Text(@description);
+
+		let column = Column()
+			.add(title)
+			.add(description);
+
+		if (@constructor_present) {
+			column.add(@constructor_def.build());
+		}
+
+		for (let i = 0, i < @methods_def.len(), i += 1) {
+			column.add(@methods_def.get(i).build());
+		}
+
+		return column;
+	}
+}
+
+start {
+	let page = Page()
+		.set_title("Standard Prelude Reference")
+		.center()
+		.set_background_colour("#FDF6E3")
+		.set_text_colour("#5C6A72")
+		.set_max_width(1200.)
+		.add(Text("Standard Prelude Reference").set_size(70.0))
+		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"))
+		.add(Text("After learning the basics of Zonkey, go ahead and try to make your own application. This section serves as a useful reference to all the available native functions, classes, methods and type classes that you can use in Zonkey."));
+
+	page.add(Text("Casting API").set_size(50.))
+		.add(CallableDef("integer_to_string")
+				.add_param("Integer", "value")
+				.add_return_type("String")
+				.add_description("Use this to safely cast an Integer value into a String value.")
+				.build())
+		.add(CallableDef("float_to_string")
+				.add_param("Float", "value")
+				.add_return_type("String")
+				.add_description("Use this to safely cast a Float value into a String value.")
+				.build())
+		.add(CallableDef("integer_to_float")
+				.add_param("Integer", "value")
+				.add_return_type("Float")
+				.add_description("Use this to safely cast an Integer value into a Float value.")
+				.build())
+		.add(CallableDef("float_to_integer")
+				.add_param("Float", "value")
+				.add_return_type("Integer")
+				.add_description("Use this to safely cast a Float value into an Integer value, which will be rounded towards zero.")
+				.build())
+		.add(CallableDef("string_to_integer")
+				.add_param("String", "value")
+				.add_return_type("Integer")
+				.add_exception("FailedStringToIntegerCast")
+				.add_description("Use this cast a String value into an Integer value. This will raise an exception if the String cannot be converted in an Integer.")
+				.build())
+		.add(CallableDef("string_to_float")
+				.add_param("String", "value")
+				.add_return_type("Float")
+				.add_exception("FailedStringToFloatCast")
+				.add_description("Use this cast a String value into a Float value. This will raise an exception if the String cannot be converted in a Float.")
+				.build())
+
+
+	.add(Text("CLI API").set_size(50.))
+		.add(TypeDef("Printable")
+				.add_description("A type class that allows a type to be printed to the command line. Implemented for Integer, Float, String and Boolean.")
+				.build())
+		.add(CallableDef("print")
+				.add_param("Printable", "value")
+				.add_description("Prints the value to standard out without a newline character.")
+				.build())
+		.add(CallableDef("println")
+				.add_param("Printable", "value")
+				.add_description("Short for print line. Prints the value to standard out with a newline character.")
+				.build())
+		.add(CallableDef("prompt")
+				.add_param("String", "message")
+				.add_return_type("String")
+				.add_description("Prompts the user to enter a string with the provided message. Returns the string that they have entered.")
+				.build())
+
+
+	.add(Text("GUI API").set_size(50.))
+		.add(TypeDef("Element")
+				.add_description("A type class that covers all the GUI class types in Zonkey except Page. Allows the Page, Column and Row classes to receive various GUI elements in their add and remove methods.")
+				.build())
+		.add(CallableDef("set_page")
+				.add_param("Page", "page")
+				.add_description("When your script is loaded in the browser, it has no page set by default. After you have created a page object, set the current page to be viewed by passing it to this function. Can be called multiple times with different pages if desired.")
+				.build())
+		.add(CallableDef("wait_for_event")
+				.add_return_type("Boolean")
+				.add_description("Pauses execution of the script until an event happens in the browser. If the browser has requested this script to exit, it will return false, and you need finish and exit your script to allow the user to close the tab or move to another script. It will return true if there is a browser event to handle. Place this function in the condition of a while loop, and in the body test the state of the current GUI elements as discussed in the 'Creating GUIs' section of this documentation.")
+				.build())
+		.add(ClassDef("Page")
+			.add_constructor(ConstructorDef()
+				.add_description("The constructor for Page does not require any arguments.")
+			)
+			.add_description("This is the root element of the GUI. It is added to the screen using the 'set_page()' function described above. Elements that are added to it are organised as a column, going from the top of the screen to the bottom. You can add an infinite amount of elements as it allows the user to scroll down the page.")
+			.add_method(CallableDef("add")
+				.set_method()
+				.add_param("Element", "element")
+				.add_return_type("Page")
+				.add_description("Adds the given element to the end of the page.")
+			)
+			.add_method(CallableDef("remove")
+				.set_method()
+				.add_param("Element", "element")
+				.add_return_type("Page")
+				.add_description("Removes the given element if it currently exists within the page.")
+			)
+			.add_method(CallableDef("center")
+				.set_method()
+				.add_return_type("Page")
+				.add_description("Centers the page in the middle of the screen. The page will stretch to the size of the largest element it holds, therefore, you might need to set a maximum width with the method below to let this method have any effect.")
+			)
+			.add_method(CallableDef("set_max_width")
+				.set_method()
+				.add_param("Float", "width")
+				.add_return_type("Page")
+				.add_description("Sets the maximum width of the page in pixels.")
+			)
+			.add_method(CallableDef("set_title")
+				.set_method()
+				.add_param("String", "title")
+				.add_return_type("Page")
+				.add_description("Sets the title of the page, which will be seen in the name of the tab and the window name of the Zonkey browser.")
+			)
+			.add_method(CallableDef("set_background_colour")
+				.set_method()
+				.add_param("String", "hex_colour")
+				.add_return_type("Page")
+				.add_exception("InvalidHexColour")
+				.add_description("Sets the background colour of the page according to the provided hex colour, e.g. #FFFFFF.")
+			)
+			.add_method(CallableDef("set_text_colour")
+				.set_method()
+				.add_param("String", "hex_colour")
+				.add_return_type("Page")
+				.add_exception("InvalidHexColour")
+				.add_description("Sets the text colour for text within this page according to the provided hex colour, e.g. #FFFFFF. Colour can be overridden for each Text element using its method to set colour.")
+			)
+			.build())
+		.add(ClassDef("Text")
+			.add_description("A string of text which can be resized and recoloured. Can be used to create titles in combination with a centered Row.")
+			.add_constructor(ConstructorDef()
+				.add_param("String", "value")
+				.add_description("Creates a text element set to the given value.")
+			)
+			.add_method(CallableDef("set_text")
+				.set_method()
+				.add_param("String", "value")
+				.add_return_type("Text")
+				.add_description("Changes the value of the text to the given value.")
+			)
+			.add_method(CallableDef("set_size")
+				.set_method()
+				.add_param("Float", "size")
+				.add_return_type("Text")
+				.add_description("Changes the size of the text to the given value. The default size is 20.0 pixels for reference.")
+			)
+			.add_method(CallableDef("set_colour")
+				.set_method()
+				.add_param("String", "hex_colour")
+				.add_return_type("Text")
+				.add_exception("InvalidHexColour")
+				.add_description("Sets the colour of the text according to the provided hex colour, e.g. #FFFFFF.")
+			)
+			.build())
+		.add(ClassDef("Button")
+			.add_description("A clickable button that you can use to interact with the user.")
+			.add_constructor(ConstructorDef()
+				.add_param("String", "label")
+				.add_description("Creates a button containing the given text label.")
+			)
+			.add_method(CallableDef("set_text")
+				.set_method()
+				.add_param("String", "label")
+				.add_return_type("Button")
+				.add_description("Changes the value of the text label inside the button.")
+			)
+			.add_method(CallableDef("clicked")
+				.set_method()
+				.add_return_type("Boolean")
+				.add_description("Returns whether the button has been clicked since the last event. Calling this method will set the clicked state back to false until it is clicked again.")
+			)
+			.add_method(CallableDef("set_text_colour")
+				.set_method()
+				.add_param("String", "hex_colour")
+				.add_return_type("Button")
+				.add_exception("InvalidHexColour")
+				.add_description("Sets the colour of the text label within this Button according to the provided hex colour, e.g. #FFFFFF.")
+			)
+			.add_method(CallableDef("set_background_colour")
+				.set_method()
+				.add_param("String", "hex_colour")
+				.add_return_type("Button")
+				.add_exception("InvalidHexColour")
+				.add_description("Sets the background colour of this Button according to the provided hex colour, e.g. #FFFFFF.")
+			)
+			.add_method(CallableDef("set_padding")
+				.set_method()
+				.add_param("Float", "vertical")
+				.add_param("Float", "horizontal")
+				.add_return_type("Button")
+				.add_description("Sets the amount of space in pixels that is around the text within the Button.")
+			)
+			.add_method(CallableDef("set_width_fill")
+				.set_method()
+				.add_return_type("Button")
+				.add_description("Sets the button to take up the maximum width possible. Place a series of buttons in a column, then call this method on each button to align them up nicely when each button has a text label of a different length. Make sure you set a maximum width for the column with its corresponding method.")
+			)
+			.build())
+		.add(ClassDef("Column")
+			.add_description("An element which organises contained elements in a Column.")
+			.add_constructor(ConstructorDef()
+				.add_description("The constructor for Column does not require any arguments.")
+			)
+			.add_method(CallableDef("add")
+				.set_method()
+				.add_param("Element", "element")
+				.add_return_type("Column")
+				.add_description("Adds the given element to the end of the column.")
+			)
+			.add_method(CallableDef("remove")
+				.set_method()
+				.add_param("Element", "element")
+				.add_return_type("Column")
+				.add_description("Removes the given element if it currently exists within the column.")
+			)
+			.add_method(CallableDef("set_max_width")
+				.set_method()
+				.add_param("Float", "width")
+				.add_return_type("Column")
+				.add_description("Sets the maximum width of the column in pixels.")
+			)
+			.build())
+		.add(ClassDef("Row")
+			.add_description("An element which organises contained elements in a Row.")
+			.add_constructor(ConstructorDef()
+				.add_description("The constructor for Row does not require any arguments.")
+			)
+			.add_method(CallableDef("add")
+				.set_method()
+				.add_param("Element", "element")
+				.add_return_type("Row")
+				.add_description("Adds the given element to the end of the row.")
+			)
+			.add_method(CallableDef("remove")
+				.set_method()
+				.add_param("Element", "element")
+				.add_return_type("Row")
+				.add_description("Removes the given element if it currently exists within the row.")
+			)
+			.add_method(CallableDef("center")
+				.set_method()
+				.add_return_type("Row")
+				.add_description("Centers the elements within the row. Can be handy if you place text in a row then use this method to create a centered title.")
+			)
+
+			.build())
+		.add(ClassDef("Hyperlink")
+			.add_description("A clickable link that directs the user to another script located at the set address.")
+			.add_constructor(ConstructorDef()
+				.add_param("String", "name")
+				.add_param("String", "address")
+				.add_description("Creates a hyperlink with a name that is shown to the user and an address that it links to.")
+			)
+			.build())
+		.add(ClassDef("Image")
+			.add_description("An element that loads and shows the image at the given address.")
+			.add_constructor(ConstructorDef()
+				.add_param("String", "address")
+				.add_description("Creates an image that is loaded from the given address.")
+			)
+			.add_method(CallableDef("set_max_width")
+				.set_method()
+				.add_param("Float", "width")
+				.add_return_type("Image")
+				.add_description("Sets the maximum width of the image in pixels.")
+			)
+			.build())
+		.add(ClassDef("Input")
+			.add_description("An element that creates an input box for the user to enter some text.")
+			.add_constructor(ConstructorDef()
+				.add_param("String", "hint")
+				.add_description("Creates a new input box with the given hint displayed inside.")
+			)
+			.add_method(CallableDef("confirmed")
+				.set_method()
+				.add_return_type("Boolean")
+				.add_description("Returns whether the user pressed enter inside this input box since the last event. Calling this method will set the confirmed state back to false until it is confirmed again.")
+			)
+			.add_method(CallableDef("get_text")
+				.set_method()
+				.add_return_type("String")
+				.add_description("Returns the value that is currently entered into this input box.")
+			)
+			.add_method(CallableDef("set_text")
+				.set_method()
+				.add_param("String", "value")
+				.add_return_type("Input")
+				.add_description("Sets the current value inside the input box to the given value.")
+			)
+			.build())
+
+		.add(Text("Tab API").set_size(50.))
+		.add(CallableDef("close_tab")
+				.add_description("Halts execution of the current script and closes the current tab of browser. Will cause the browser to close if this is the last tab.")
+				.build())
+		.add(CallableDef("open_link")
+				.add_param("String", "address")
+				.add_description("Halts execution of the current script and changes the current tab of the browser to the given address.")
+				.build())
+
+		.add(Text("Networking and Persistence API").set_size(50.))
+			.add(CallableDef("read_string")
+					.add_param("String", "address")
+					.add_return_type("String")
+					.add_exception("InsufficientPermissionLevel")
+					.add_exception("ReadAddressFailed")
+					.add_description("Reads a string from the given address. If it is a network address, a get request is created, and the body of the response is returned. Will raise an exception if a script loaded over the network attempts to read from the file system.")
+					.build())
+			.add(CallableDef("write_string")
+					.add_param("String", "address")
+					.add_param("String", "value")
+					.add_return_type("String")
+					.add_exception("InsufficientPermissionLevel")
+					.add_exception("WriteAddressFailed")
+					.add_description("Writes the given string value to the given address. If it is a network address, a post request is created with a body containing the given value. Will raise an exception if a script loaded over the network attempts to write to the file system. The response from the server is returned if this is a network address, otherwise OK is returned.")
+					.build())
+
+		.add(Text("Arrays").set_size(50.))
+			.add(ClassDef("[<type>]")
+				.add_description("An object that stores the given type in an array, which is created when using the array initialisation syntax as discussed in the learning material.")
+				.add_method(CallableDef("push")
+					.set_method()
+					.add_param("<type>", "value")
+					.add_return_type("[<type>]")
+					.add_description("Pushes the provided value to the end of the array, then returns the array object so you can call the same method again, e.g. 'array.push(1).push(2)'.")
+				)
+				.add_method(CallableDef("get")
+					.set_method()
+					.add_param("Integer", "position")
+					.add_return_type("<type>")
+					.add_exception("IndexOutOfRange")
+					.add_description("Retrieves the value at the given position within the array. Array positions start from 0. Throws the specified exception if the position does not exist in the array.")
+				)
+				.add_method(CallableDef("remove")
+					.set_method()
+					.add_param("Integer", "position")
+					.add_return_type("<type>")
+					.add_exception("IndexOutOfRange")
+					.add_description("Removes the value at the given position within the array. Array positions start from 0. Throws the specified exception if the position does not exist in the array. Returns the removed value.")
+				)
+				.add_method(CallableDef("len")
+					.set_method()
+					.add_return_type("Integer")
+					.add_description("Returns the amount of values currently in the array.")
+				)
+				.build())
+
+
+		.add(Text("Miscellaneous").set_size(50.))
+			.add(CallableDef("sleep")
+					.add_param("Integer", "duration")
+					.add_description("Pauses the script for the given duration in milliseconds.")
+					.build())
+		;
+
+	set_page(page);
+}

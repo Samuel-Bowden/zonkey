@@ -1,0 +1,13 @@
+function factorial(Integer n) -> Integer {
+	if (n == 1) {
+		return 1;
+	} else {
+		return n * factorial(n - 1);
+	}
+}
+
+start {
+	println("The factorial of 13 is " + integer_to_string(factorial(13)));
+	println("The factorial of 15 is " + integer_to_string(factorial(15)));
+	println("The factorial of 9 is " + integer_to_string(factorial(9)));
+}

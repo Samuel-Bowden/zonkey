@@ -108,10 +108,20 @@ impl Address {
         }
     }
 
-    pub fn write_string(&self, string: String) -> Result<(), AddressErr> {
+    pub fn write_string(&self, string: String) -> Result<String, AddressErr> {
         match self {
-            Self::Zonkey(location) => file_system_write(data_dir!().join(location), string),
-            Self::File(location) => file_system_write(location.into(), string),
+            Self::Zonkey(location) | Self::File(location) => {
+                let dir = if let Self::Zonkey(_) = self {
+                    data_dir!().join(location)
+                } else {
+                    location.into()
+                };
+
+                match file_system_write(dir, string) {
+                    Ok(()) => Ok("OK".to_string()),
+                    Err(e) => Err(e),
+                }
+            }
             Self::HTTP(secure, location) => network_write(http_name(*secure), location, string),
             Self::Invalid(_, error) => Err(AddressErr::InvalidAddress(error.into())),
         }
@@ -188,7 +198,7 @@ pub fn network_read(protocol: &str, location: &str) -> Result<Response, AddressE
     }
 }
 
-pub fn network_write(protocol: &str, location: &str, string: String) -> Result<(), AddressErr> {
+pub fn network_write(protocol: &str, location: &str, string: String) -> Result<String, AddressErr> {
     let client = reqwest::blocking::Client::new();
     match client
         .post(protocol.to_string() + ":" + location)
@@ -196,7 +206,10 @@ pub fn network_write(protocol: &str, location: &str, string: String) -> Result<(
         .send()
     {
         Ok(response) => match response.error_for_status() {
-            Ok(_) => Ok(()),
+            Ok(response) => match response.text() {
+                Ok(text) => Ok(text),
+                Err(e) => Err(AddressErr::NetworkFailure(e)),
+            },
             Err(e) => Err(AddressErr::NetworkFailure(e)),
         }
         Err(e) => Err(AddressErr::NetworkFailure(e)),

@@ -25,11 +25,21 @@ mod tree_walker;
 pub mod element;
 pub mod event;
 
+pub enum PermissionLevel {
+    All,
+    NetworkOnly,
+}
+
 pub fn run_with_std_stream_error_handling(
     address: Address,
     mut sender: Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
 ) {
+    let permission_level = match address {
+        Address::Zonkey(_) | Address::File(_) | Address::Invalid(..) => PermissionLevel::All,
+        Address::HTTP(..) => PermissionLevel::NetworkOnly,
+    };
+
     let source = match address.load_script() {
         Ok(source) => source,
         Err(e) => {
@@ -42,11 +52,11 @@ pub fn run_with_std_stream_error_handling(
 
     let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
-    match run(&graphemes, &mut sender, receiver) {
+    match run(&graphemes, &mut sender, receiver, permission_level) {
         Ok(_) => (),
         Err(e) => {
             let error_message = err::handler::run(e, &graphemes);
-            eprintln!("{}", error_message);
+            eprint!("{}", error_message);
             sender
                 .send(InterpreterEvent::ScriptError(error_message))
                 .unwrap();
@@ -58,6 +68,7 @@ pub fn run(
     source: &Vec<&str>,
     sender: &mut Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
+    permission_level: PermissionLevel,
 ) -> Result<(), InterpreterErr> {
     interpreter_debug!("Debug build");
 
@@ -65,7 +76,7 @@ pub fn run(
 
     let ast = run_parser(tokens)?;
 
-    run_tree_walker(ast, sender, receiver)
+    run_tree_walker(ast, sender, receiver, permission_level)
 }
 
 pub fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
@@ -98,10 +109,11 @@ fn run_tree_walker(
     ast: AST,
     sender: &mut Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
+    permission_level: PermissionLevel,
 ) -> Result<(), InterpreterErr> {
     interpreter_debug!("Starting tree walker");
 
-    match TreeWalker::run(ast, sender, receiver) {
+    match TreeWalker::run(ast, sender, receiver, permission_level) {
         Ok(_) => Ok(()),
         Err(TreeWalkerErr::Exit) => Ok(()),
         Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),

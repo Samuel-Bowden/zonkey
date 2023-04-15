@@ -1,0 +1,18 @@
+start {
+	let page = Page()
+			.set_title("Creating Your Own Page With Classes")
+			.center()
+			.set_max_width(800.)
+			.set_background_colour("#FDF6E3")
+			.set_text_colour("#5C6A72")
+			.add(Text("Creating Your Own Page With Classes").set_size(40.0))
+			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+	
+	page.add(Text("An object is a value with multiple pieces of data and code attached to it. As an object is a value, you can assign them to variables and pass them as parameters to functions."));
+
+	page.add(Text("Objects are very important in Zonkey as they are used to create graphical user interfaces. You can start creating a GUI with the Page object. Write the following code in your text editor and run it."));
+
+	page.add(Image("zonkey:documentation/pictures/first_page.png"));
+
+	set_page(page);
+}

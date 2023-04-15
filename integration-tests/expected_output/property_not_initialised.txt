@@ -1,0 +1,3 @@
+(EXCEPTION) PropertyNotInitialised
+  Attempted to access property with name 'children' without initialising it first.
+	3 | 	[Text] <children>;

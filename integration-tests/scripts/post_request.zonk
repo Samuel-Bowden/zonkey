@@ -1,0 +1,5 @@
+start {
+	let response = write_string("https://postman-echo.com/post", "Hello from the client");
+	write_string("post_request_response.txt", response);
+	println("Created file containing post response");
+}

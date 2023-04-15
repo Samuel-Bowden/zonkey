@@ -1,0 +1,24 @@
+function fibonacci(Integer a, Integer b, Integer n, [Integer] result) -> [Integer] {
+	result.push(a + b);
+	if (a + b < n) {
+		return fibonacci(b, a + b, n, result);
+	}
+	return result;
+}
+
+function print_sequence([Integer] result) {
+	let print_string = "";
+	for (let i = 0, i < result.len(), i += 1) {
+		print_string += integer_to_string(result.get(i));
+
+		if (i + 1 < result.len()) {
+			print_string += ", ";
+		}
+	}
+	println(print_string);
+}
+
+start {
+	let result = fibonacci(0, 1, 400, Integer[]);
+	print_sequence(result);
+}

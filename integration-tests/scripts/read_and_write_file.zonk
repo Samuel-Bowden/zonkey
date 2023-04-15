@@ -1,0 +1,14 @@
+start {
+	let file_contents = read_string("test.txt");
+
+	for (let i = 1, i <= 10, i += 1) {
+		file_contents += " " + integer_to_string(i);
+	}
+
+	# Should return OK
+	let response = write_string("test.txt", file_contents);
+
+	if (response == "OK") {
+		println("Wrote to file successfully");
+	}
+}

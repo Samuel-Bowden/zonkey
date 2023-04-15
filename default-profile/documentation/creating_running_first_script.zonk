@@ -3,6 +3,8 @@ start {
 		.set_title("Creating And Running Your First Script")
 		.center()
 		.set_max_width(800.)
+		.set_background_colour("#FDF6E3")
+		.set_text_colour("#5C6A72")
 		.add(Text("Creating And Running Your First Script").set_size(40.0))
 		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 
@@ -28,13 +30,11 @@ start {
 
 	page.add(Text("Then, we call another function called 'println' (short for print line), which prints the result of adding 'Hello ' and the value at the location 'name' together."));
 
-	page.add(Text("Lets runs this program to see if it works. Navigate to the directory where you saved the file you created, and run the following command below depending on your operating system, entering your name when your program requests to."));
-
-	page.add(Text("Linux:").set_size(30.));
+	page.add(Text("Lets runs this program to see if it works. Navigate to the directory where you saved the file you created in your terminal emulator, and run the following command below depending on your operating system, entering your name when your program requests to. For Linux, run the script with 'zonkey greet_me.zonk', whilst for Windows, run the script with 'zonkey.exe greet_me.zonk'"));
 
 	page.add(Image("zonkey:documentation/pictures/run_greet_me.png"));
 
 	page.add(Text("Congratulations on creating your first program in Zonkey. Now we can move onto the next section, where we will discuss variables and types."));
 
-	page.add(Hyperlink("Next page", "zonkey:documentation/variables_and_types.zonk"));
+	page.add(Hyperlink("Next page", "zonkey:documentation/variables_types_and_expressions.zonk"));
 }

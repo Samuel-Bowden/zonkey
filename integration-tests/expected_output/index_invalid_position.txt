@@ -1,0 +1,3 @@
+(EXCEPTION) IndexOutOfRange
+  Attempted to index an array at position 4, but the array only contains 4 values.
+	5 | 		println(integer_to_string(array.<get>(i)));

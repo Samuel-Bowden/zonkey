@@ -1,7 +1,7 @@
 use std::io::{stdout, Write};
 use resource_loader::Address;
 
-use crate::standard_prelude::calls::NativeCallString;
+use crate::{standard_prelude::calls::NativeCallString, PermissionLevel};
 use super::prelude::*;
 
 impl<'a> TreeWalker<'a> {
@@ -38,8 +38,14 @@ impl<'a> TreeWalker<'a> {
 
             NativeCallString::ReadString(location) => {
                 let location = self.eval_string(location)?;
+                let address = Address::new(&location);
 
-                let string = match Address::new(&location).read_string() {
+                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) 
+                    = (&self.permission_level, &address) {
+                    return Err(TreeWalkerErr::InsufficientPermissionLevel)
+                }
+
+                let string = match address.read_string() {
                     Ok(string) => string,
                     Err(e) => return Err(TreeWalkerErr::ReadAddressFailed(e.to_string())),
                 };
@@ -47,20 +53,36 @@ impl<'a> TreeWalker<'a> {
                 Ok(string)
             }
 
-            NativeCallString::StringArrayGet(array, index) => {
-                let mut array_obj = self.eval_object(&array)?;
-                let index = self.eval_int(index)?;
+            NativeCallString::WriteString(location, string) => {
+                let location = self.eval_string(location)?;
+                let string = self.eval_string(string)?;
+                let address = Address::new(&location);
 
-                let array = array_obj.extract_native_object().extract_string_array().lock().unwrap();
+                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) 
+                    = (&self.permission_level, &address) {
+                    return Err(TreeWalkerErr::InsufficientPermissionLevel)
+                }
 
-                if let Some(element) = array.get(index as usize) {
-                    Ok(element.clone())
-                } else {
-                    Err(TreeWalkerErr::IndexOutOfRange)
+                match address.write_string(string) {
+                    Ok(string) => Ok(string),
+                    Err(e) => return Err(TreeWalkerErr::WriteAddressFailed(e.to_string())),
                 }
             }
 
-            NativeCallString::StringArrayRemove(array, index) => {
+            NativeCallString::StringArrayGet(array, index, token) => {
+                let mut array_obj = self.eval_object(&array)?;
+                let index = self.eval_int(index)? as usize;
+
+                let array = array_obj.extract_native_object().extract_string_array().lock().unwrap();
+
+                if let Some(element) = array.get(index) {
+                    Ok(element.clone())
+                } else {
+                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
+                }
+            }
+
+            NativeCallString::StringArrayRemove(array, index, token) => {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;
 
@@ -69,7 +91,7 @@ impl<'a> TreeWalker<'a> {
                 if index < array.len() {
                     Ok(array.remove(index))
                 } else {
-                    Err(TreeWalkerErr::IndexOutOfRange)
+                    Err(TreeWalkerErr::IndexOutOfRange(index, array.len(), token.clone()))
                 }
             }
 
