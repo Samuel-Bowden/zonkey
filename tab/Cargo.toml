@@ -1,8 +1,0 @@
-[package]
-name = "tab"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-non-empty-vec = "0.2.3"
-interpreter = { path = "../interpreter" }

@@ -1,7 +1,10 @@
-use afl::fuzz;
-use interpreter::{run_lexer, run_parser, UnicodeSegmentation};
-
+#[cfg(target_os = "linux")]
 fn main() {
+    // Please note that fuzz testing will not work on Windows as it is unsupported by afl-rs
+
+    use afl::fuzz;
+    use interpreter::{run_lexer, run_parser, UnicodeSegmentation};
+
     fuzz!(|data: &[u8]| {
         if let Ok(s) = std::str::from_utf8(data) {
             let graphemes = UnicodeSegmentation::graphemes(s, true).collect::<Vec<&str>>();

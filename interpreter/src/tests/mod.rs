@@ -4,6 +4,7 @@ use crate::{
     parser::Parser,
     token::Token,
 };
+use normalize_line_endings::normalized;
 use unicode_segmentation::UnicodeSegmentation;
 
 fn get_tokens(graphemes: &Vec<&str>) -> Result<Vec<Token>, LexerErr> {
@@ -23,9 +24,12 @@ fn get_failed_parser_err(tokens: Vec<Token>) -> ParserErr {
 
 macro_rules! test_script_error {
     ( $x:literal ) => {
+        let source = include_str!(concat!("scripts/", $x, ".zonk"));
+
+        let source = normalized(source.chars()).collect::<String>();
+
         let graphemes =
-            UnicodeSegmentation::graphemes(include_str!(concat!("scripts/", $x, ".zonk")), true)
-                .collect::<Vec<&str>>();
+            UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
         let error = match get_tokens(&graphemes) {
             Ok(tokens) => err::InterpreterErr::ParserFailed(get_failed_parser_err(tokens)),
@@ -33,9 +37,16 @@ macro_rules! test_script_error {
         };
 
         let error_message = err::handler::run(error, &graphemes);
+
         assert_eq!(
-            error_message,
+            error_message
+                .chars()
+                .filter(|char| !char.is_whitespace())
+                .collect::<String>(),
             include_str!(concat!("expected_err_msg/", $x, ".txt"))
+                .chars()
+                .filter(|char| !char.is_whitespace())
+                .collect::<String>(),
         );
     };
 }

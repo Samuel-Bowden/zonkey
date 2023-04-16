@@ -29,9 +29,8 @@ start {
 	page.add(Text("This box allows you to enter an address and press enter to load a page. An address can be in the following formats."));
 
 	page.add(Text("- file:path - The file prefix opens a page from a script on your filesystem, e.g. 'file:/home/sam/Documents/test.zonk'."));
-	page.add(Text("- zonkey:path - The zonkey prefix opens a page from a script within the folder for the internal scripts used by Zonkey, e.g. 'zonkey:home.zonk'."));
+	page.add(Text("- zonkey:path - The zonkey prefix opens a page from a script internal to Zonkey, e.g. 'zonkey:home.zonk'."));
 	page.add(Text("- http:// or https:// - These both open a page from over a network using http or https, e.g. 'https://sambowden.codeberg.page/test.zonk'."));
-
 
 	set_page(page);
 }

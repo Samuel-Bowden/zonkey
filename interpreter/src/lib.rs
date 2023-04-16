@@ -4,6 +4,7 @@ use ast::AST;
 use event::{InterpreterEvent, PageEvent};
 pub use iced;
 pub use iced_native;
+use normalize_line_endings::normalized;
 pub use resource_loader::Address;
 use std::sync::mpsc::{Receiver, Sender};
 pub use unicode_segmentation::UnicodeSegmentation;
@@ -19,6 +20,7 @@ pub mod event;
 mod expr;
 mod lexer;
 mod parser;
+pub mod resource_loader;
 mod stack;
 mod standard_prelude;
 mod stmt;
@@ -50,6 +52,8 @@ pub fn run_with_std_stream_error_handling(
         }
     };
 
+    let source: String = normalized(source.chars()).collect();
+
     let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
 
     match run(&graphemes, &mut sender, receiver, permission_level) {
@@ -64,6 +68,7 @@ pub fn run_with_std_stream_error_handling(
     }
 }
 
+// Please ensure you provide a source file with normalised line endings - e.g. \r\n gets translated to \n
 pub fn run(
     source: &Vec<&str>,
     sender: &mut Sender<InterpreterEvent>,

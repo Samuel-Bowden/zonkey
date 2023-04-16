@@ -1,11 +1,11 @@
 use super::prelude::*;
+use crate::resource_loader::Address;
 use crate::{
     element::*,
     standard_prelude::calls::NativeCallObject,
     tree_walker::object::{NativeObject, Object},
 };
 use colorsys::Rgb;
-use resource_loader::Address;
 use std::thread;
 
 impl<'a> TreeWalker<'a> {

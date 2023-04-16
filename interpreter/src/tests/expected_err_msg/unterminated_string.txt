@@ -1,4 +1,4 @@
-(ERROR) String literal was not closed before starting a new line.
-	2 | 	let a = "hello worl<d>
+(ERROR) Reached the end of the file and the string literal started here was not closed.
+        4 |     println("a<">);
 
 (ABORTING) Cannot start execution of script due to lexical error.

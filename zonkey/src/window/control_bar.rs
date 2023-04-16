@@ -1,5 +1,6 @@
-use crate::{message::Message, ZonkeyBrowser};
-use iced::{
+use super::{message::Message, Window};
+use interpreter::iced::{
+    self,
     widget::{
         container::{Appearance, StyleSheet},
         Button, TextInput,
@@ -7,7 +8,7 @@ use iced::{
     widget::{svg::Handle, Container, Row, Svg},
     Alignment, Background, Length, Theme,
 };
-use tab::{iced, iced_native::color};
+use interpreter::iced_native::color;
 
 // Icons from remixicon.com
 pub const HOME: &'static str = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'><path fill='none' d='M0 0h24v24H0z'/><path d='M21 20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.49a1 1 0 0 1 .386-.79l8-6.222a1 1 0 0 1 1.228 0l8 6.222a1 1 0 0 1 .386.79V20zm-2-1V9.978l-7-5.444-7 5.444V19h14z'/></svg>";
@@ -36,43 +37,57 @@ impl From<TopBarStyle> for iced::theme::Container {
     }
 }
 
-pub fn build(browser: &ZonkeyBrowser) -> Container<Message> {
-    let search_box = TextInput::new("Enter address", &browser.current_tab().address_field)
-        .on_input(Message::AddressChanged)
-        .on_submit(Message::AddressConfirmed);
+impl Window {
+    pub fn control_bar_build(&self) -> Container<Message> {
+        let search_box = TextInput::new("Enter address", &self.current_tab().address_field)
+            .on_input(Message::AddressChanged)
+            .on_submit(Message::AddressConfirmed);
 
-    let home_svg = Svg::new(Handle::from_memory(HOME.as_bytes()));
-    let home_button = Button::new(home_svg).on_press(Message::HomePressed);
+        let home_svg = Svg::new(Handle::from_memory(HOME.as_bytes()));
+        let home_button = Button::new(home_svg).on_press(Message::HomePressed);
 
-    let reload_svg = Svg::new(Handle::from_memory(RELOAD.as_bytes()));
-    let reload_button = Button::new(reload_svg).on_press(Message::ReloadPressed);
+        let reload_svg = Svg::new(Handle::from_memory(RELOAD.as_bytes()));
+        let reload_button = Button::new(reload_svg).on_press(Message::ReloadPressed);
 
-    let back_svg = Svg::new(Handle::from_memory(BACK.as_bytes()));
-    let back_button = Button::new(back_svg).on_press(Message::BackPressed);
+        let back_svg = Svg::new(Handle::from_memory(BACK.as_bytes()));
+        let back_button = Button::new(back_svg).on_press(Message::BackPressed);
 
-    let add_tab_svg = Svg::new(Handle::from_memory(ADD.as_bytes()));
-    let add_tab_button = Button::new(add_tab_svg).on_press(Message::NewTab);
+        let add_tab_svg = Svg::new(Handle::from_memory(ADD.as_bytes()));
+        let mut add_tab_button = Button::new(add_tab_svg);
 
-    let zoom_in_svg = Svg::new(Handle::from_memory(ZOOM_IN.as_bytes()));
-    let zoom_in_button = Button::new(zoom_in_svg).on_press(Message::ZoomIn);
+        if self.tabs.len() < 8 {
+            add_tab_button = add_tab_button.on_press(Message::NewTab);
+        }
 
-    let zoom_out_svg = Svg::new(Handle::from_memory(ZOOM_OUT.as_bytes()));
-    let zoom_out_button = Button::new(zoom_out_svg).on_press(Message::ZoomOut);
+        let zoom_in_svg = Svg::new(Handle::from_memory(ZOOM_IN.as_bytes()));
+        let mut zoom_in_button = Button::new(zoom_in_svg);
 
-    let content = Row::new()
-        .push(home_button)
-        .push(reload_button)
-        .push(back_button)
-        .push(add_tab_button)
-        .push(search_box)
-        .push(zoom_in_button)
-        .push(zoom_out_button)
-        .align_items(Alignment::Center)
-        .spacing(30);
+        if self.zoom_level < 2.0 {
+            zoom_in_button = zoom_in_button.on_press(Message::ZoomIn);
+        }
 
-    Container::new(content)
-        .width(Length::Fill)
-        .padding(10)
-        .center_x()
-        .style(TopBarStyle)
+        let zoom_out_svg = Svg::new(Handle::from_memory(ZOOM_OUT.as_bytes()));
+        let mut zoom_out_button = Button::new(zoom_out_svg);
+
+        if self.zoom_level > 0.5 {
+            zoom_out_button = zoom_out_button.on_press(Message::ZoomOut);
+        }
+
+        let content = Row::new()
+            .push(home_button)
+            .push(reload_button)
+            .push(back_button)
+            .push(add_tab_button)
+            .push(search_box)
+            .push(zoom_in_button)
+            .push(zoom_out_button)
+            .align_items(Alignment::Center)
+            .spacing(30);
+
+        Container::new(content)
+            .width(Length::Fill)
+            .padding(10)
+            .center_x()
+            .style(TopBarStyle)
+    }
 }

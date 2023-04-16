@@ -1,19 +1,13 @@
-use directories::ProjectDirs;
+use include_dir::{include_dir, Dir};
 use reqwest::blocking::Response;
 use std::{
     fmt,
     fs::{self, read_to_string, File},
     io::{BufReader, Read},
-    path::PathBuf,
+    path::Path,
 };
 
-macro_rules! data_dir {
-    () => {
-        ProjectDirs::from("rocks.sambowden", "", "zonkey-browser")
-            .unwrap()
-            .data_dir()
-    };
-}
+static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
 fn http_name(secure: bool) -> &'static str {
     if secure {
@@ -36,6 +30,7 @@ pub enum AddressErr {
     FileSystemFailure(std::io::Error),
     NetworkFailure(reqwest::Error),
     InvalidAddress(String),
+    ZonkeyAssetError(String),
 }
 
 impl fmt::Display for AddressErr {
@@ -44,6 +39,7 @@ impl fmt::Display for AddressErr {
             Self::FileSystemFailure(e) => write!(f, "Failed to read file - {e}"),
             Self::NetworkFailure(e) => write!(f, "Failed to read over network - {e}"),
             Self::InvalidAddress(e) => write!(f, "Could not load as the address is invalid - {e}"),
+            Self::ZonkeyAssetError(e) => write!(f, "Failed to read zonkey asset - {e}"),
         }
     }
 }
@@ -82,8 +78,8 @@ impl Address {
 
     pub fn load_script(&self) -> Result<String, AddressErr> {
         match self {
-            Self::Zonkey(location) => file_system_read(data_dir!().join(location)),
-            Self::File(location) => file_system_read(location.into()),
+            Self::Zonkey(location) => zonkey_asset_read(location),
+            Self::File(location) => file_system_read(Path::new(location)),
             Self::HTTP(secure, location) => {
                 match network_read(http_name(*secure), location)?.text() {
                     Ok(script) => Ok(script),
@@ -96,8 +92,8 @@ impl Address {
 
     pub fn read_string(&self) -> Result<String, AddressErr> {
         match self {
-            Self::Zonkey(location) => file_system_read(data_dir!().join(location)),
-            Self::File(location) => file_system_read(location.into()),
+            Self::Zonkey(location) => zonkey_asset_read(location),
+            Self::File(location) => file_system_read(Path::new(location)),
             Self::HTTP(secure, location) => {
                 match network_read(http_name(*secure), location)?.text() {
                     Ok(script) => Ok(script),
@@ -110,27 +106,28 @@ impl Address {
 
     pub fn write_string(&self, string: String) -> Result<String, AddressErr> {
         match self {
-            Self::Zonkey(location) | Self::File(location) => {
-                let dir = if let Self::Zonkey(_) = self {
-                    data_dir!().join(location)
-                } else {
-                    location.into()
-                };
-
-                match file_system_write(dir, string) {
-                    Ok(()) => Ok("OK".to_string()),
-                    Err(e) => Err(e),
-                }
-            }
+            Self::File(location) => match file_system_write(Path::new(location), string) {
+                Ok(()) => Ok("OK".to_string()),
+                Err(e) => Err(e),
+            },
             Self::HTTP(secure, location) => network_write(http_name(*secure), location, string),
             Self::Invalid(_, error) => Err(AddressErr::InvalidAddress(error.into())),
+            Self::Zonkey(_) => Err(AddressErr::ZonkeyAssetError(
+                "Cannot overwrite internal zonkey assets".into(),
+            )),
         }
     }
 
     pub fn load_image(&self) -> Vec<u8> {
         match self {
-            Self::Zonkey(_) => self.load_bytes(),
-            Self::File(_) => self.load_bytes(),
+            Self::Zonkey(location) => match zonkey_asset_read_bytes(location) {
+                Ok(bytes) => bytes,
+                Err(_) => include_bytes!("image_load_failed.png").to_vec(),
+            },
+            Self::File(location) => match file_read_bytes(location) {
+                Ok(bytes) => bytes,
+                Err(_) => include_bytes!("image_load_failed.png").to_vec(),
+            },
             Self::HTTP(secure, location) => {
                 if let Ok(response) = network_read(http_name(*secure), location) {
                     if let Ok(data) = response.bytes() {
@@ -141,24 +138,6 @@ impl Address {
                 include_bytes!("image_load_failed.png").to_vec()
             }
             Self::Invalid(..) => include_bytes!("image_load_failed.png").to_vec(),
-        }
-    }
-
-    fn load_bytes(&self) -> Vec<u8> {
-        let mut reader = match File::open(self.get_path()) {
-            Ok(file) => BufReader::new(file),
-            Err(_) => return vec![],
-        };
-        let mut buffer = Vec::new();
-        reader.read_to_end(&mut buffer).unwrap();
-        buffer
-    }
-
-    pub fn get_path(&self) -> PathBuf {
-        match self {
-            Self::File(location) => PathBuf::from(location),
-            Self::Zonkey(location) => data_dir!().join(location),
-            _ => panic!("Cannot get path of non filesystem types"),
         }
     }
 }
@@ -174,18 +153,51 @@ impl fmt::Display for Address {
     }
 }
 
-fn file_system_read(path: PathBuf) -> Result<String, AddressErr> {
+fn zonkey_asset_read(path: &str) -> Result<String, AddressErr> {
+    match PROJECT_DIR.get_file(path) {
+        Some(file) => match file.contents_utf8() {
+            Some(contents) => Ok(contents.into()),
+            None => Err(AddressErr::ZonkeyAssetError(
+                "File is not valid UTF8".into(),
+            )),
+        },
+        None => Err(AddressErr::InvalidAddress(
+            "Internal Zonkey asset does not exist.".into(),
+        )),
+    }
+}
+
+fn zonkey_asset_read_bytes(path: &str) -> Result<Vec<u8>, AddressErr> {
+    match PROJECT_DIR.get_file(path) {
+        Some(file) => Ok(file.contents().to_vec()),
+        None => Err(AddressErr::InvalidAddress(
+            "Internal Zonkey asset does not exist.".into(),
+        )),
+    }
+}
+
+fn file_system_read(path: &Path) -> Result<String, AddressErr> {
     match read_to_string(path) {
         Ok(source) => Ok(source),
         Err(e) => Err(AddressErr::FileSystemFailure(e)),
     }
 }
 
-fn file_system_write(path: PathBuf, string: String) -> Result<(), AddressErr> {
+fn file_system_write(path: &Path, string: String) -> Result<(), AddressErr> {
     match fs::write(path, string) {
         Ok(_) => Ok(()),
         Err(e) => Err(AddressErr::FileSystemFailure(e)),
     }
+}
+
+fn file_read_bytes(location: &str) -> Result<Vec<u8>, AddressErr> {
+    let mut reader = match File::open(Path::new(location)) {
+        Ok(file) => BufReader::new(file),
+        Err(e) => return Err(AddressErr::FileSystemFailure(e)),
+    };
+    let mut buffer = Vec::new();
+    reader.read_to_end(&mut buffer).unwrap();
+    Ok(buffer)
 }
 
 pub fn network_read(protocol: &str, location: &str) -> Result<Response, AddressErr> {

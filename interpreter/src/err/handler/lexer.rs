@@ -20,7 +20,9 @@ pub fn err_handler(err_reporter: &mut ErrReporter, lexer_err: LexerErr) {
         }
 
         LexerErr::UnterminatedString(position) => {
-            err_reporter.writeln("String literal was not closed before starting a new line.");
+            err_reporter.writeln(
+                "Reached the end of the file and the string literal started here was not closed.",
+            );
 
             err_reporter.report_section(position, position + 1);
         }

@@ -1,52 +1,84 @@
-#![windows_subsystem = "windows"]
-
-use iced::{Application, Settings};
-use interpreter::event::InterpreterEvent;
-use std::{env::args, process::ExitCode, sync::mpsc, thread};
-use tab::iced;
-use tab::Address;
+use crate::tab::Address;
+use clap::Parser;
+use interpreter::{
+    event::InterpreterEvent,
+    iced::{self, Application, Settings},
+};
+use std::{process::ExitCode, sync::mpsc, thread};
 use window::Window;
 
+mod page_viewer;
+mod tab;
 mod window;
 
-fn main() -> ExitCode {
-    if let Some(value) = args().skip(1).next() {
-        let address = match Address::new(&value) {
-            Address::Invalid(_, err) => {
-                eprintln!("Improperly formatted address: {err}");
-                return ExitCode::FAILURE;
-            }
-            address => address,
-        };
+#[derive(Parser)]
+#[command(author, version, about, arg_required_else_help = true)]
+struct Arguments {
+    ///A script address can be a file path, e.g. 'folder/test.zonk', or a zonkey formatted address, e.g. 'zonkey:home.zonk', 'https://localhost:8000/test.zonk'
+    script_address: String,
 
-        run(address)
+    #[arg(short, long)]
+    ///Launch browser - provide the script address 'zonkey:home.zonk' to load the home page
+    browser: bool,
+}
+
+pub fn main() -> ExitCode {
+    let arguments = Arguments::parse();
+    let address = Address::new(&arguments.script_address);
+
+    if arguments.browser {
+        browser(address)
     } else {
-        eprintln!("Error: Missing address argument\nUsage: zonkey <ADDRESS>");
-        ExitCode::FAILURE
+        command_line_tool(address)
     }
 }
 
-fn run(address: Address) -> ExitCode {
-    let (interpreter_sender, this_receiver) = mpsc::channel();
-    let (this_sender, interpreter_receiver) = mpsc::channel();
+fn browser(address: Address) -> ExitCode {
+    let result = Window::run(Settings {
+        default_font: Some("Noto".as_bytes()),
+        antialiasing: true,
+        text_multithreading: true,
+        flags: (address, None),
+        id: None,
+        window: iced::window::Settings::default(),
+        default_text_size: 20.,
+        exit_on_close_request: true,
+        try_opengles_first: false,
+    });
+
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("Failure running browser UI: {e}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn command_line_tool(address: Address) -> ExitCode {
+    let (interpreter_event_sender, interpreter_event_receiver) = mpsc::channel();
+    let (page_event_sender, page_event_receiver) = mpsc::channel();
 
     let address_copy = address.clone();
 
     thread::spawn(move || {
         interpreter::run_with_std_stream_error_handling(
             address_copy,
-            interpreter_sender,
-            interpreter_receiver,
+            interpreter_event_sender,
+            page_event_receiver,
         );
     });
 
-    match this_receiver.recv() {
+    match interpreter_event_receiver.recv() {
         Ok(InterpreterEvent::SetPage(page)) => {
             let result = Window::run(Settings {
                 default_font: Some("Noto".as_bytes()),
                 antialiasing: true,
                 text_multithreading: true,
-                flags: (page, this_sender, this_receiver, address),
+                flags: (
+                    address,
+                    Some((page, page_event_sender, interpreter_event_receiver)),
+                ),
                 id: None,
                 window: iced::window::Settings::default(),
                 default_text_size: 20.,

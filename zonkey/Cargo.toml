@@ -2,9 +2,16 @@
 name = "zonkey"
 version = "0.1.0"
 edition = "2021"
-description = "CLI Interpreter for the Zonkey programming language"
+description = "The Zonkey Programming Language And Browser."
 authors = ["Sam Bowden"]
 
 [dependencies]
+clap = { version = "4.2.2", features = ["derive"] }
 interpreter = { path = "../interpreter" }
-tab = { path = "../tab" }
+non-empty-vec = "0.2.3"
+
+[dev-dependencies]
+assert_cmd = "2"
+
+[package.metadata.wix]
+name = "Zonkey"

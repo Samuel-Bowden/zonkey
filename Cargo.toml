@@ -3,12 +3,7 @@
 members = [
 	"interpreter",
 	"zonkey",
-	"installer",
-	"zonkey-browser",
-	"tab",
-	"resource-loader",
-	"integration-tests",
-	"fuzz-tests",
+	"fuzz-test",
 ]
 
 resolver = "2"

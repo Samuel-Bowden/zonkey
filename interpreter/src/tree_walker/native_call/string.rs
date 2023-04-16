@@ -1,4 +1,4 @@
-use resource_loader::Address;
+use crate::resource_loader::Address;
 use std::io::{stdout, Write};
 
 use super::prelude::*;

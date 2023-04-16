@@ -1,3 +1,4 @@
+use crate::page_viewer::{update::PageViewerEvent, PageViewer};
 pub use interpreter::iced;
 use interpreter::iced::{subscription, Element};
 pub use interpreter::iced_native;
@@ -8,7 +9,6 @@ pub use interpreter::{
 };
 pub use message::Message;
 use non_empty_vec::NonEmpty;
-use page_viewer::{update::PageViewerEvent, PageViewer};
 use std::{
     sync::{
         mpsc::{self, Receiver, Sender},
@@ -19,7 +19,6 @@ use std::{
 use subscription_state::{SubscriptionState, SubscriptionStateVariant};
 
 mod message;
-mod page_viewer;
 mod subscription_state;
 
 pub type MessagePointer = (usize, Message);
@@ -155,8 +154,8 @@ impl Tab {
                         s
                     } else {
                         return (
-                            (index, Message::None),
-                            (index, SubscriptionStateVariant::Finished),
+                            (index, Message::Finished),
+                            (index, SubscriptionStateVariant::PreparingForNextScript),
                         );
                     };
 
@@ -200,7 +199,7 @@ impl Tab {
                 },
 
                 SubscriptionStateVariant::Finished => (
-                    (index, Message::Finished),
+                    (index, Message::None),
                     (index, SubscriptionStateVariant::Finished),
                 ),
             }
@@ -248,9 +247,5 @@ impl Tab {
     pub fn open_address(&mut self, address: Address) {
         self.history.push(address);
         self.load_script()
-    }
-
-    pub fn history(&self) -> &NonEmpty<Address> {
-        &self.history
     }
 }

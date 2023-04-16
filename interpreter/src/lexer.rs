@@ -137,7 +137,7 @@ impl<'a> Lexer<'a> {
                 }
             }
             // Whitespace and newlines
-            " " | "\r" | "\t" | "\r\n" | "\n" => (),
+            " " | "\t" | "\n" => (),
             _ => return Err(LexerErr::UnexpectedGrapheme(self.current - 1)),
         }
 
@@ -145,9 +145,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn new_line_char(&self) -> bool {
-        self.graphemes[self.current] == "\r\n"
-            || self.graphemes[self.current] == "\n"
-            || self.graphemes[self.current] == "\r"
+        self.graphemes[self.current] == "\n"
     }
 
     fn is_at_end(&self) -> bool {
@@ -183,14 +181,11 @@ impl<'a> Lexer<'a> {
 
     fn string(&mut self) -> Result<(), LexerErr> {
         while !self.is_at_end() && self.graphemes[self.current] != "\"" {
-            if self.graphemes[self.current] == "\n" {
-                return Err(LexerErr::UnterminatedString(self.current - 1));
-            }
             self.current += 1;
         }
 
         if self.is_at_end() {
-            return Err(LexerErr::UnterminatedString(self.current - 1));
+            return Err(LexerErr::UnterminatedString(self.start));
         }
 
         self.current += 1;
