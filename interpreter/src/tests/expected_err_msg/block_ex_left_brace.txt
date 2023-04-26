@@ -1,5 +1,5 @@
 (ERROR) Expected '{' after 'loop' to start block.
-	4 | 			<loop> 
+	4 | 			<loop>
         But the next token was '}'.
 	5 | 			<}>
 
@@ -7,8 +7,8 @@
 	8 | <}>
         Tip: There should only be start, function or class definitions in the global scope.
 
-(ERROR) Expected '{' after ')' to start block.
-	11 | 	if (true<)> 
+(ERROR) Expected a value after ')'.
+	11 | 	if (true<)>
         But the next token was '}'.
 	12 | 	<}>
 

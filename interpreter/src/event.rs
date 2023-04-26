@@ -8,7 +8,7 @@ pub enum InterpreterEvent {
     ScriptError(String),
     LoadAddressError(String),
     CloseTab,
-    OpenLink(String),
+    OpenLink(String, Vec<String>),
 }
 
 #[derive(Debug, Clone)]

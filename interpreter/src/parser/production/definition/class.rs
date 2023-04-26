@@ -1,14 +1,14 @@
-use rustc_hash::FxHashMap;
-
 use crate::{
     expr::{Expr, ObjectExpr},
     parser::{
         declaration::{CallableDeclaration, CallableType, ClassDeclaration, ConstructionType},
+        location::Location,
         production::definition::prelude::*,
-        value::{Value, ValueType},
+        value::ValueType,
     },
     stmt::Stmt,
 };
+use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
 impl Parser {
@@ -31,6 +31,15 @@ impl Parser {
 
         if let Some(_) = self.class_declarations.get(&class_name) {
             self.error.add(ParserErrType::ClassRedeclared(
+                self.tokens[self.current - 1].clone(),
+            ));
+            return Err(ParserStatus::Unwind);
+        }
+
+        if let "Integer" | "Float" | "String" | "Boolean" | "Printable" | "Element" =
+            class_name.as_str()
+        {
+            self.error.add(ParserErrType::InbuiltType(
                 self.tokens[self.current - 1].clone(),
             ));
             return Err(ParserStatus::Unwind);
@@ -83,29 +92,29 @@ impl Parser {
 
             match dt {
                 ValueType::Integer => {
-                    properties.insert(property_name, Value::Integer(class_integer_next_id));
+                    properties.insert(property_name, Location::Integer(class_integer_next_id));
                     class_integer_next_id += 1;
                     property_default_expressions.push(ConstructionType::Integer);
                 }
                 ValueType::Float => {
-                    properties.insert(property_name, Value::Float(class_float_next_id));
+                    properties.insert(property_name, Location::Float(class_float_next_id));
                     class_float_next_id += 1;
                     property_default_expressions.push(ConstructionType::Float);
                 }
                 ValueType::String => {
-                    properties.insert(property_name, Value::String(class_string_next_id));
+                    properties.insert(property_name, Location::String(class_string_next_id));
                     class_string_next_id += 1;
                     property_default_expressions.push(ConstructionType::String);
                 }
                 ValueType::Boolean => {
-                    properties.insert(property_name, Value::Boolean(class_boolean_next_id));
+                    properties.insert(property_name, Location::Boolean(class_boolean_next_id));
                     class_boolean_next_id += 1;
                     property_default_expressions.push(ConstructionType::Boolean);
                 }
                 ValueType::Class(class) => {
                     properties.insert(
                         property_name.clone(),
-                        Value::Object(Rc::clone(&class), class_object_next_id),
+                        Location::Object(Rc::clone(&class), class_object_next_id),
                     );
                     class_object_next_id += 1;
                     property_default_expressions.push(ConstructionType::NullPointer(
@@ -160,11 +169,11 @@ impl Parser {
                 let parameters = self.parameters()?;
                 let mut parameter_value_types = vec![];
 
-                let mut constructor_scope = IndexMap::new();
+                let mut constructor_scope = FxHashMap::default();
 
                 constructor_scope.insert(
                     Rc::new("self".to_string()),
-                    Value::Object(Rc::clone(&class_name), self.object_next_id),
+                    Location::Object(Rc::clone(&class_name), self.object_next_id),
                 );
                 self.object_next_id += 1;
 
@@ -172,7 +181,7 @@ impl Parser {
                     self.add_scope_parameter(&value_type, name, &mut constructor_scope)?;
                     parameter_value_types.push(value_type);
                 }
-                self.value_stack.push(constructor_scope);
+                self.environments.push(constructor_scope);
 
                 let constructor_declaration = CallableDeclaration {
                     callable_type: CallableType::Zonkey(self.callables.len()),
@@ -189,8 +198,8 @@ impl Parser {
 
                 let block = self.block()?;
 
-                // Clean value stack after it has been parsed
-                self.value_stack.clear();
+                // Clean environments after it has been parsed
+                self.environments.clear();
                 self.integer_next_id = 0;
                 self.float_next_id = 0;
                 self.string_next_id = 0;
@@ -246,12 +255,12 @@ impl Parser {
                 let parameters = self.parameters()?;
                 let return_type = self.return_type()?;
 
-                let mut method_scope = IndexMap::new();
+                let mut method_scope = FxHashMap::default();
                 let mut parameter_value_types = vec![];
 
                 method_scope.insert(
                     Rc::new("self".to_string()),
-                    Value::Object(Rc::clone(&class_name), self.object_next_id),
+                    Location::Object(Rc::clone(&class_name), self.object_next_id),
                 );
                 self.object_next_id += 1;
 
@@ -260,7 +269,7 @@ impl Parser {
                     parameter_value_types.push(value_type);
                 }
 
-                self.value_stack.push(method_scope);
+                self.environments.push(method_scope);
 
                 let method_declaration = CallableDeclaration {
                     callable_type: CallableType::Zonkey(self.callables.len()),
@@ -290,7 +299,7 @@ impl Parser {
                 }
 
                 // Clean value stack after it has been parsed
-                self.value_stack.clear();
+                self.environments.clear();
                 self.integer_next_id = 0;
                 self.float_next_id = 0;
                 self.string_next_id = 0;

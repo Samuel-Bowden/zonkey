@@ -35,7 +35,7 @@ impl Parser {
                 }
             }
         } else {
-            self.literal()
+            self.value()
         }
     }
 }

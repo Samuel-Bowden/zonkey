@@ -1,0 +1,19 @@
+(ERROR) A class cannot be declared with the name of an inbuilt type.
+	1 | class <Integer> {
+
+(ERROR) A class cannot be declared with the name of an inbuilt type.
+	5 | class <Float> {
+
+(ERROR) A class cannot be declared with the name of an inbuilt type.
+	9 | class <String> {
+
+(ERROR) A class cannot be declared with the name of an inbuilt type.
+	13 | class <Boolean> {
+
+(ERROR) A class cannot be declared with the name of an inbuilt type.
+	17 | class <Printable> {
+
+(ERROR) A class cannot be declared with the name of an inbuilt type.
+	21 | class <Element> {
+
+(ABORTING) Cannot start execution of script due to 6 error(s).

@@ -11,4 +11,5 @@ pub enum Message {
     TabPressed(usize),
     TabClosePressed(usize),
     NewTab,
+    SettingsPressed,
 }

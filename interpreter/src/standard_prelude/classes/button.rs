@@ -13,6 +13,15 @@ pub fn new(button: Rc<String>) -> ClassDeclaration {
     );
 
     methods.insert(
+        "get_text".to_string().into(),
+        Rc::new(CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: Some(ValueType::String),
+        }),
+    );
+
+    methods.insert(
         "set_background_colour".to_string().into(),
         Rc::new(CallableDeclaration {
             callable_type: CallableType::Native,

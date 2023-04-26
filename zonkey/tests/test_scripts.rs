@@ -244,3 +244,32 @@ fn read_and_write_file() -> Result<(), Box<dyn Error>> {
     std::fs::remove_file("test.txt")?;
     Ok(())
 }
+
+#[test]
+fn args() -> Result<(), Box<dyn Error>> {
+    assert_eq!(
+        std::str::from_utf8(
+            &Command::cargo_bin("zonkey")
+                .unwrap()
+                .arg("tests/scripts/args.zonk")
+                .arg("-a")
+                .arg("one")
+                .arg("two")
+                .arg("three")
+                .assert()
+                .success()
+                .get_output()
+                .stdout
+        )
+        .unwrap()
+        .chars()
+        .filter(|char| !char.is_whitespace())
+        .collect::<String>(),
+        include_str!("expected_output/args.txt")
+            .chars()
+            .filter(|char| !char.is_whitespace())
+            .collect::<String>()
+    );
+
+    Ok(())
+}

@@ -73,6 +73,7 @@ pub struct Hyperlink {
     pub id: u64,
     pub text: String,
     pub link: String,
+    pub arguments: Vec<String>,
 }
 
 #[derive(Debug, Clone)]

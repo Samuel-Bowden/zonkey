@@ -1,0 +1,105 @@
+class InstalledApplication {
+    String location;
+    Button uninstall;
+    Column column;
+
+    constructor(String location) {
+        @location = location;
+        let title = Text("App Location - " + location + ": ");
+        @uninstall = Button("Uninstall").set_background_colour("#AA0000");
+        @column = Column().add(title).add(@uninstall);
+    }
+
+    method row() -> Column { return @column; }
+
+    method removed() -> Boolean {
+        if (@uninstall.clicked()) {
+            remove_application(@location);
+            return true;
+        }
+        return false;
+    }
+}
+
+class Settings {
+    [InstalledApplication] entries;
+    Page page;
+    Column managed_installed;
+    Column help;
+    Column about;
+
+    method check_non_installed() {
+        if (@entries.len() == 0)
+            @managed_installed.add(Text("There are no applications installed at the moment."));
+    }
+
+    method run() {
+        self.check_non_installed();
+
+        while (wait_for_event()) {
+            for (let i = 0, i < @entries.len(), i += 1) {
+                let entry = @entries.get(i);
+                if (entry.removed()) {
+                    @managed_installed.remove(entry.row());
+                    @entries.remove(i);
+                    break;
+                }
+            }
+            self.check_non_installed();
+        }
+    }
+
+    method manage_installed_section() {
+        @managed_installed = Column();
+        @managed_installed.add(Text("Manage Installed Applications:").set_size(40.).set_colour("#888888"));
+
+        let installed_applications = installed_applications();
+        @entries = InstalledApplication[];
+
+        for (let i = 0, i < installed_applications.len(), i += 1) {
+            let location = installed_applications.get(i);
+            let installed_application = InstalledApplication(location);
+            @entries.push(installed_application);
+            @managed_installed.add(installed_application.row()).add(Text(""));
+        }
+    }
+
+    method help_section() {
+        @help = Column();
+        @help.add(Text("Help:").set_size(40.).set_colour("#888888"));
+        @help.add(Hyperlink("Navigating the user interface.", "zonkey:documentation/navigating_browser_ui.zonk"));
+        @help.add(Hyperlink("Documentation for developing your own Zonkey Apps.", "zonkey:documentation/index.zonk"));
+    }
+
+    method about_section() {
+        @about = Column();
+        @about.add(Text("About:").set_size(40.).set_colour("#888888"));
+        @about.add(Text("Zonkey v0.1.0, Author: Samuel Bowden."));
+        if (args().len() >= 1) @about.add(Text(args().get(0)));
+    }
+
+    constructor() {
+        let title_name = "Settings";
+        
+        let title_row = Row().add(Text(title_name).set_size(70.)).center();
+
+        self.manage_installed_section();
+        self.help_section();
+        self.about_section();
+
+        @page = Page()
+            .center()
+            .set_title(title_name)
+            .add(title_row)
+            .add(@managed_installed)
+            .add(@help)
+            .add(@about)
+            .set_max_width(800.);
+
+        set_page(@page);
+
+        self.run();
+    }
+}
+
+start { Settings(); }

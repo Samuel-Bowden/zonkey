@@ -52,10 +52,10 @@ impl Parser {
         };
 
         self.loop_count += 1;
-        let block = Box::new(self.block()?);
+        let statement = Box::new(self.statement()?);
         self.returned_value = false;
         self.loop_count -= 1;
 
-        Ok(Stmt::While(expression, block))
+        Ok(Stmt::While(expression, statement))
     }
 }

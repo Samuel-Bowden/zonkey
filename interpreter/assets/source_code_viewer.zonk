@@ -36,7 +36,8 @@ class SourceCodeViewer {
 
         @applications = Application[
             Application("Home App", "zonkey:home.zonk"),
-            Application("Calculator App", "zonkey:calculator.zonk"),
+            Application("Settings App", "zonkey:settings.zonk"),
+            Application("Calculator App", "zonkey:calculator/app.zonk"),
             Application("Source Code Viewer App", "zonkey:source_code_viewer.zonk")
         ];
 

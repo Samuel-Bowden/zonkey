@@ -36,11 +36,50 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
     );
 
     functions.insert(
+        Rc::new("args".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: Some(ValueType::Class(Rc::new("[String]".into()))),
+        },
+    );
+
+    functions.insert(
         Rc::new("sleep".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,
             parameters: vec![ValueType::Integer],
             return_type: None,
+        },
+    );
+
+    functions.insert(
+        Rc::new("install_application".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![
+                ValueType::Class(Rc::new("[String]".into())),
+                ValueType::Boolean,
+            ],
+            return_type: None,
+        },
+    );
+
+    functions.insert(
+        Rc::new("remove_application".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::String],
+            return_type: None,
+        },
+    );
+
+    functions.insert(
+        Rc::new("installed_applications".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![],
+            return_type: Some(ValueType::Class(Rc::new("[String]".into()))),
         },
     );
 
@@ -75,7 +114,10 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
         Rc::new("open_link".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,
-            parameters: vec![ValueType::String],
+            parameters: vec![
+                ValueType::String,
+                ValueType::Class(Rc::new("[String]".into())),
+            ],
             return_type: None,
         },
     );

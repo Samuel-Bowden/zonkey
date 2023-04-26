@@ -1,0 +1,7 @@
+start {
+	let args = args();
+
+	println(args.get(0));
+	println(args.get(1));
+	println(args.get(2));
+}

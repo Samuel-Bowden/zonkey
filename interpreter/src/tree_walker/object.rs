@@ -1,4 +1,4 @@
-use super::environment::Environment;
+use super::state::State;
 use crate::element::*;
 use std::{
     cell::RefCell,
@@ -29,6 +29,16 @@ impl NativeObject {
             text
         } else {
             panic!("Attempted to extract type Text from a native object that was not that type")
+        }
+    }
+
+    pub fn extract_hyperlink(&mut self) -> &mut Arc<Mutex<Hyperlink>> {
+        if let NativeObject::Hyperlink(hyperlink) = self {
+            hyperlink
+        } else {
+            panic!(
+                "Attempted to extract type Hyperlink from a native object that was not that type"
+            )
         }
     }
 
@@ -145,11 +155,11 @@ impl NativeObject {
 #[derive(Debug, Clone)]
 pub enum Object {
     Native(NativeObject),
-    Zonkey(Rc<RefCell<Environment>>),
+    Zonkey(Rc<RefCell<State>>),
 }
 
 impl Object {
-    pub fn extract_zonkey_object(&mut self) -> &mut Rc<RefCell<Environment>> {
+    pub fn extract_zonkey_object(&mut self) -> &mut Rc<RefCell<State>> {
         if let Object::Zonkey(env) = self {
             env
         } else {

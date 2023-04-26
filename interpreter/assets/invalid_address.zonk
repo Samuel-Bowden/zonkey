@@ -1,0 +1,6 @@
+start {
+	set_page(Page()
+		.add(Text("Invalid Address").set_size(40.))
+		.add(Text(args().get(0)))
+	);
+}

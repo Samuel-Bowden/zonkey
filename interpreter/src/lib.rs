@@ -1,47 +1,40 @@
-use self::{err::InterpreterErr, lexer::Lexer, token::Token};
-use crate::{err::tree_walker::TreeWalkerErr, parser::Parser, tree_walker::TreeWalker};
-use ast::AST;
+use self::{err::InterpreterErr, lexer::Lexer};
+use crate::{
+    err::InterpreterErrType,
+    parser::Parser,
+    tree_walker::{err::TreeWalkerErr, TreeWalker},
+};
+pub use address::Address;
 use event::{InterpreterEvent, PageEvent};
 pub use iced;
 pub use iced_native;
-use normalize_line_endings::normalized;
-pub use resource_loader::Address;
+use permission::PermissionLevel;
 use std::sync::mpsc::{Receiver, Sender};
-pub use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
 mod tests;
 
+pub mod address;
 mod ast;
 mod debugger;
 pub mod element;
 pub mod err;
 pub mod event;
 mod expr;
-mod lexer;
-mod parser;
-pub mod resource_loader;
+pub mod lexer;
+pub mod parser;
+mod permission;
 mod stack;
 mod standard_prelude;
 mod stmt;
 mod token;
 mod tree_walker;
 
-pub enum PermissionLevel {
-    All,
-    NetworkOnly,
-}
-
-pub fn run_with_std_stream_error_handling(
+pub fn run_with_error_messages(
     address: Address,
     mut sender: Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
 ) {
-    let permission_level = match address {
-        Address::Zonkey(_) | Address::File(_) | Address::Invalid(..) => PermissionLevel::All,
-        Address::HTTP(..) => PermissionLevel::NetworkOnly,
-    };
-
     let source = match address.load_script() {
         Ok(source) => source,
         Err(e) => {
@@ -52,75 +45,71 @@ pub fn run_with_std_stream_error_handling(
         }
     };
 
-    let source: String = normalized(source.chars()).collect();
-
-    let graphemes = UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
-
-    match run(&graphemes, &mut sender, receiver, permission_level) {
+    match run(
+        &source,
+        &mut sender,
+        receiver,
+        PermissionLevel::new(&address),
+        address.arguments,
+    ) {
         Ok(_) => (),
-        Err(e) => {
-            let error_message = err::handler::run(e, &graphemes);
-            eprint!("{}", error_message);
+        Err(error) => {
+            let error_messages = error.get_err_messages();
+            eprint!("{}", error_messages);
             sender
-                .send(InterpreterEvent::ScriptError(error_message))
+                .send(InterpreterEvent::ScriptError(error_messages))
                 .unwrap();
         }
     }
 }
 
-// Please ensure you provide a source file with normalised line endings - e.g. \r\n gets translated to \n
-pub fn run(
-    source: &Vec<&str>,
+pub fn run<'a>(
+    source: &'a str,
     sender: &mut Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
     permission_level: PermissionLevel,
-) -> Result<(), InterpreterErr> {
+    arguments: Vec<String>,
+) -> Result<(), InterpreterErr<'a>> {
     interpreter_debug!("Debug build");
 
-    let tokens = run_lexer(source)?;
-
-    let ast = run_parser(tokens)?;
-
-    run_tree_walker(ast, sender, receiver, permission_level)
-}
-
-pub fn run_lexer(source: &Vec<&str>) -> Result<Vec<Token>, InterpreterErr> {
     interpreter_debug!("Starting lexer");
-
-    let lexer = Lexer::new(source).run();
-
-    match lexer {
-        Ok(lexer) => {
+    let (result, graphemes) = Lexer::run(source);
+    let tokens = match result {
+        Ok(tokens) => {
             interpreter_debug!("Lexer finished successfully");
-            Ok(lexer.tokens)
+            tokens
         }
-        Err(e) => Err(InterpreterErr::LexerFailed(e)),
-    }
-}
+        Err(e) => {
+            return Err(InterpreterErr::new(
+                InterpreterErrType::LexerFailed(e),
+                graphemes,
+            ))
+        }
+    };
 
-pub fn run_parser(tokens: Vec<Token>) -> Result<AST, InterpreterErr> {
     interpreter_debug!("Starting parser");
-
-    match Parser::new(tokens).run() {
+    let ast = match Parser::run(tokens) {
         Ok(ast) => {
             interpreter_debug!("Parser completed successfully");
-            Ok(ast)
+            ast
         }
-        Err(e) => Err(InterpreterErr::ParserFailed(e)),
-    }
-}
+        Err(e) => {
+            return Err(InterpreterErr::new(
+                InterpreterErrType::ParserFailed(e),
+                graphemes,
+            ))
+        }
+    };
 
-fn run_tree_walker(
-    ast: AST,
-    sender: &mut Sender<InterpreterEvent>,
-    receiver: Receiver<PageEvent>,
-    permission_level: PermissionLevel,
-) -> Result<(), InterpreterErr> {
     interpreter_debug!("Starting tree walker");
-
-    match TreeWalker::run(ast, sender, receiver, permission_level) {
+    match TreeWalker::run(ast, sender, receiver, permission_level, arguments) {
         Ok(_) => Ok(()),
         Err(TreeWalkerErr::Exit) => Ok(()),
-        Err(e) => Err(InterpreterErr::TreeWalkerFailed(e)),
+        Err(e) => {
+            return Err(InterpreterErr::new(
+                InterpreterErrType::TreeWalkerFailed(e),
+                graphemes,
+            ))
+        }
     }
 }

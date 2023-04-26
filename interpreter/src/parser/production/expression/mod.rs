@@ -5,12 +5,12 @@ mod comparison;
 mod equality;
 mod function_call;
 mod grouping;
-mod literal;
 mod method_call;
 mod multdiv;
 mod or;
 mod prelude;
 mod unary;
+mod value;
 
 use crate::parser::production::expression::prelude::*;
 

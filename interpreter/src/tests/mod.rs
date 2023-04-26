@@ -1,22 +1,13 @@
 use crate::{
-    err::{self, lexer::LexerErr, parser::ParserErr},
+    err::{InterpreterErr, InterpreterErrType},
     lexer::Lexer,
-    parser::Parser,
+    parser::{err::ParserErr, Parser},
     token::Token,
+    tree_walker::state::NullableReference,
 };
-use normalize_line_endings::normalized;
-use unicode_segmentation::UnicodeSegmentation;
-
-fn get_tokens(graphemes: &Vec<&str>) -> Result<Vec<Token>, LexerErr> {
-    let lexer = Lexer::new(graphemes).run();
-    match lexer {
-        Ok(lexer) => Ok(lexer.tokens),
-        Err(e) => Err(e),
-    }
-}
 
 fn get_failed_parser_err(tokens: Vec<Token>) -> ParserErr {
-    match Parser::new(tokens).run() {
+    match Parser::run(tokens) {
         Ok(_) => panic!("Expected parser to fail"),
         Err(e) => e,
     }
@@ -26,17 +17,15 @@ macro_rules! test_script_error {
     ( $x:literal ) => {
         let source = include_str!(concat!("scripts/", $x, ".zonk"));
 
-        let source = normalized(source.chars()).collect::<String>();
-
-        let graphemes =
-            UnicodeSegmentation::graphemes(source.as_str(), true).collect::<Vec<&str>>();
-
-        let error = match get_tokens(&graphemes) {
-            Ok(tokens) => err::InterpreterErr::ParserFailed(get_failed_parser_err(tokens)),
-            Err(lexer_err) => err::InterpreterErr::LexerFailed(lexer_err),
+        let (error, graphemes) = match Lexer::run(source) {
+            (Ok(tokens), graphemes) => (
+                InterpreterErrType::ParserFailed(get_failed_parser_err(tokens)),
+                graphemes,
+            ),
+            (Err(lexer_err), graphemes) => (InterpreterErrType::LexerFailed(lexer_err), graphemes),
         };
 
-        let error_message = err::handler::run(error, &graphemes);
+        let error_message = InterpreterErr::new(error, graphemes).get_err_messages();
 
         assert_eq!(
             error_message
@@ -52,8 +41,54 @@ macro_rules! test_script_error {
 }
 
 #[test]
+fn test_sizes() {
+    #[allow(dead_code)]
+    enum Value {
+        Integer(i64),
+        Float(f64),
+        String(Box<String>),
+        Boolean(bool),
+        Object(Box<NullableReference>),
+    }
+    println!(
+        "Size of value enumeration: {} bytes",
+        std::mem::size_of::<Value>()
+    );
+    println!(
+        "Size of integer value: {} bytes",
+        std::mem::size_of::<i64>()
+    );
+    println!("Size of float value: {} bytes", std::mem::size_of::<f64>());
+    println!(
+        "Size of string value: {} bytes",
+        std::mem::size_of::<String>()
+    );
+    println!(
+        "Size of string value in box: {} bytes",
+        std::mem::size_of::<Box<String>>()
+    );
+    println!(
+        "Size of boolean value: {} bytes",
+        std::mem::size_of::<bool>()
+    );
+    println!(
+        "Size of object nullable reference: {} bytes",
+        std::mem::size_of::<NullableReference>()
+    );
+    println!(
+        "Size of object nullable reference in box: {} bytes",
+        std::mem::size_of::<Box<NullableReference>>()
+    );
+}
+
+#[test]
 fn method_call_expected_name() {
     test_script_error!("mcall_ex_name");
+}
+
+#[test]
+fn class_dec_inbuilt_type() {
+    test_script_error!("inbuilt_type");
 }
 
 #[test]

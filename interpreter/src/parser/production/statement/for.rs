@@ -1,5 +1,6 @@
+use rustc_hash::FxHashMap;
+
 use crate::parser::production::statement::prelude::*;
-use indexmap::IndexMap;
 
 impl Parser {
     pub fn for_statement(&mut self) -> Result<Stmt, ParserStatus> {
@@ -21,7 +22,7 @@ impl Parser {
             }
         };
 
-        self.value_stack.push(IndexMap::new());
+        self.environments.push(FxHashMap::default());
         let integer_point = self.integer_next_id;
         let float_point = self.float_next_id;
         let string_point = self.string_next_id;
@@ -116,16 +117,13 @@ impl Parser {
         };
 
         self.loop_count += 1;
-        let mut block = self.block()?;
+        let statement = self.statement()?;
         self.returned_value = false;
         self.loop_count -= 1;
 
-        if let Stmt::Block(b, _) = &mut block {
-            b.push(update_statement);
-        }
+        let block = Stmt::Block(vec![statement, update_statement], self.stack());
 
-        self.value_stack.pop();
-
+        self.environments.pop();
         self.integer_next_id = integer_point;
         self.float_next_id = float_point;
         self.string_next_id = string_point;

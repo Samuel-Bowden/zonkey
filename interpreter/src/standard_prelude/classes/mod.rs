@@ -32,5 +32,11 @@ pub fn new() -> FxHashMap<Rc<String>, ClassDeclaration> {
     classes.insert(Rc::clone(&column), column::new(Rc::clone(&column)));
     classes.insert(Rc::clone(&image), image::new(Rc::clone(&image)));
 
+    let string_array_type = Rc::new("[String]".into());
+    classes.insert(
+        Rc::clone(&string_array_type),
+        array::new(string_array_type, ValueType::String),
+    );
+
     classes
 }

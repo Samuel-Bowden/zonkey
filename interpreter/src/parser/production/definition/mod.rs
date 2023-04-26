@@ -3,14 +3,15 @@ mod function;
 mod prelude;
 mod start;
 
-use std::rc::Rc;
+use rustc_hash::FxHashMap;
 
 use crate::{
     parser::production::definition::prelude::*,
     parser::value::ValueType,
-    parser::value::{print_type, Value},
+    parser::{location::Location, value::print_type},
     standard_prelude::classes::array,
 };
+use std::rc::Rc;
 
 impl Parser {
     // Helper functions used by some definitions to convert token_type to a value_type
@@ -162,27 +163,30 @@ impl Parser {
         &mut self,
         value_type: &ValueType,
         name: Rc<String>,
-        scope: &mut IndexMap<Rc<String>, Value>,
+        scope: &mut FxHashMap<Rc<String>, Location>,
     ) -> Result<(), ParserStatus> {
         match value_type {
             ValueType::Integer => {
-                scope.insert(name, Value::Integer(self.integer_next_id));
+                scope.insert(name, Location::Integer(self.integer_next_id));
                 self.integer_next_id += 1;
             }
             ValueType::Float => {
-                scope.insert(name, Value::Float(self.float_next_id));
+                scope.insert(name, Location::Float(self.float_next_id));
                 self.float_next_id += 1;
             }
             ValueType::String => {
-                scope.insert(name, Value::String(self.string_next_id));
+                scope.insert(name, Location::String(self.string_next_id));
                 self.string_next_id += 1;
             }
             ValueType::Boolean => {
-                scope.insert(name, Value::Boolean(self.boolean_next_id));
+                scope.insert(name, Location::Boolean(self.boolean_next_id));
                 self.boolean_next_id += 1;
             }
             ValueType::Class(class) => {
-                scope.insert(name, Value::Object(Rc::clone(class), self.object_next_id));
+                scope.insert(
+                    name,
+                    Location::Object(Rc::clone(class), self.object_next_id),
+                );
                 self.object_next_id += 1;
             }
             ValueType::Printable | ValueType::Element | ValueType::Generic => {

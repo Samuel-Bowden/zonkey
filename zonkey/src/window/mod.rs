@@ -3,6 +3,7 @@ use crate::tab::iced_native;
 use crate::tab::iced_native::color;
 use crate::tab::Address;
 use crate::tab::{Tab, TabEvent};
+use interpreter::address::AddressType;
 use interpreter::element::Page;
 use interpreter::event::{InterpreterEvent, PageEvent};
 use interpreter::iced::{
@@ -77,7 +78,11 @@ impl Application for Window {
     }
 
     fn title(&self) -> String {
-        format!("Zonkey Browser - {}", self.current_tab().title())
+        if self.browser_gui {
+            format!("Zonkey Browser - {}", self.current_tab().title())
+        } else {
+            self.current_tab().title()
+        }
     }
 
     fn theme(&self) -> Self::Theme {
@@ -119,8 +124,22 @@ impl Application for Window {
                 }
             }
             Message::HomePressed => {
-                self.current_tab_mut()
-                    .open_address(Address::Zonkey("home.zonk".into()));
+                self.current_tab_mut().open_address(Address {
+                    address_type: AddressType::Zonkey,
+                    location: "home.zonk".into(),
+                    arguments: vec![],
+                });
+            }
+            Message::SettingsPressed => {
+                self.current_tab_mut().open_address(Address {
+                    address_type: AddressType::Zonkey,
+                    location: "settings.zonk".into(),
+                    arguments: vec![if cfg!(debug_assertions) {
+                        "Debug build.".into()
+                    } else {
+                        "Release build.".into()
+                    }],
+                });
             }
             Message::ReloadPressed => {
                 self.current_tab_mut().reload();
@@ -139,7 +158,14 @@ impl Application for Window {
                     self.next_tab_id += 1;
                     self.tabs.insert(
                         self.next_tab_id,
-                        Tab::new(Address::Zonkey("home.zonk".into()), self.next_tab_id),
+                        Tab::new(
+                            Address {
+                                address_type: AddressType::Zonkey,
+                                location: "home.zonk".into(),
+                                arguments: vec![],
+                            },
+                            self.next_tab_id,
+                        ),
                     );
                     self.current_tab = self.next_tab_id;
                 }

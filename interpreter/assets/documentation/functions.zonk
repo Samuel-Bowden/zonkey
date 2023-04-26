@@ -8,11 +8,7 @@ start {
 			.add(Text("Functions").set_size(40.0))
 			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 
-	page.add(Text("Functions allow you to reuse code in other sections of your program and abstract the underlying implementation of some functionality. You have already seen this with the println function used previously - you didn't need to worry about how this actually works internally."));
-
-	page.add(Text("The function println is part of the standard prelude, which is a set of functions and classes that are automatically imported for you to use in your scripts."));
-
-	page.add(Text("You can also define your own functions using the syntax below."));
+	page.add(Text("You can define your own functions using the syntax below."));
 
 	page.add(Image("zonkey:documentation/pictures/function.png"));
 

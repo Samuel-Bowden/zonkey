@@ -1,0 +1,25 @@
+class Integer {
+    constructor() {}
+}
+
+class Float {
+    constructor() {}
+}
+
+class String {
+    constructor() {}
+}
+
+class Boolean {
+    constructor() {}
+}
+
+class Printable {
+    constructor() {}
+}
+
+class Element {
+    constructor() {}
+}
+
+start {}

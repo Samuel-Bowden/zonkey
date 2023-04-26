@@ -14,17 +14,26 @@ mod window;
 #[derive(Parser)]
 #[command(author, version, about, arg_required_else_help = true)]
 struct Arguments {
-    ///A script address can be a file path, e.g. 'folder/test.zonk', or a zonkey formatted address, e.g. 'zonkey:home.zonk', 'https://localhost:8000/test.zonk'
+    #[arg(verbatim_doc_comment)]
+    ///A Zonkey formatted address to load the script from, e.g.
+    ///- 'scripts/hello_world.zonk'
+    ///- 'zonkey:home.zonk'
+    ///- 'https://twigville.com/app.zonk'
     script_address: String,
 
-    #[arg(short, long)]
-    ///Launch browser - provide the script address 'zonkey:home.zonk' to load the home page
+    #[arg(short, long, verbatim_doc_comment)]
+    ///Launch the browser mode:
+    ///Provide the address 'zonkey:home.zonk' for the home page
     browser: bool,
+
+    #[arg(short, long, raw = true)]
+    ///Arguments to be passed to the script
+    arguments: Vec<String>,
 }
 
 pub fn main() -> ExitCode {
     let arguments = Arguments::parse();
-    let address = Address::new(&arguments.script_address);
+    let address = Address::new(&arguments.script_address, arguments.arguments);
 
     if arguments.browser {
         browser(address)
@@ -62,7 +71,7 @@ fn command_line_tool(address: Address) -> ExitCode {
     let address_copy = address.clone();
 
     thread::spawn(move || {
-        interpreter::run_with_std_stream_error_handling(
+        interpreter::run_with_error_messages(
             address_copy,
             interpreter_event_sender,
             page_event_receiver,

@@ -3,7 +3,7 @@ name = "zonkey"
 version = "0.1.0"
 edition = "2021"
 description = "The Zonkey Programming Language And Browser."
-authors = ["Sam Bowden"]
+authors = ["Samuel Bowden"]
 
 [dependencies]
 clap = { version = "4.2.2", features = ["derive"] }

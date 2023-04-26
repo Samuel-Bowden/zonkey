@@ -1,4 +1,4 @@
-use crate::{parser::production::statement::prelude::*, parser::value::Value};
+use crate::{parser::location::Location, parser::production::statement::prelude::*};
 use std::rc::Rc;
 
 impl Parser {
@@ -31,7 +31,7 @@ impl Parser {
 
         self.current += 1;
 
-        if let Some(_) = self.value_stack.last().unwrap().get(&name) {
+        if let Some(_) = self.environments.last().unwrap().get(&name) {
             self.error
                 .add(ParserErrType::VariableDeclarationAlreadyDeclared(
                     self.tokens[self.current - 1].clone(),
@@ -62,37 +62,37 @@ impl Parser {
             Expr::Integer(val) => {
                 let id = self.integer_next_id;
                 self.integer_next_id += 1;
-                self.value_stack
+                self.environments
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::Integer(id));
+                    .insert(name, Location::Integer(id));
                 Ok(Stmt::IntegerVariableInitialisation(val))
             }
             Expr::Float(val) => {
                 let id = self.float_next_id;
                 self.float_next_id += 1;
-                self.value_stack
+                self.environments
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::Float(id));
+                    .insert(name, Location::Float(id));
                 Ok(Stmt::FloatVariableInitialisation(val))
             }
             Expr::String(val) => {
                 let id = self.string_next_id;
                 self.string_next_id += 1;
-                self.value_stack
+                self.environments
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::String(id));
+                    .insert(name, Location::String(id));
                 Ok(Stmt::StringVariableInitialisation(val))
             }
             Expr::Boolean(val) => {
                 let id = self.boolean_next_id;
                 self.boolean_next_id += 1;
-                self.value_stack
+                self.environments
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::Boolean(id));
+                    .insert(name, Location::Boolean(id));
                 Ok(Stmt::BooleanVariableInitialisation(val))
             }
             Expr::None(_) => {
@@ -106,10 +106,10 @@ impl Parser {
             Expr::Object(class, val) => {
                 let id = self.object_next_id;
                 self.object_next_id += 1;
-                self.value_stack
+                self.environments
                     .last_mut()
                     .unwrap()
-                    .insert(name, Value::Object(class, id));
+                    .insert(name, Location::Object(class, id));
                 Ok(Stmt::ObjectVariableInitialisation(val))
             }
         }

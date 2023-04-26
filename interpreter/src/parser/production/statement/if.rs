@@ -50,8 +50,8 @@ impl Parser {
             BooleanExpr::Literal(false)
         };
 
-        let true_branch = Box::new(self.block()?);
-        let true_branch_return = self.returned_value;
+        let true_branch = Box::new(self.statement()?);
+        let true_branch_returned = self.returned_value;
         self.returned_value = false;
 
         let false_branch = match self.current_token_type() {
@@ -62,9 +62,9 @@ impl Parser {
             }
             _ => None,
         };
-        let false_branch_return = self.returned_value;
+        let false_branch_returned = self.returned_value;
 
-        self.returned_value = true_branch_return && false_branch_return;
+        self.returned_value = true_branch_returned && false_branch_returned;
 
         Ok(Stmt::If(expression, true_branch, false_branch))
     }

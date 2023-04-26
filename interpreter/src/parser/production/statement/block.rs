@@ -1,5 +1,5 @@
 use crate::{parser::production::statement::prelude::*, parser_debug};
-use indexmap::IndexMap;
+use rustc_hash::FxHashMap;
 
 impl Parser {
     pub fn block(&mut self) -> Result<Stmt, ParserStatus> {
@@ -21,7 +21,7 @@ impl Parser {
         self.current += 1;
 
         let mut statements = vec![];
-        self.value_stack.push(IndexMap::new());
+        self.environments.push(FxHashMap::default());
 
         let integer_point = self.integer_next_id;
         let float_point = self.float_next_id;
@@ -33,7 +33,7 @@ impl Parser {
             match self.current_token_type() {
                 Some(TokenType::RightBrace) => {
                     self.current += 1;
-                    self.value_stack.pop();
+                    self.environments.pop();
 
                     self.integer_next_id = integer_point;
                     self.float_next_id = float_point;

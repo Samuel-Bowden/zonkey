@@ -1,16 +1,22 @@
 use super::prelude::*;
-use crate::resource_loader::Address;
+use crate::address::Address;
+use crate::permission::PermissionLevel;
 use crate::{
     element::*,
     standard_prelude::calls::NativeCallObject,
     tree_walker::object::{NativeObject, Object},
 };
 use colorsys::Rgb;
+use directories_next::ProjectDirs;
 use std::thread;
 
 impl<'a> TreeWalker<'a> {
     pub fn native_call_object(&mut self, call: &NativeCallObject) -> Result<Object, TreeWalkerErr> {
         match call {
+            NativeCallObject::Args => Ok(Object::Native(NativeObject::StringArray(
+                self.arguments.clone(),
+            ))),
+
             NativeCallObject::PageAddElement(page_obj, element) => {
                 let mut element_obj = self.eval_object(element)?;
                 let mut page_obj = self.eval_object(page_obj)?;
@@ -405,8 +411,26 @@ impl<'a> TreeWalker<'a> {
                     id: self.next_element_id(),
                     link,
                     text,
+                    arguments: vec![],
                 }));
                 Ok(Object::Native(NativeObject::Hyperlink(hyperlink)))
+            }
+
+            NativeCallObject::HyperlinkAddArg(object, argument) => {
+                let mut object = self.eval_object(object)?;
+                let argument = self.eval_string(argument)?;
+
+                {
+                    object
+                        .extract_native_object()
+                        .extract_hyperlink()
+                        .lock()
+                        .unwrap()
+                        .arguments
+                        .push(argument)
+                }
+
+                Ok(object)
             }
 
             NativeCallObject::InputConstructor(placeholder) => {
@@ -433,7 +457,7 @@ impl<'a> TreeWalker<'a> {
                 let sender_clone = self.interpreter_event_sender.clone();
 
                 thread::spawn(move || {
-                    let data = Address::new(&link).load_image();
+                    let data = Address::new(&link, vec![]).load_image();
                     image_ref.lock().unwrap().data = Some(data);
                     sender_clone.send(InterpreterEvent::Update).unwrap();
                 });
@@ -688,6 +712,36 @@ impl<'a> TreeWalker<'a> {
                     .text = text;
 
                 Ok(input)
+            }
+
+            NativeCallObject::InstalledApplications => {
+                if let PermissionLevel::NetworkOnly = self.permission_level {
+                    return Err(TreeWalkerErr::InsufficientPermissionLevel);
+                }
+
+                let mut installed_applications = vec![];
+
+                let error = |msg: &str| Err(TreeWalkerErr::InstallFailed(msg.into()));
+
+                let Some(proj_dirs) = ProjectDirs::from("rocks.sambowden", "",  "zonkey") else { return error("Couldn't find zonkey project directory.") };
+
+                let data_dir = proj_dirs.data_dir();
+
+                println!("Ensuring data directory is created at {:?}", data_dir);
+                let Ok(()) = std::fs::create_dir_all(data_dir.clone()) else { return error("Couldn't create zonkey data directory.") };
+
+                let Ok(data_dir_apps) = std::fs::read_dir(proj_dirs.data_dir()) else { return error("Couldn't read application folders inside data directory of Zonkey.") };
+
+                for application in data_dir_apps {
+                    let Ok(application_name) = application else { return error("Failed to extract application folder.") };
+                    let application_name = application_name.path();
+                    let Some(application_name) = application_name.to_str() else { return error("Failed to extract name from application folder.") };
+                    installed_applications.push(application_name.to_string());
+                }
+
+                Ok(Object::Native(NativeObject::StringArray(Arc::new(
+                    Mutex::new(installed_applications),
+                ))))
             }
         }
     }

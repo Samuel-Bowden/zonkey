@@ -1,3 +1,5 @@
+use rustc_hash::FxHashMap;
+
 use crate::parser::production::definition::prelude::*;
 
 impl Parser {
@@ -7,13 +9,13 @@ impl Parser {
         let start_token = self.tokens[self.current].clone();
         self.current += 1;
 
-        // Add start value scope
-        self.value_stack.push(IndexMap::new());
+        // Add start environment scope
+        self.environments.push(FxHashMap::default());
 
         let block = self.block();
 
-        // Clean value stack after it has been parsed
-        self.value_stack.clear();
+        // Clean environments after it has been parsed
+        self.environments.clear();
         self.integer_next_id = 0;
         self.float_next_id = 0;
         self.string_next_id = 0;

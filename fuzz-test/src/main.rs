@@ -3,24 +3,33 @@ fn main() {
     // Please note that fuzz testing will not work on Windows as it is unsupported by afl-rs
 
     use afl::fuzz;
-    use interpreter::{run_lexer, run_parser, UnicodeSegmentation};
+    use interpreter::{
+        err::{InterpreterErr, InterpreterErrType},
+        lexer::Lexer,
+        parser::Parser,
+    };
 
     fuzz!(|data: &[u8]| {
         if let Ok(s) = std::str::from_utf8(data) {
-            let graphemes = UnicodeSegmentation::graphemes(s, true).collect::<Vec<&str>>();
+            let mut source = s.to_string();
+            let (lexer_result, graphemes) = Lexer::run(&mut source);
 
-            let lexer_result = run_lexer(&graphemes);
-
-            match lexer_result {
+            let err_type = match lexer_result {
                 Ok(tokens) => {
                     // Lexer survived and has been given a valid file to tokenise.
                     // Now test the parser
-                    run_parser(tokens).ok();
+                    match Parser::run(tokens) {
+                        Ok(_) => return,
+                        Err(e) => InterpreterErrType::ParserFailed(e),
+                    }
                 }
-                Err(_) => {
-                    // Lexer survived without panicking
-                }
-            }
+                Err(e) => InterpreterErrType::LexerFailed(e),
+            };
+
+            eprintln!(
+                "{}",
+                InterpreterErr::new(err_type, graphemes).get_err_messages()
+            );
         }
     });
 }

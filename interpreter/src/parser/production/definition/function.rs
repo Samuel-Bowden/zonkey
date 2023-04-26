@@ -1,3 +1,5 @@
+use rustc_hash::FxHashMap;
+
 use crate::{
     parser::declaration::CallableDeclaration,
     parser::{declaration::CallableType, production::definition::prelude::*},
@@ -39,7 +41,7 @@ impl Parser {
 
         // Second stage - parse function body
         // Add parameters to the first value scope of function body
-        let mut function_scope = IndexMap::new();
+        let mut function_scope = FxHashMap::default();
 
         let mut parameter_value_types = vec![];
         for (value_type, name) in parameters {
@@ -47,7 +49,7 @@ impl Parser {
             parameter_value_types.push(value_type);
         }
 
-        self.value_stack.push(function_scope);
+        self.environments.push(function_scope);
 
         let function_declaration = CallableDeclaration {
             callable_type: CallableType::Zonkey(self.callables.len()),
@@ -74,8 +76,8 @@ impl Parser {
             }
         }
 
-        // Clean value stack after it has been parsed
-        self.value_stack.clear();
+        // Clean environments after it has been parsed
+        self.environments.clear();
         self.integer_next_id = 0;
         self.float_next_id = 0;
         self.string_next_id = 0;

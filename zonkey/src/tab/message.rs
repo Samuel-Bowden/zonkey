@@ -12,6 +12,6 @@ pub enum Message {
     ScriptError(String),
     LoadAddressErr(String),
     Finished,
-    OpenLink(String),
+    OpenLink(String, Vec<String>),
     None,
 }

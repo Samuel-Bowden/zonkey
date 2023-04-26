@@ -1,6 +1,6 @@
 start {
 	let page = Page()
-		.set_title("Creating And Running Your First Script")
+		.set_title("Creating and Running Scripts")
 		.center()
 		.set_max_width(800.)
 		.set_background_colour("#FDF6E3")
@@ -10,14 +10,6 @@ start {
 
 	set_page(page);
 
-	page.add(Text("Zonkey must be used on Windows or Linux machines, but if you're already running this browser you shouldn't need to worry as you are already using a supported platform and have already performed the installation."));
-
-	page.add(Text("To learn the language, we will first create programs on the command line to get used to the syntax and semantics of Zonkey. Therefore, you will need to choose a text editor and a terminal emulator to write and run the Zonkey scripts. Feel free to choose any you like, your operating system will likely have a good built in text editor and terminal emulator already. In this tutorial, I will be using Neovim and Alacritty in the screenshots I have taken on Linux."));
-
-	page.add(Text("Unfortunately, Zonkey will not have colouring (syntax highlighting) in every text editor as it is impossible to support large variety in use. I have created a syntax highlighting file for Neovim/Vim users which provides the colouring in the screenshots of this tutorial. There is instructions on how to install this in the repository if you would like this."));
-
-	page.add(Text("Now we have covered the preparation, lets open your first script called 'greet_me.zonk' in the text editor you chose."));
-
 	page.add(Text("Enter the following program into the file."));
 
 	page.add(Image("zonkey:documentation/pictures/greet_me.png"));
@@ -26,15 +18,11 @@ start {
 
 	page.add(Text("Then we see the start block. This is the entry point of every Zonkey program, and a program will refuse to run without one. It might seem an inconvenience now, but one of my intentions with this block is to make it easier to spot where your program starts in a larger file."));
 
-	page.add(Text("Inside the start block, we set a variable called 'name' to the returned value of a function call called 'prompt'. These concepts are explained in more detail in later sections, but all you need to understand at the moment is that the prompt asks the user for a string with the prompt 'What is your name?', and then returns the entered value into the location of memory called 'name'."));
-
-	page.add(Text("Then, we call another function called 'println' (short for print line), which prints the result of adding 'Hello ' and the value at the location 'name' together."));
-
 	page.add(Text("Lets runs this program to see if it works. Navigate to the directory where you saved the file you created in your terminal emulator, and run the following command below depending on your operating system, entering your name when your program requests to. For Linux, run the script with 'zonkey greet_me.zonk', whilst for Windows, run the script with 'zonkey.exe greet_me.zonk'"));
 
 	page.add(Image("zonkey:documentation/pictures/run_greet_me.png"));
 
-	page.add(Text("Congratulations on creating your first program in Zonkey. Now we can move onto the next section, where we will discuss variables and types."));
+	page.add(Text("Congratulations on creating your first program in Zonkey."));
 
 	page.add(Hyperlink("Next page", "zonkey:documentation/variables_types_and_expressions.zonk"));
 }

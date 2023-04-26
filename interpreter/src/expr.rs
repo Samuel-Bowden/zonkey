@@ -161,10 +161,10 @@ pub enum BooleanExpr {
     },
     Literal(bool),
     Variable(usize),
-    Property(usize, usize), // Object address, property address
+    Property(usize, usize), // Object location, property location
     Unary(BooleanUnaryOperator, Box<BooleanExpr>),
     NativeCall(NativeCallBoolean),
-    Call(usize, Vec<Expr>), // Call address, argument expressions
+    Call(usize, Vec<Expr>), // Call location, argument expressions
 }
 
 #[derive(Debug, Clone)]

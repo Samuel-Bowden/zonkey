@@ -1,4 +1,4 @@
-use crate::resource_loader::Address;
+use crate::address::{Address, AddressType};
 use std::io::{stdout, Write};
 
 use super::prelude::*;
@@ -22,6 +22,7 @@ impl<'a> TreeWalker<'a> {
 
                 Ok(input.trim().to_string())
             }
+
             NativeCallString::GetInputText(input) => {
                 let mut input = self.eval_object(input)?;
 
@@ -36,12 +37,26 @@ impl<'a> TreeWalker<'a> {
                 Ok(text)
             }
 
+            NativeCallString::GetButtonText(button) => {
+                let mut button = self.eval_object(button)?;
+
+                let text = button
+                    .extract_native_object()
+                    .extract_button()
+                    .lock()
+                    .unwrap()
+                    .text
+                    .clone();
+
+                Ok(text)
+            }
+
             NativeCallString::ReadString(location) => {
                 let location = self.eval_string(location)?;
-                let address = Address::new(&location);
+                let address = Address::new(&location, vec![]);
 
-                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) =
-                    (&self.permission_level, &address)
+                if let (PermissionLevel::NetworkOnly, AddressType::Zonkey | AddressType::File) =
+                    (&self.permission_level, &address.address_type)
                 {
                     return Err(TreeWalkerErr::InsufficientPermissionLevel);
                 }
@@ -57,10 +72,10 @@ impl<'a> TreeWalker<'a> {
             NativeCallString::WriteString(location, string) => {
                 let location = self.eval_string(location)?;
                 let string = self.eval_string(string)?;
-                let address = Address::new(&location);
+                let address = Address::new(&location, vec![]);
 
-                if let (PermissionLevel::NetworkOnly, Address::Zonkey(_) | Address::File(_)) =
-                    (&self.permission_level, &address)
+                if let (PermissionLevel::NetworkOnly, AddressType::Zonkey | AddressType::File) =
+                    (&self.permission_level, &address.address_type)
                 {
                     return Err(TreeWalkerErr::InsufficientPermissionLevel);
                 }

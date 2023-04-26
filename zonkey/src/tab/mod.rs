@@ -31,7 +31,7 @@ pub struct Tab {
     page_viewer: PageViewer,
     script_executor_sender: Option<Sender<Address>>,
     initial_state: Arc<Mutex<SubscriptionState>>,
-    history: NonEmpty<Address>,
+    pub history: NonEmpty<Address>,
     waiting_to_load_next_script: bool,
     pub address_field: String,
     position: usize,
@@ -88,8 +88,8 @@ impl Tab {
         match message {
             Message::Update => (),
             Message::PageViewer(msg) => match self.page_viewer.update(msg) {
-                Some(PageViewerEvent::HyperlinkPressed(location)) => {
-                    self.open_address_from_string(location)
+                Some(PageViewerEvent::HyperlinkPressed(location, arguments)) => {
+                    self.open_address_from_string(location, arguments)
                 }
                 None => (),
             },
@@ -116,7 +116,7 @@ impl Tab {
                 self.page_viewer.load_address_error(error);
             }
             Message::Finished => return Some(TabEvent::Finished),
-            Message::OpenLink(link) => self.open_address_from_string(link),
+            Message::OpenLink(link, arguments) => self.open_address_from_string(link, arguments),
             Message::None => (),
         }
 
@@ -163,7 +163,7 @@ impl Tab {
                     let (tab_sender, interpreter_receiver) = mpsc::channel();
 
                     thread::spawn(move || {
-                        interpreter::run_with_std_stream_error_handling(
+                        interpreter::run_with_error_messages(
                             source,
                             interpreter_sender,
                             interpreter_receiver,
@@ -188,7 +188,9 @@ impl Tab {
                                 (index, Message::LoadAddressErr(error))
                             }
                             InterpreterEvent::CloseTab => (index, Message::Finished),
-                            InterpreterEvent::OpenLink(link) => (index, Message::OpenLink(link)),
+                            InterpreterEvent::OpenLink(link, arguments) => {
+                                (index, Message::OpenLink(link, arguments))
+                            }
                         },
                         (index, SubscriptionStateVariant::RunningScript(receiver)),
                     ),
@@ -220,13 +222,13 @@ impl Tab {
         }
     }
 
-    fn open_address_from_string(&mut self, string: String) {
-        let address = Address::new(&string);
+    fn open_address_from_string(&mut self, string: String, arguments: Vec<String>) {
+        let address = Address::new(&string, arguments);
         self.open_address(address);
     }
 
     pub fn open_address_in_bar(&mut self) {
-        self.open_address_from_string(self.address_field.clone())
+        self.open_address_from_string(self.address_field.clone(), vec![])
     }
 
     pub fn reload(&mut self) {

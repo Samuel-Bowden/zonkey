@@ -1,0 +1,43 @@
+start {
+	let password = Input("Guess the password");
+	let status = Text("No password entered yet");
+	let exit = Button("Close Tab and Exit Game");
+
+	let title = "Password Guessing Game";
+
+	let page = Page()	
+		.set_title(title)
+		.center()
+		.set_max_width(600.)
+		.add(Text(title).set_size(40.))
+		.add(status)
+		.add(password)
+		.add(exit);
+
+    if (!(args().len() > 0 & args().get(0) == "installed")) {
+        page.add(Hyperlink("Install game", "zonkey:installer.zonk")
+            .add_argument("rocks-sambowden-GuessingGame")
+            .add_argument("Guessing Game")
+            .add_argument("zonkey:guessing_game/rocks-sambowden-GuessingGame.ini")
+            .add_argument("zonkey:guessing_game/rocks-sambowden-GuessingGame.desktop")
+            .add_argument("zonkey:guessing_game/app.zonk")
+        );
+    }
+
+    set_page(page);
+
+	while (wait_for_event()) {
+		if (password.confirmed()) {
+			if (password.get_text() == "password1234")
+				status	
+					.set_text("You guessed the correct password!")
+					.set_colour("#00aa00");
+			else
+				status	
+					.set_text("That wasn't the right password")
+					.set_colour("#ff0000");
+		}
+
+		if (exit.clicked()) close_tab();
+	}
+}

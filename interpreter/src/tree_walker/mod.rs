@@ -1,12 +1,12 @@
 use self::{
-    environment::{Environment, NullableReference},
+    err::TreeWalkerErr,
     object::{NativeObject, Object},
+    state::{NullableReference, State},
     status::TreeWalkerStatus,
 };
 use crate::{
     ast::AST,
     element::*,
-    err::tree_walker::TreeWalkerErr,
     event::{InterpreterEvent, PageEvent},
     expr::*,
     parser::declaration::ConstructionType,
@@ -18,22 +18,24 @@ use std::{
     io::{stdout, Write},
     rc::Rc,
     sync::mpsc::Receiver,
-    sync::{mpsc::Sender, Arc},
+    sync::{mpsc::Sender, Arc, Mutex},
 };
 
-mod environment;
+pub mod err;
 mod native_call;
 mod object;
+pub mod state;
 pub mod status;
 
 pub struct TreeWalker<'a> {
-    environment: Environment,
+    state: State,
     callables: Vec<Rc<Stmt>>,
     stdout: Vec<u8>,
     interpreter_event_sender: &'a mut Sender<InterpreterEvent>,
     page_event_receiver: Receiver<PageEvent>,
     element_id: u64,
     permission_level: PermissionLevel,
+    arguments: Arc<Mutex<Vec<String>>>,
 }
 
 impl<'a> TreeWalker<'a> {
@@ -42,15 +44,17 @@ impl<'a> TreeWalker<'a> {
         interpreter_event_sender: &'a mut Sender<InterpreterEvent>,
         page_event_receiver: Receiver<PageEvent>,
         permission_level: PermissionLevel,
+        arguments: Vec<String>,
     ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         let mut tree_walker = Self {
-            environment: Environment::new(),
+            state: State::new(),
             callables: ast.callable,
             stdout: vec![],
             interpreter_event_sender,
             page_event_receiver,
             element_id: 0,
             permission_level,
+            arguments: Arc::new(Mutex::new(arguments)),
         };
 
         let result = tree_walker.interpret(&ast.start);
@@ -72,17 +76,17 @@ impl<'a> TreeWalker<'a> {
             // Integer statements
             Stmt::IntegerVariableInitialisation(expr) => {
                 let int = self.eval_int(expr)?;
-                self.environment.push_int(int);
+                self.state.push_int(int);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::IntegerVariableAssignment(id, expr, assignment_operator) => {
                 let int = self.eval_int(expr)?;
-                self.environment.assign_int(*id, int, assignment_operator);
+                self.state.assign_int(*id, int, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::IntegerPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let int = self.eval_int(expr)?;
-                self.environment
+                self.state
                     .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
@@ -93,18 +97,17 @@ impl<'a> TreeWalker<'a> {
             // Float statements
             Stmt::FloatVariableInitialisation(expr) => {
                 let float = self.eval_float(expr)?;
-                self.environment.push_float(float);
+                self.state.push_float(float);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::FloatVariableAssignment(id, expr, assignment_operator) => {
                 let float = self.eval_float(expr)?;
-                self.environment
-                    .assign_float(*id, float, assignment_operator);
+                self.state.assign_float(*id, float, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::FloatPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let float = self.eval_float(expr)?;
-                self.environment
+                self.state
                     .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
@@ -115,18 +118,17 @@ impl<'a> TreeWalker<'a> {
             // String statements
             Stmt::StringVariableInitialisation(expr) => {
                 let string = self.eval_string(expr)?;
-                self.environment.push_string(string);
+                self.state.push_string(string);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::StringVariableAssignment(id, expr, assignment_operator) => {
                 let string = self.eval_string(expr)?;
-                self.environment
-                    .assign_string(*id, string, assignment_operator);
+                self.state.assign_string(*id, string, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::StringPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let string = self.eval_string(expr)?;
-                self.environment
+                self.state
                     .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
@@ -137,18 +139,17 @@ impl<'a> TreeWalker<'a> {
             // Boolean statements
             Stmt::BooleanVariableInitialisation(expr) => {
                 let boolean = self.eval_boolean(expr)?;
-                self.environment.push_boolean(boolean);
+                self.state.push_boolean(boolean);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::BooleanVariableAssignment(id, expr, assignment_operator) => {
                 let boolean = self.eval_boolean(expr)?;
-                self.environment
-                    .assign_boolean(*id, boolean, assignment_operator);
+                self.state.assign_boolean(*id, boolean, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::BooleanPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let boolean = self.eval_boolean(expr)?;
-                self.environment
+                self.state
                     .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
@@ -159,24 +160,22 @@ impl<'a> TreeWalker<'a> {
             // Class statements
             Stmt::ObjectVariableInitialisation(expr) => {
                 let object = self.eval_object(expr)?;
-                self.environment
-                    .push_object(NullableReference::Some(object));
+                self.state.push_object(NullableReference::Some(object));
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::SelfInitialisation(expr) => {
                 let object = self.eval_object(expr)?;
-                self.environment.set_self(NullableReference::Some(object));
+                self.state.set_self(NullableReference::Some(object));
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::ObjectVariableAssignment(id, expr, assignment_operator) => {
                 let object = self.eval_object(expr)?;
-                self.environment
-                    .assign_object(*id, object, assignment_operator);
+                self.state.assign_object(*id, object, assignment_operator);
                 Ok(TreeWalkerStatus::Ok)
             }
             Stmt::ObjectPropertyAssignment(obj_id, id, expr, assignment_operator) => {
                 let object = self.eval_object(expr)?;
-                self.environment
+                self.state
                     .get_object(*obj_id)?
                     .extract_zonkey_object()
                     .borrow_mut()
@@ -198,7 +197,7 @@ impl<'a> TreeWalker<'a> {
                     }
                 }
 
-                self.environment.pop_stack(stack);
+                self.state.pop_stack(stack);
 
                 return_value
             }
@@ -308,14 +307,14 @@ impl<'a> TreeWalker<'a> {
             IntegerExpr::Unary(unary_operator, expr) => match unary_operator {
                 NumericUnaryOperator::Minus => Ok(-self.eval_int(expr)?),
             },
-            IntegerExpr::Variable(id) => Ok(self.environment.get_int(*id)),
+            IntegerExpr::Variable(id) => Ok(self.state.get_int(*id)),
             IntegerExpr::Literal(val) => Ok(*val),
             IntegerExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnInt(v) => Ok(v),
                 _ => panic!("Call did not return correct type"),
             },
             IntegerExpr::Property(obj_id, id) => Ok(self
-                .environment
+                .state
                 .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
@@ -339,7 +338,7 @@ impl<'a> TreeWalker<'a> {
             FloatExpr::Unary(unary_operator, expr) => match unary_operator {
                 NumericUnaryOperator::Minus => Ok(-self.eval_float(expr)?),
             },
-            FloatExpr::Variable(id) => Ok(self.environment.get_float(*id)),
+            FloatExpr::Variable(id) => Ok(self.state.get_float(*id)),
             FloatExpr::Literal(val) => Ok(*val),
             FloatExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnFloat(v) => Ok(v),
@@ -347,7 +346,7 @@ impl<'a> TreeWalker<'a> {
             },
             FloatExpr::NativeCall(call) => self.native_call_float(call),
             FloatExpr::Property(obj_id, id) => Ok(self
-                .environment
+                .state
                 .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
@@ -364,7 +363,7 @@ impl<'a> TreeWalker<'a> {
             } => match operator {
                 StringOperator::Add => Ok(self.eval_string(left)? + &self.eval_string(right)?),
             },
-            StringExpr::Variable(id) => Ok(self.environment.get_string(*id)),
+            StringExpr::Variable(id) => Ok(self.state.get_string(*id)),
             StringExpr::Literal(val) => Ok(val.to_string()),
             StringExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnString(v) => Ok(v),
@@ -372,7 +371,7 @@ impl<'a> TreeWalker<'a> {
             },
             StringExpr::NativeCall(call) => self.native_call_string(call),
             StringExpr::Property(obj_id, id) => Ok(self
-                .environment
+                .state
                 .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
@@ -438,7 +437,7 @@ impl<'a> TreeWalker<'a> {
                 }
                 BooleanComparision::Or => Ok(self.eval_boolean(left)? || self.eval_boolean(right)?),
             },
-            BooleanExpr::Variable(id) => Ok(self.environment.get_boolean(*id)),
+            BooleanExpr::Variable(id) => Ok(self.state.get_boolean(*id)),
             BooleanExpr::Literal(val) => Ok(*val),
             BooleanExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnBoolean(v) => Ok(v),
@@ -449,7 +448,7 @@ impl<'a> TreeWalker<'a> {
             },
             BooleanExpr::NativeCall(call) => self.native_call_boolean(call),
             BooleanExpr::Property(obj_id, id) => Ok(self
-                .environment
+                .state
                 .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
@@ -469,14 +468,14 @@ impl<'a> TreeWalker<'a> {
 
     fn eval_object(&mut self, expression: &ObjectExpr) -> Result<Object, TreeWalkerErr> {
         match expression {
-            ObjectExpr::Variable(id) => self.environment.get_object(*id),
+            ObjectExpr::Variable(id) => self.state.get_object(*id),
             ObjectExpr::Call(id, expressions) => match self.eval_call(*id, expressions)? {
                 TreeWalkerStatus::ReturnObject(v) => Ok(v),
                 v => panic!("Call did not return correct type - {:?} was returned", v),
             },
             ObjectExpr::NativeCall(call) => self.native_call_object(call),
             ObjectExpr::Constructor(properties) => {
-                let mut object = Environment::new();
+                let mut object = State::new();
 
                 for property in properties.iter() {
                     match property {
@@ -493,7 +492,7 @@ impl<'a> TreeWalker<'a> {
                 Ok(Object::Zonkey(Rc::new(RefCell::new(object))))
             }
             ObjectExpr::Property(obj_id, id) => Ok(self
-                .environment
+                .state
                 .get_object(*obj_id)?
                 .extract_zonkey_object()
                 .borrow_mut()
@@ -522,40 +521,40 @@ impl<'a> TreeWalker<'a> {
     ) -> Result<TreeWalkerStatus, TreeWalkerErr> {
         tree_walker_debug!(format!("Executing native callable with id {}", id).as_str());
 
-        let mut environment = Environment::new();
+        let mut state = State::new();
 
         for expr in expressions {
             match expr {
                 Expr::Integer(expr) => {
                     let integer = self.eval_int(expr)?;
-                    environment.push_int(integer)
+                    state.push_int(integer)
                 }
                 Expr::Float(expr) => {
                     let float = self.eval_float(expr)?;
-                    environment.push_float(float)
+                    state.push_float(float)
                 }
                 Expr::String(expr) => {
                     let string = self.eval_string(expr)?;
-                    environment.push_string(string)
+                    state.push_string(string)
                 }
                 Expr::Boolean(expr) => {
                     let boolean = self.eval_boolean(expr)?;
-                    environment.push_boolean(boolean)
+                    state.push_boolean(boolean)
                 }
                 Expr::None(_) => panic!("Cannot pass none to a callable"),
                 Expr::Object(_, expr) => {
-                    environment.push_object(NullableReference::Some(self.eval_object(expr)?));
+                    state.push_object(NullableReference::Some(self.eval_object(expr)?));
                 }
             }
         }
 
-        std::mem::swap(&mut environment, &mut self.environment);
+        std::mem::swap(&mut state, &mut self.state);
 
         let callable = &self.callables[id];
 
         let result = self.interpret(&Rc::clone(callable));
 
-        std::mem::swap(&mut environment, &mut self.environment);
+        std::mem::swap(&mut state, &mut self.state);
 
         result
     }

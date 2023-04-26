@@ -1,25 +1,26 @@
 pub mod declaration;
+pub mod err;
+mod location;
 mod production;
 mod status;
 pub mod value;
 
-use self::value::ValueType;
 use crate::{
     ast::AST,
-    err::parser::{ParserErr, ParserErrType},
     parser::declaration::{CallableDeclaration, ClassDeclaration},
-    parser::value::Value,
+    parser::location::Location,
     parser_debug, standard_prelude,
     stmt::Stmt,
     token::Token,
 };
-use indexmap::IndexMap;
+use err::{ParserErr, ParserErrType};
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
+use value::ValueType;
 
 pub struct Parser {
     tokens: Vec<Token>,
-    value_stack: Vec<IndexMap<Rc<String>, Value>>,
+    environments: Vec<FxHashMap<Rc<String>, Location>>,
     integer_next_id: usize,
     float_next_id: usize,
     string_next_id: usize,
@@ -30,7 +31,7 @@ pub struct Parser {
     current_return_type: Option<ValueType>,
     returned_value: bool,
     loop_count: usize,
-    current_properties: Option<FxHashMap<Rc<String>, Value>>,
+    current_properties: Option<FxHashMap<Rc<String>, Location>>,
     callables: Vec<Rc<Stmt>>,
     error: ParserErr,
     start_definition: Option<(Token, Option<Stmt>)>,
@@ -38,10 +39,10 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        Self {
+    pub fn run(tokens: Vec<Token>) -> Result<AST, ParserErr> {
+        let mut parser = Self {
             tokens,
-            value_stack: vec![],
+            environments: vec![],
             integer_next_id: 0,
             float_next_id: 0,
             string_next_id: 0,
@@ -57,19 +58,17 @@ impl Parser {
             error: ParserErr::new(),
             start_definition: None,
             current: 0,
-        }
-    }
+        };
 
-    pub fn run(mut self) -> Result<AST, ParserErr> {
         parser_debug!("Production rule path:");
 
-        self.program();
+        parser.program();
 
-        match (self.start_definition, self.error.had_error()) {
+        match (parser.start_definition, parser.error.had_error()) {
             (Some((_, Some(stmt))), false) => {
                 let ast = AST {
                     start: stmt,
-                    callable: self.callables,
+                    callable: parser.callables,
                 };
 
                 parser_debug!("AST");
@@ -80,9 +79,9 @@ impl Parser {
             }
             (t, _) => {
                 if let None = t {
-                    self.error.add(ParserErrType::NoStartBlock)
+                    parser.error.add(ParserErrType::NoStartBlock)
                 }
-                Err(self.error)
+                Err(parser.error)
             }
         }
     }

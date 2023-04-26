@@ -7,23 +7,23 @@ pub struct Token {
     pub end: usize,
 }
 
+// Adapted from TokenType template from Crating Interpreters
+// https://craftinginterpreters.com/scanning.html#token-type
 #[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
-    // Single grapheme tokens
     LeftParen,
     RightParen,
     LeftBrace,
     RightBrace,
     LeftBracket,
     RightBracket,
+
     Comma,
     Dot,
     SemiColon,
     Colon,
     And,
     Or,
-
-    // One or more grapheme tokens
     Bang,
     BangEqual,
     Equal,
@@ -36,20 +36,18 @@ pub enum TokenType {
     PlusEqual,
     Minus,
     MinusEqual,
-    Arrow,
     Star,
     StarEqual,
     Slash,
     SlashEqual,
+    Arrow,
 
-    // Literals
     String(Rc<String>),
     Integer(i64),
     Float(f64),
     Boolean(bool),
     Identifier(Rc<String>),
 
-    // Keywords
     Start,
     Function,
     Loop,

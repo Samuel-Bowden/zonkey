@@ -85,6 +85,23 @@ impl Parser {
                         Box::new(arguments.remove(0)),
                         true,
                     )))),
+                    "install_application" => Ok(Expr::None(NoneExpr::NativeCall(
+                        NativeCallNone::InstallApplication(
+                            arguments.remove(0).to_object_expr(),
+                            arguments.remove(0).to_boolean_expr(),
+                        ),
+                    ))),
+                    "remove_application" => Ok(Expr::None(NoneExpr::NativeCall(
+                        NativeCallNone::RemoveApplication(arguments.remove(0).to_string_expr()),
+                    ))),
+                    "args" => Ok(Expr::Object(
+                        Rc::new("[String]".into()),
+                        ObjectExpr::NativeCall(NativeCallObject::Args),
+                    )),
+                    "installed_applications" => Ok(Expr::Object(
+                        Rc::new("[String]".into()),
+                        ObjectExpr::NativeCall(NativeCallObject::InstalledApplications),
+                    )),
                     "prompt" => Ok(Expr::String(StringExpr::NativeCall(
                         NativeCallString::Prompt(Box::new(arguments.remove(0).to_string_expr())),
                     ))),
@@ -131,6 +148,7 @@ impl Parser {
                     "close_tab" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::CloseTab))),
                     "open_link" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::OpenLink(
                         Box::new(arguments.remove(0).to_string_expr()),
+                        arguments.remove(0).to_object_expr(),
                     )))),
                     "sleep" => Ok(Expr::None(NoneExpr::NativeCall(NativeCallNone::Sleep(
                         arguments.remove(0).to_integer_expr(),

@@ -102,7 +102,10 @@ fn build_button<'a>(obj: Arc<Mutex<element::Button>>) -> Element<'a, Message> {
 fn build_hyperlink<'a>(hyperlink: Arc<Mutex<element::Hyperlink>>) -> Element<'a, Message> {
     let hyperlink = hyperlink.lock().unwrap();
     Button::new(Text::new(hyperlink.text.clone()))
-        .on_press(Message::HyperlinkPressed(hyperlink.link.to_string()))
+        .on_press(Message::HyperlinkPressed(
+            hyperlink.link.to_string(),
+            hyperlink.arguments.clone(),
+        ))
         .style(theme::Button::Custom(Box::new(hyperlink.clone())))
         .padding(Padding::new(0.))
         .into()

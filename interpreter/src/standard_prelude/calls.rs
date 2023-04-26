@@ -10,7 +10,9 @@ pub enum NativeCallNone {
     Sleep(IntegerExpr),
     SetPage(ObjectExpr),
     CloseTab,
-    OpenLink(Box<StringExpr>),
+    OpenLink(Box<StringExpr>, ObjectExpr),
+    InstallApplication(ObjectExpr, BooleanExpr),
+    RemoveApplication(StringExpr),
 }
 
 #[derive(Debug, Clone)]
@@ -36,6 +38,7 @@ pub enum NativeCallString {
     FromInteger(IntegerExpr),
     FromFloat(FloatExpr),
     GetInputText(ObjectExpr),
+    GetButtonText(ObjectExpr),
     ReadString(Box<StringExpr>),
     WriteString(Box<StringExpr>, Box<StringExpr>),
     StringArrayGet(Box<ObjectExpr>, IntegerExpr, Token),
@@ -66,6 +69,7 @@ pub enum NativeCallObject {
     TextSetColour(Box<ObjectExpr>, Box<StringExpr>),
 
     HyperlinkConstructor(Box<StringExpr>, Box<StringExpr>),
+    HyperlinkAddArg(Box<ObjectExpr>, Box<StringExpr>),
 
     InputConstructor(Box<StringExpr>),
     InputSetText(Box<ObjectExpr>, Box<StringExpr>),
@@ -108,4 +112,8 @@ pub enum NativeCallObject {
     ObjectArrayPush(Box<ObjectExpr>, Box<ObjectExpr>),
     ObjectArrayGet(Box<ObjectExpr>, IntegerExpr, Token),
     ObjectArrayRemove(Box<ObjectExpr>, IntegerExpr, Token),
+
+    Args,
+
+    InstalledApplications,
 }

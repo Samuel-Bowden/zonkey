@@ -116,6 +116,16 @@ impl Parser {
 
             let result = match call.callable_type {
                 CallableType::Native => match class.as_str() {
+                    "Hyperlink" => match name.as_str() {
+                        "add_argument" => Ok(Expr::Object(
+                            Rc::clone(&class),
+                            ObjectExpr::NativeCall(NativeCallObject::HyperlinkAddArg(
+                                Box::new(object),
+                                Box::new(arguments.remove(0).to_string_expr()),
+                            )),
+                        )),
+                        _ => unreachable!(),
+                    },
                     "Button" => match name.as_str() {
                         "clicked" => Ok(Expr::Boolean(BooleanExpr::NativeCall(
                             NativeCallBoolean::ButtonClicked(object),
@@ -127,6 +137,9 @@ impl Parser {
                                 Box::new(arguments.remove(0).to_string_expr()),
                             )),
                         )),
+                        "get_text" => Ok(Expr::String(StringExpr::NativeCall(
+                            NativeCallString::GetButtonText(object),
+                        ))),
                         "set_background_colour" => Ok(Expr::Object(
                             Rc::clone(&class),
                             ObjectExpr::NativeCall(NativeCallObject::ButtonSetBackgroundColour(
