@@ -35,7 +35,7 @@ pub fn run_with_error_messages(
     mut sender: Sender<InterpreterEvent>,
     receiver: Receiver<PageEvent>,
 ) {
-    let source = match address.load_script() {
+    let source = match address.read_string() {
         Ok(source) => source,
         Err(e) => {
             sender

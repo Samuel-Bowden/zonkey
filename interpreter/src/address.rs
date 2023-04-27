@@ -1,13 +1,14 @@
+use directories_next::ProjectDirs;
 use include_dir::{include_dir, Dir};
 use reqwest::blocking::Response;
 use std::{
     fmt,
     fs::{self, read_to_string, File},
     io::{BufReader, Read},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
-static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
+pub static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
 fn http_name(secure: bool) -> &'static str {
     if secure {
@@ -28,6 +29,7 @@ pub struct Address {
 pub enum AddressType {
     Zonkey,
     File,
+    Installed,
     HTTP { secure: bool },
 }
 
@@ -61,8 +63,8 @@ impl Address {
             None => return Self::invalid_address(vec!["The provided address is empty".into()]),
         };
 
-        let second_section = match it.next() {
-            Some(sec) => sec,
+        let mut second_section = match it.next() {
+            Some(sec) => sec.to_string(),
             None => {
                 // Assume to be a file if the address is not split into sections
                 return Self {
@@ -76,6 +78,13 @@ impl Address {
         let address_type = match first_section {
             "zonkey" => AddressType::Zonkey,
             "file" => AddressType::File,
+            "installed" => {
+                let proj_dirs = ProjectDirs::from("rocks.sambowden", "", "zonkey").unwrap();
+                let mut path = PathBuf::from(proj_dirs.data_dir());
+                path.push(second_section);
+                second_section = path.as_path().display().to_string();
+                AddressType::File
+            }
             "http" => AddressType::HTTP { secure: false },
             "https" => AddressType::HTTP { secure: true },
             invalid_section => {
@@ -89,7 +98,7 @@ impl Address {
         Self {
             address_type,
             arguments,
-            location: second_section.into(),
+            location: second_section,
         }
     }
 
@@ -101,23 +110,12 @@ impl Address {
         }
     }
 
-    pub fn load_script(&self) -> Result<String, AddressErr> {
-        match &self.address_type {
-            AddressType::Zonkey => zonkey_asset_read(&self.location),
-            AddressType::File => file_system_read(Path::new(&self.location)),
-            AddressType::HTTP { secure } => {
-                match network_read(http_name(*secure), &self.location)?.text() {
-                    Ok(script) => Ok(script),
-                    Err(e) => Err(AddressErr::NetworkFailure(e)),
-                }
-            }
-        }
-    }
-
     pub fn read_string(&self) -> Result<String, AddressErr> {
         match &self.address_type {
             AddressType::Zonkey => zonkey_asset_read(&self.location),
-            AddressType::File => file_system_read(Path::new(&self.location)),
+            AddressType::File | AddressType::Installed => {
+                file_system_read(Path::new(&self.location))
+            }
             AddressType::HTTP { secure } => {
                 match network_read(http_name(*secure), &self.location)?.text() {
                     Ok(script) => Ok(script),
@@ -129,10 +127,12 @@ impl Address {
 
     pub fn write_string(&self, string: String) -> Result<String, AddressErr> {
         match &self.address_type {
-            AddressType::File => match file_system_write(Path::new(&self.location), string) {
-                Ok(()) => Ok("OK".to_string()),
-                Err(e) => Err(e),
-            },
+            AddressType::File | AddressType::Installed => {
+                match file_system_write(Path::new(&self.location), string) {
+                    Ok(()) => Ok("OK".to_string()),
+                    Err(e) => Err(e),
+                }
+            }
             AddressType::HTTP { secure } => {
                 network_write(http_name(*secure), &self.location, string)
             }
@@ -142,24 +142,24 @@ impl Address {
         }
     }
 
-    pub fn load_image(&self) -> Vec<u8> {
+    pub fn load_bytes(&self) -> Result<Vec<u8>, String> {
         match &self.address_type {
             AddressType::Zonkey => match zonkey_asset_read_bytes(&self.location) {
-                Ok(bytes) => bytes,
-                Err(_) => include_bytes!("image_load_failed.png").to_vec(),
+                Ok(bytes) => Ok(bytes),
+                Err(e) => Err(e.to_string()),
             },
-            AddressType::File => match file_read_bytes(&self.location) {
-                Ok(bytes) => bytes,
-                Err(_) => include_bytes!("image_load_failed.png").to_vec(),
+            AddressType::File | AddressType::Installed => match file_read_bytes(&self.location) {
+                Ok(bytes) => Ok(bytes),
+                Err(e) => Err(e.to_string()),
             },
             AddressType::HTTP { secure } => {
-                if let Ok(response) = network_read(http_name(*secure), &self.location) {
-                    if let Ok(data) = response.bytes() {
-                        return data.to_vec();
-                    }
+                match network_read(http_name(*secure), &self.location) {
+                    Ok(response) => match response.bytes() {
+                        Ok(data) => Ok(data.to_vec()),
+                        Err(e) => Err(e.to_string()),
+                    },
+                    Err(e) => Err(e.to_string()),
                 }
-
-                include_bytes!("image_load_failed.png").to_vec()
             }
         }
     }
@@ -167,11 +167,13 @@ impl Address {
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &self.address_type {
-            AddressType::File => write!(f, "file:{}", self.location),
-            AddressType::Zonkey => write!(f, "zonkey:{}", self.location),
-            AddressType::HTTP { secure } => write!(f, "{}:{}", http_name(*secure), self.location),
-        }
+        let name = match &self.address_type {
+            AddressType::File => "file",
+            AddressType::Installed => "installed",
+            AddressType::Zonkey => "zonkey",
+            AddressType::HTTP { secure } => http_name(*secure),
+        };
+        write!(f, "{}:{}", name, self.location)
     }
 }
 

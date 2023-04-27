@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Version=1.0
-Name=Guessing Game
-Exec=sh -c "zonkey ~/.local/share/zonkey/rocks-sambowden-GuessingGame/app.zonk -a installed"
-Terminal=false

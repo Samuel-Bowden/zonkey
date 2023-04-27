@@ -7,7 +7,6 @@ use interpreter::{
 use std::{process::ExitCode, sync::mpsc, thread};
 use window::Window;
 
-mod page_viewer;
 mod tab;
 mod window;
 
@@ -29,11 +28,23 @@ struct Arguments {
     #[arg(short, long, raw = true)]
     ///Arguments to be passed to the script
     arguments: Vec<String>,
+
+    #[cfg(target_os = "windows")]
+    #[arg(short, long, verbatim_doc_comment)]
+    ///Disables the console (Windows only)
+    disable_console: bool,
 }
 
 pub fn main() -> ExitCode {
     let arguments = Arguments::parse();
     let address = Address::new(&arguments.script_address, arguments.arguments);
+
+    #[cfg(target_os = "windows")]
+    if arguments.disable_console {
+        unsafe {
+            winapi::um::wincon::FreeConsole();
+        }
+    }
 
     if arguments.browser {
         browser(address)

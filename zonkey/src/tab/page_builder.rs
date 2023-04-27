@@ -1,37 +1,14 @@
-use super::{message::Message, PageErr, PageViewer};
+use super::message::Message;
 use interpreter::element::{self, ElementType};
 use interpreter::iced_native::{image::Handle, theme};
 use interpreter::{
     iced::{
-        alignment::{Horizontal, Vertical},
         widget::{text, Button, Column, Container, Image, Row, Scrollable, Space, Text, TextInput},
         Color, Element, Length, Padding,
     },
     iced_native::Alignment,
 };
 use std::sync::{Arc, Mutex};
-
-impl PageViewer {
-    pub fn view(&self) -> Element<Message> {
-        if let Some(error) = &self.page_error {
-            return match error {
-                PageErr::ScriptError(error) => script_error_page(error),
-                PageErr::LoadAddressError(error) => load_address_error_page(error),
-            };
-        }
-
-        if let Some(page) = &self.page {
-            build_page(page)
-        } else {
-            Container::new(text("Loading page").size(40))
-                .align_x(Horizontal::Center)
-                .align_y(Vertical::Center)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .into()
-        }
-    }
-}
 
 fn build_calls<'a>(element: &ElementType) -> Element<'a, Message> {
     match element {
@@ -179,7 +156,7 @@ fn build_image<'a>(image: Arc<Mutex<element::Image>>) -> Element<'a, Message> {
     }
 }
 
-fn script_error_page<'a>(error: &str) -> Element<'a, Message> {
+pub fn script_error_page<'a>(error: &str) -> Element<'a, Message> {
     Column::new()
         .push(text("Failed to run application").size(100))
         .push(text("Execution of the script failed:"))
@@ -189,7 +166,7 @@ fn script_error_page<'a>(error: &str) -> Element<'a, Message> {
         .into()
 }
 
-fn load_address_error_page<'a>(error: &str) -> Element<'a, Message> {
+pub fn load_address_error_page<'a>(error: &str) -> Element<'a, Message> {
     Column::new()
         .push(text("Failed to load application").size(100))
         .push(text(error))

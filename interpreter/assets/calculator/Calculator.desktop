@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Calculator
+Exec=sh -c "zonkey installed:Calculator/app.zonk -a installed"
+Terminal=false

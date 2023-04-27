@@ -1,7 +1,12 @@
-use crate::page_viewer::{update::PageViewerEvent, PageViewer};
 pub use interpreter::iced;
-use interpreter::iced::{subscription, Element};
+use interpreter::iced::subscription;
+use interpreter::iced::widget::text;
+use interpreter::iced::widget::Container;
+use interpreter::iced::Element;
 pub use interpreter::iced_native;
+use interpreter::iced_native::alignment::Horizontal;
+use interpreter::iced_native::alignment::Vertical;
+use interpreter::iced_native::Length;
 pub use interpreter::Address;
 pub use interpreter::{
     element::Page,
@@ -19,6 +24,7 @@ use std::{
 use subscription_state::{SubscriptionState, SubscriptionStateVariant};
 
 mod message;
+mod page_builder;
 mod subscription_state;
 
 pub type MessagePointer = (usize, Message);
@@ -27,8 +33,15 @@ pub enum TabEvent {
     Finished,
 }
 
+pub enum PageErr {
+    LoadAddressError(String),
+    ScriptError(String),
+}
+
 pub struct Tab {
-    page_viewer: PageViewer,
+    page: Option<Arc<Mutex<Page>>>,
+    page_event_sender: Option<Sender<PageEvent>>,
+    page_error: Option<PageErr>,
     script_executor_sender: Option<Sender<Address>>,
     initial_state: Arc<Mutex<SubscriptionState>>,
     pub history: NonEmpty<Address>,
@@ -42,7 +55,9 @@ impl Tab {
     pub fn new(address: Address, position: usize) -> Self {
         let address_field = address.to_string();
         Self {
-            page_viewer: PageViewer::empty(),
+            page: None,
+            page_event_sender: None,
+            page_error: None,
             script_executor_sender: None,
             waiting_to_load_next_script: true,
             initial_state: Arc::new(Mutex::new((
@@ -64,7 +79,9 @@ impl Tab {
     ) -> Self {
         let address_field = current_script.to_string();
         Self {
-            page_viewer: PageViewer::new(Some(page), Some(page_event_sender)),
+            page: Some(page),
+            page_event_sender: Some(page_event_sender),
+            page_error: None,
             script_executor_sender: None,
             initial_state: Arc::new(Mutex::new((
                 0,
@@ -79,22 +96,48 @@ impl Tab {
     }
 
     pub fn view(&self) -> Element<MessagePointer> {
-        self.page_viewer
-            .view()
-            .map(|msg| (self.position, Message::PageViewer(msg)))
+        if let Some(error) = &self.page_error {
+            return match error {
+                PageErr::ScriptError(error) => page_builder::script_error_page(error),
+                PageErr::LoadAddressError(error) => page_builder::load_address_error_page(error),
+            }
+            .map(|msg| (self.position, msg));
+        }
+
+        if let Some(page) = &self.page {
+            page_builder::build_page(page).map(|msg| (self.position, msg))
+        } else {
+            Container::new(text("Loading page").size(40))
+                .align_x(Horizontal::Center)
+                .align_y(Vertical::Center)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .into()
+        }
     }
 
     pub fn update(&mut self, message: Message) -> Option<TabEvent> {
         match message {
             Message::Update => (),
-            Message::PageViewer(msg) => match self.page_viewer.update(msg) {
-                Some(PageViewerEvent::HyperlinkPressed(location, arguments)) => {
-                    self.open_address_from_string(location, arguments)
+            Message::ButtonPressed(id) => {
+                if let Some(sender) = &self.page_event_sender {
+                    sender.send(PageEvent::ButtonPress(id)).ok();
                 }
-                None => (),
-            },
+            }
+            Message::HyperlinkPressed(location, arguments) => {
+                self.open_address_from_string(location, arguments)
+            }
+            Message::InputChanged(text, input) => {
+                input.lock().unwrap().text = text;
+            }
+            Message::InputSubmit(input) => {
+                if let Some(sender) = &self.page_event_sender {
+                    sender.send(PageEvent::InputConfirmed(input)).ok();
+                }
+            }
             Message::StartedScript(page_event_sender) => {
-                self.page_viewer = PageViewer::new(None, Some(page_event_sender));
+                self.page = None;
+                self.page_event_sender = Some(page_event_sender);
             }
             Message::ReadyForNextScript(script_executor_sender) => {
                 if !self.closing {
@@ -107,13 +150,13 @@ impl Tab {
                 }
             }
             Message::SetPage(page) => {
-                self.page_viewer.set_page(page);
+                self.page = Some(page);
             }
             Message::ScriptError(error) => {
-                self.page_viewer.script_error(error);
+                self.page_error = Some(PageErr::ScriptError(error));
             }
             Message::LoadAddressErr(error) => {
-                self.page_viewer.load_address_error(error);
+                self.page_error = Some(PageErr::LoadAddressError(error));
             }
             Message::Finished => return Some(TabEvent::Finished),
             Message::OpenLink(link, arguments) => self.open_address_from_string(link, arguments),
@@ -124,7 +167,18 @@ impl Tab {
     }
 
     pub fn title(&self) -> String {
-        self.page_viewer.title()
+        if let Some(page) = &self.page {
+            page.lock().unwrap().title.to_string()
+        } else {
+            if let Some(error) = &self.page_error {
+                match error {
+                    PageErr::LoadAddressError(_) => "Load Address Error".into(),
+                    PageErr::ScriptError(_) => "Script Error".into(),
+                }
+            } else {
+                "Loading page".into()
+            }
+        }
     }
 
     pub fn subscription(&self) -> interpreter::iced::Subscription<MessagePointer> {
@@ -209,7 +263,8 @@ impl Tab {
     }
 
     pub fn load_script(&mut self) {
-        self.page_viewer.finish();
+        // Finish currently running script
+        self.page_event_sender = None;
 
         if let Some(sender) = std::mem::take(&mut self.script_executor_sender) {
             let address = self.history.last();
@@ -241,7 +296,9 @@ impl Tab {
     }
 
     pub fn close(&mut self) {
-        self.page_viewer.finish();
+        // Finish currently running script
+        self.page_event_sender = None;
+
         self.script_executor_sender = None;
         self.closing = true;
     }

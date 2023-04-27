@@ -131,14 +131,16 @@ impl Application for Window {
                 });
             }
             Message::SettingsPressed => {
+                use std::env::consts;
                 self.current_tab_mut().open_address(Address {
                     address_type: AddressType::Zonkey,
                     location: "settings.zonk".into(),
-                    arguments: vec![if cfg!(debug_assertions) {
-                        "Debug build.".into()
-                    } else {
-                        "Release build.".into()
-                    }],
+                    arguments: vec![
+                        consts::OS.to_string(),
+                        consts::ARCH.to_string(),
+                        env!("CARGO_PKG_VERSION").to_string(),
+                        env!("CARGO_PKG_AUTHORS").to_string(),
+                    ],
                 });
             }
             Message::ReloadPressed => {
@@ -208,7 +210,6 @@ impl Application for Window {
     }
 
     fn subscription(&self) -> iced::Subscription<Self::Message> {
-        //self.current_tab().subscription().map(Message::Tab)
         Subscription::batch(
             self.tabs
                 .iter()

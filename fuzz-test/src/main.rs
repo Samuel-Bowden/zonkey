@@ -33,3 +33,8 @@ fn main() {
         }
     });
 }
+
+#[cfg(target_os = "windows")]
+fn main() {
+    println!("Fuzz testing does not work on Windows");
+}

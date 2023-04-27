@@ -5,7 +5,6 @@ use numtoa::NumToA;
 use std::{
     io::{stdout, Write},
     path::PathBuf,
-    process::Command,
     thread::sleep,
     time::Duration,
 };
@@ -111,11 +110,12 @@ impl<'a> TreeWalker<'a> {
                 shortcut_path.set_extension("desktop");
 
                 #[cfg(target_os = "windows")]
-                shortcut_path.set_extension("ini");
+                shortcut_path.set_extension("lnk");
 
                 println!("Removing shortcut from desktop: {:?}", shortcut_path);
 
-                // Shortcut may or may not have been added at install
+                // Shortcut may or may not have been added at install, or could have possible been
+                // moved
                 std::fs::remove_file(shortcut_path).ok();
 
                 println!(
@@ -134,6 +134,8 @@ impl<'a> TreeWalker<'a> {
                     .extract_string_array()
                     .lock()
                     .unwrap();
+
+                println!("Arguments: {:?}", arguments);
 
                 let mut arguments_iter = arguments.iter();
 
@@ -164,7 +166,7 @@ impl<'a> TreeWalker<'a> {
 
                 for file in arguments_iter {
                     let path = PathBuf::from(file);
-                    let data = match Address::new(file, vec![]).read_string() {
+                    let data = match Address::new(file, vec![]).load_bytes() {
                         Ok(d) => d,
                         Err(e) => return Err(TreeWalkerErr::InstallFailed(e.to_string())),
                     };
@@ -189,7 +191,7 @@ impl<'a> TreeWalker<'a> {
 
                     let path = PathBuf::from(shortcut);
 
-                    let data = match Address::new(&shortcut, vec![]).read_string() {
+                    let data = match Address::new(&shortcut, vec![]).load_bytes() {
                         Ok(d) => d,
                         Err(e) => return Err(TreeWalkerErr::InstallFailed(e.to_string())),
                     };
@@ -204,6 +206,8 @@ impl<'a> TreeWalker<'a> {
 
                     #[cfg(target_os = "linux")]
                     {
+                        use std::process::Command;
+
                         // Make sure desktop file is executable
                         use std::os::unix::fs::PermissionsExt;
                         std::fs::set_permissions(

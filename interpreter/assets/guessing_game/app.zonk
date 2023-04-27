@@ -16,10 +16,9 @@ start {
 
     if (!(args().len() > 0 & args().get(0) == "installed")) {
         page.add(Hyperlink("Install game", "zonkey:installer.zonk")
-            .add_argument("rocks-sambowden-GuessingGame")
             .add_argument("Guessing Game")
-            .add_argument("zonkey:guessing_game/rocks-sambowden-GuessingGame.ini")
-            .add_argument("zonkey:guessing_game/rocks-sambowden-GuessingGame.desktop")
+            .add_argument("zonkey:guessing_game/GuessingGame.ini")
+            .add_argument("zonkey:guessing_game/GuessingGame.desktop")
             .add_argument("zonkey:guessing_game/app.zonk")
         );
     }

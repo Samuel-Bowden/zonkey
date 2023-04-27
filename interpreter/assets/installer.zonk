@@ -1,51 +1,73 @@
 start {
+    # Colours
+    let burnt_orange = "#cc5500";
+    let grey = "#777777";
+    let green = "#8fbc8f";
+    let red = "#AA0000";
+
     if (args().len() < 4) {
-        let message = "Incorrect arguments. Requires: <APPLICATION_ID> <APPLICATION_NAME> <WINDOWS_SHORTCUT_LOCATION> <LINUX_SHORTCUT_LOCATION> <REQUIRED_FILES>...";
+        let message = "Incorrect arguments. Requires: <APPLICATION_NAME> <WINDOWS_SHORTCUT_LOCATION> <LINUX_SHORTCUT_LOCATION> <REQUIRED_FILES>...";
         set_page(Page().add(Text(message)));
         println(message);
         return;
     }
 
-    let application_id = args().get(0);
-    let application_name = args().get(1);
-    let windows_shortcut_location = args().get(2);
-    let linux_shortcut_location = args().get(3);
+    let application_name = args().get(0);
+    let windows_shortcut_location = args().get(1);
+    let linux_shortcut_location = args().get(2);
 
     let required_files = String[];
 
-    for (let i = 4, i < args().len(), i += 1)
+    for (let i = 3, i < args().len(), i += 1)
         required_files.push(args().get(i));
 
     let page = Page()
         .center()
         .set_title("Installer for " + application_name)
-        .set_max_width(800.);
+        .set_max_width(1200.);
 
-    page.add(Text("Installation for " + application_name).set_size(70.));
-    page.add(Text("Application ID: " + application_id).set_colour("#AAAAAA"));
+    page.add(Row().add(Text("Installation for " + application_name).set_size(70.)).center());
 
-    page.add(Text("Are you sure you want to install " + application_name + " to your system? Please make sure you trust the author of this application.").set_colour("#AA0000"));
+    page.add(Text("Are you sure you want to install " + application_name + " to your system? Please make sure you trust the author of this application.").set_colour(red));
 
-    page.add(Text("These files will be downloaded to your system. "));
+    page.add(Text(""));
+
+    page.add(Text("These files will be downloaded to your system:"));
 
     for (let i = 0, i < required_files.len(), i += 1)
-        page.add(Text(integer_to_string(i + 1) + ". " + required_files.get(i)));
+        page.add(Text(integer_to_string(i + 1) + ". " + required_files.get(i)).set_colour(burnt_orange));
 
-    page.add(Text("They will be placed inside a dedicated folder for this application in the following directories below depending on your operating system:"));
+    page.add(Text(""));
 
-    page.add(Text("Linux: /home/<YOUR_USER>/.local/share/zonkey/" + application_id + "/"));
+    page.add(Text("They will be placed inside a dedicated folder for this application in one of the directories below, depending on your operating system."));
 
-    page.add(Text("A shortcut will be added to your desktop folder if desired, which will allow you to launch this application."));
+    page.add(Text("- Linux: /home/<YOUR_USER>/.local/share/zonkey/" + application_name + "/").set_colour(burnt_orange));
+    page.add(Text("- Windows: C:\Users\<YOUR_USER>\AppData\Roaming\zonkey\data\" + application_name + "\").set_colour(burnt_orange));
 
+    page.add(Text(""));
+
+    page.add(Text("Additionally, the shortcut for this application will be downloaded to your desktop folder if desired, which is from one of the following addresses depending on your operating system:"));
+
+    page.add(Text("- Linux: " + linux_shortcut_location).set_colour(burnt_orange));
+    page.add(Text("- Windows: " + windows_shortcut_location).set_colour(burnt_orange));
+
+    page.add(Text(""));
+
+    page.add(Text("You can uninstall this application later in the settings of the browser."));
+
+    page.add(Text(""));
+
+    let install_button_with_shortcut = Button("Install with shortcut")
+                                            .set_width_fill()
+                                            .set_background_colour(green);
     let install_button_without_shortcut = Button("Install without shortcut").set_width_fill();
-    let install_button_with_shortcut = Button("Install with shortcut").set_width_fill();
 
     let column = Column()
         .add(install_button_with_shortcut)
         .add(install_button_without_shortcut)
-        .set_max_width(250.);
+        .set_max_width(200.);
 
-    page.add(column);
+    page.add(Row().add(column).center());
 
     let shortcut_desired = false;
     let install_requested = false;
@@ -66,7 +88,7 @@ start {
 
     if (install_requested) {
         let install_arguments = String[
-            application_id,
+            application_name,
             windows_shortcut_location,
             linux_shortcut_location
         ];
@@ -81,14 +103,14 @@ start {
             shortcut_desired
         );
 
-        let title = "Installation for " + application_name + " Successsful";
+        let title = "Installation for " + application_name + " Successful";
 
         let install_success_page = Page()
             .add(Text(title).set_size(70.))
             .add(Text("You can navigate away from this page now."))
             .center()
             .set_title(title)
-            .set_max_width(800.);
+            .set_max_width(1200.);
 
         set_page(install_success_page);
     }

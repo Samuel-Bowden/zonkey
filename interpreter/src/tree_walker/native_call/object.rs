@@ -457,7 +457,15 @@ impl<'a> TreeWalker<'a> {
                 let sender_clone = self.interpreter_event_sender.clone();
 
                 thread::spawn(move || {
-                    let data = Address::new(&link, vec![]).load_image();
+                    let data = Address::new(&link, vec![])
+                        .load_bytes()
+                        .unwrap_or_else(|_| {
+                            crate::address::PROJECT_DIR
+                                .get_file("image_load_failed")
+                                .unwrap()
+                                .contents()
+                                .to_vec()
+                        });
                     image_ref.lock().unwrap().data = Some(data);
                     sender_clone.send(InterpreterEvent::Update).unwrap();
                 });

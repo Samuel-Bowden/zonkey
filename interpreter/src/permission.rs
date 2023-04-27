@@ -8,8 +8,8 @@ pub enum PermissionLevel {
 impl PermissionLevel {
     pub fn new(address: &Address) -> Self {
         match address.address_type {
-            AddressType::Zonkey | AddressType::File => PermissionLevel::All,
             AddressType::HTTP { .. } => PermissionLevel::NetworkOnly,
+            _ => PermissionLevel::All,
         }
     }
 }

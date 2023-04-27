@@ -187,10 +187,9 @@ class Calculator {
                 @screen_state = " ";
             } else if (@install.clicked()) {
                 let arguments = String[
-                    "rocks-sambowden-Calculator",
                     "Calculator",
-                    "zonkey:calculator/rocks-sambowden-Calculator.ini",
-                    "zonkey:calculator/rocks-sambowden-Calculator.desktop",
+                    "zonkey:calculator/Calculator.ini",
+                    "zonkey:calculator/Calculator.desktop",
                     "zonkey:calculator/app.zonk"
                 ];
                 open_link("zonkey:installer.zonk", arguments);

@@ -1,11 +1,11 @@
 class InstalledApplication {
-    String location;
+    String name;
     Button uninstall;
     Column column;
 
-    constructor(String location) {
-        @location = location;
-        let title = Text("App Location - " + location + ": ");
+    constructor(String name) {
+        @name = name;
+        let title = Text("App - " + name + ": ");
         @uninstall = Button("Uninstall").set_background_colour("#AA0000");
         @column = Column().add(title).add(@uninstall);
     }
@@ -14,7 +14,7 @@ class InstalledApplication {
 
     method removed() -> Boolean {
         if (@uninstall.clicked()) {
-            remove_application(@location);
+            remove_application(@name);
             return true;
         }
         return false;
@@ -57,8 +57,8 @@ class Settings {
         @entries = InstalledApplication[];
 
         for (let i = 0, i < installed_applications.len(), i += 1) {
-            let location = installed_applications.get(i);
-            let installed_application = InstalledApplication(location);
+            let name = installed_applications.get(i);
+            let installed_application = InstalledApplication(name);
             @entries.push(installed_application);
             @managed_installed.add(installed_application.row()).add(Text(""));
         }
@@ -74,8 +74,14 @@ class Settings {
     method about_section() {
         @about = Column();
         @about.add(Text("About:").set_size(40.).set_colour("#888888"));
-        @about.add(Text("Zonkey v0.1.0, Author: Samuel Bowden."));
-        if (args().len() >= 1) @about.add(Text(args().get(0)));
+        if (args().len() >= 4) {
+            @about.add(Text("Operating System: " + args().get(0)))
+                  .add(Text("Architecture: " + args().get(1)))
+                  .add(Text("Version: " + args().get(2)))
+                  .add(Text("Author: " + args().get(3)));
+        } else {
+            @about.add(Text("About information missing."));
+        }
     }
 
     constructor() {
