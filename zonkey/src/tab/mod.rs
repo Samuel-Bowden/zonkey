@@ -138,6 +138,7 @@ impl Tab {
             Message::StartedScript(page_event_sender) => {
                 self.page = None;
                 self.page_event_sender = Some(page_event_sender);
+                self.page_error = None;
             }
             Message::ReadyForNextScript(script_executor_sender) => {
                 if !self.closing {

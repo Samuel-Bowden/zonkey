@@ -1,5 +1,5 @@
 use crate::tab::Address;
-use clap::Parser;
+use clap::{Parser, Subcommand, Args};
 use interpreter::{
     event::InterpreterEvent,
     iced::{self, Application, Settings},
@@ -13,43 +13,81 @@ mod window;
 #[derive(Parser)]
 #[command(author, version, about, arg_required_else_help = true)]
 struct Arguments {
-    #[arg(verbatim_doc_comment)]
-    ///A Zonkey formatted address to load the script from, e.g.
-    ///- 'scripts/hello_world.zonk'
-    ///- 'zonkey:home.zonk'
-    ///- 'https://twigville.com/app.zonk'
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Subcommand)]
+enum Command {
+    /// Run the script in the command line interface, opening a window if a page is set.
+    Run(RunArgs),
+    /// Run the browser
+    Browser(BrowserArgs),
+}
+
+#[derive(Args)]
+struct RunArgs {
+    ///A script to run in the command line interface
     script_address: String,
 
-    #[arg(short, long, verbatim_doc_comment)]
-    ///Launch the browser mode:
-    ///Provide the address 'zonkey:home.zonk' for the home page
-    browser: bool,
+    #[cfg(target_os = "windows")]
+    #[arg(short, long)]
+    ///Disable the console (Windows only)
+    disable_console: bool,
 
     #[arg(short, long, raw = true)]
     ///Arguments to be passed to the script
     arguments: Vec<String>,
 
+    #[arg(default_value_t = 1280, short, long)]
+    ///Width of the window launched
+    width: u32,
+
+    #[arg(default_value_t = 720, short, long)]
+    ///Height of the window launched
+    height: u32,
+}
+
+#[derive(Args)]
+struct BrowserArgs {
+    #[arg(default_value_t = String::from("zonkey:home.zonk"))]
+    ///A Zonkey formatted address to launch in the browser
+    script_address: String,
+
     #[cfg(target_os = "windows")]
-    #[arg(short, long, verbatim_doc_comment)]
-    ///Disables the console (Windows only)
-    disable_console: bool,
+    #[arg(short, long)]
+    ///Enable the console (Windows only)
+    enable_console: bool,
+
+    #[arg(short, long, raw = true)]
+    ///Arguments to be passed to the script
+    arguments: Vec<String>,
 }
 
 pub fn main() -> ExitCode {
     let arguments = Arguments::parse();
-    let address = Address::new(&arguments.script_address, arguments.arguments);
 
+    match arguments.command {
+        Command::Run(run_args) => {
+            let address = Address::new(&run_args.script_address, run_args.arguments);
+            disable_console(run_args.disable_console);
+            command_line_tool(address, run_args.width, run_args.height)
+        }
+        Command::Browser(browser_args) => {
+            let address = Address::new(&browser_args.script_address, browser_args.arguments);
+            disable_console(!browser_args.enable_console);
+            browser(address)
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn disable_console(disable: bool) {
     #[cfg(target_os = "windows")]
-    if arguments.disable_console {
+    if disable {
         unsafe {
             winapi::um::wincon::FreeConsole();
         }
-    }
-
-    if arguments.browser {
-        browser(address)
-    } else {
-        command_line_tool(address)
     }
 }
 
@@ -69,13 +107,13 @@ fn browser(address: Address) -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("Failure running browser UI: {e}");
+            eprintln!("Failed to open window for browser. Please make sure you are using a GPU that supports OpenGL 3.0+ or OpenGL ES 2.0. Error details: {e}");
             ExitCode::FAILURE
         }
     }
 }
 
-fn command_line_tool(address: Address) -> ExitCode {
+fn command_line_tool(address: Address, width: u32, height: u32) -> ExitCode {
     let (interpreter_event_sender, interpreter_event_receiver) = mpsc::channel();
     let (page_event_sender, page_event_receiver) = mpsc::channel();
 
@@ -100,7 +138,10 @@ fn command_line_tool(address: Address) -> ExitCode {
                     Some((page, page_event_sender, interpreter_event_receiver)),
                 ),
                 id: None,
-                window: iced::window::Settings::default(),
+                window: iced::window::Settings {
+                    size: (width, height),
+                    ..Default::default()
+                },
                 default_text_size: 20.,
                 exit_on_close_request: true,
                 try_opengles_first: false,
@@ -109,7 +150,7 @@ fn command_line_tool(address: Address) -> ExitCode {
             return match result {
                 Ok(_) => ExitCode::SUCCESS,
                 Err(e) => {
-                    eprintln!("Failure running window: {e}");
+                    eprintln!("Failed to open window for script. Please make sure you are using a GPU that supports OpenGL 3.0+ or OpenGL ES 2.0. Error details: {e}");
                     ExitCode::FAILURE
                 }
             };

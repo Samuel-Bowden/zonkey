@@ -188,7 +188,7 @@ class Calculator {
             } else if (@install.clicked()) {
                 let arguments = String[
                     "Calculator",
-                    "zonkey:calculator/Calculator.ini",
+                    "zonkey:calculator/Calculator.lnk",
                     "zonkey:calculator/Calculator.desktop",
                     "zonkey:calculator/app.zonk"
                 ];
