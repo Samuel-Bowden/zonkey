@@ -7,6 +7,7 @@ macro_rules! test_success {
             std::str::from_utf8(
                 &Command::cargo_bin("zonkey")
                     .unwrap()
+                    .arg("run")
                     .arg($argument)
                     .assert()
                     .success()
@@ -31,6 +32,7 @@ macro_rules! test_fail {
             std::str::from_utf8(
                 &Command::cargo_bin("zonkey")
                     .unwrap()
+                    .arg("run")
                     .arg($argument)
                     .assert()
                     .failure()
@@ -54,7 +56,7 @@ macro_rules! test_fail {
 fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
     let mut cmd = Command::cargo_bin("zonkey")?;
 
-    cmd.arg("/a-directory-that-does-not-exist");
+    cmd.arg("run").arg("/a-directory-that-does-not-exist");
     cmd.assert()
         .failure()
         .stderr("Failed to read file - No such file or directory (os error 2)");
@@ -67,7 +69,7 @@ fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
 fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
     let mut cmd = Command::cargo_bin("zonkey")?;
 
-    cmd.arg("/a-directory-that-does-not-exist");
+    cmd.arg("run").arg("/a-directory-that-does-not-exist");
     cmd.assert()
         .failure()
         .stderr("Failed to read file - The system cannot find the file specified. (os error 2)");
@@ -78,6 +80,12 @@ fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
 #[test]
 fn and_or_script() -> Result<(), Box<dyn Error>> {
     test_success!("and_or", "tests/scripts/and_or.zonk");
+    Ok(())
+}
+
+#[test]
+fn power() -> Result<(), Box<dyn Error>> {
+    test_success!("power", "tests/scripts/power.zonk");
     Ok(())
 }
 
@@ -251,6 +259,7 @@ fn args() -> Result<(), Box<dyn Error>> {
         std::str::from_utf8(
             &Command::cargo_bin("zonkey")
                 .unwrap()
+                .arg("run")
                 .arg("tests/scripts/args.zonk")
                 .arg("-a")
                 .arg("one")

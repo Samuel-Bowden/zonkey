@@ -1,0 +1,8 @@
+function fib(Integer n, Integer a, Integer b) {
+    println(a);
+    if (n > 1) fib(n - 1, b, a + b);
+}
+
+start { 
+    for (let i = 0, i < 100000, i += 1) fib(40, 0, 1);
+}

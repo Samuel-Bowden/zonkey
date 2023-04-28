@@ -5,6 +5,12 @@ use super::prelude::*;
 impl<'a> TreeWalker<'a> {
     pub fn native_call_integer(&mut self, call: &NativeCallInteger) -> Result<i64, TreeWalkerErr> {
         match call {
+            NativeCallInteger::Power(base, exponent) => {
+                let base = self.eval_int(base)?;
+                let exponent = self.eval_int(exponent)?;
+
+                Ok(i64::pow(base, exponent as u32))
+            }
             NativeCallInteger::IntegerArrayGet(array, index, token) => {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;

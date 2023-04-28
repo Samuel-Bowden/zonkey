@@ -70,11 +70,13 @@ pub fn main() -> ExitCode {
     match arguments.command {
         Command::Run(run_args) => {
             let address = Address::new(&run_args.script_address, run_args.arguments);
+            #[cfg(target_os = "windows")]
             disable_console(run_args.disable_console);
             command_line_tool(address, run_args.width, run_args.height)
         }
         Command::Browser(browser_args) => {
             let address = Address::new(&browser_args.script_address, browser_args.arguments);
+            #[cfg(target_os = "windows")]
             disable_console(!browser_args.enable_console);
             browser(address)
         }
@@ -83,7 +85,6 @@ pub fn main() -> ExitCode {
 
 #[cfg(target_os = "windows")]
 fn disable_console(disable: bool) {
-    #[cfg(target_os = "windows")]
     if disable {
         unsafe {
             winapi::um::wincon::FreeConsole();

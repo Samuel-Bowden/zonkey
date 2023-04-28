@@ -1,0 +1,106 @@
+Running C++
+g++ (GCC) 12.2.1 20230201
+Copyright (C) 2022 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+
+ Performance counter stats for './leibniz' (10 runs):
+
+          5,125.96 msec task-clock:u                     #    9.991 CPUs utilized               ( +-  9.57% )
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             1,296      page-faults:u                    #  459.732 /sec                        ( +-  9.55% )
+    22,135,508,235      cycles:u                         #    7.852 GHz                         ( +-  9.57% )
+         1,152,400      stalled-cycles-frontend:u        #    0.01% frontend cycles idle        ( +-  8.80% )
+    10,586,753,085      stalled-cycles-backend:u         #   86.99% backend cycles idle         ( +-  9.57% )
+    76,024,965,383      instructions:u                   #    6.25  insn per cycle
+                                                  #    0.08  stalled cycles per insn     ( +-  9.57% )
+    11,254,316,476      branches:u                       #    3.992 G/sec                       ( +-  9.57% )
+           375,130      branch-misses:u                  #    0.01% of all branches             ( +-  8.69% )
+
+          0.513058 +- 0.000322 seconds time elapsed  ( +-  0.06% )
+
+-----
+Running Python
+Python 3.10.10
+
+ Performance counter stats for 'python leibniz.py' (10 runs):
+
+         93,916.35 msec task-clock:u                     #    9.998 CPUs utilized               ( +-  9.58% )
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             8,825      page-faults:u                    #  170.616 /sec                        ( +-  9.58% )
+   403,426,559,615      cycles:u                         #    7.800 GHz                         ( +-  9.56% )
+       382,343,925      stalled-cycles-frontend:u        #    0.17% frontend cycles idle        ( +- 10.05% )
+   137,351,317,959      stalled-cycles-backend:u         #   61.67% backend cycles idle         ( +-  9.56% )
+ 1,125,753,862,501      instructions:u                   #    5.05  insn per cycle
+                                                  #    0.07  stalled cycles per insn     ( +-  9.57% )
+   226,578,273,031      branches:u                       #    4.380 G/sec                       ( +-  9.56% )
+       272,626,608      branch-misses:u                  #    0.22% of all branches             ( +-  9.58% )
+
+            9.3932 +- 0.0481 seconds time elapsed  ( +-  0.51% )
+
+-----
+Running JavaScript (Deno)
+deno 1.33.0 (release, x86_64-unknown-linux-gnu)
+v8 11.4.183.1
+typescript 5.0.3
+
+ Performance counter stats for 'deno run leibniz.js' (10 runs):
+
+          3,370.28 msec task-clock:u                     #   10.080 CPUs utilized               ( +-  9.57% )
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            41,820      page-faults:u                    #   22.625 K/sec                       ( +-  9.58% )
+    13,660,783,648      cycles:u                         #    7.391 GHz                         ( +-  9.58% )
+        36,903,467      stalled-cycles-frontend:u        #    0.49% frontend cycles idle        ( +-  9.52% )
+     2,931,458,932      stalled-cycles-backend:u         #   39.07% backend cycles idle         ( +-  9.56% )
+    57,144,660,527      instructions:u                   #    7.62  insn per cycle
+                                                  #    0.03  stalled cycles per insn     ( +-  9.57% )
+    14,321,642,191      branches:u                       #    7.748 G/sec                       ( +-  9.57% )
+        18,552,841      branch-misses:u                  #    0.24% of all branches             ( +-  9.57% )
+
+           0.33436 +- 0.00115 seconds time elapsed  ( +-  0.34% )
+
+-----
+Running JavaScript (Bun)
+0.5.9
+
+ Performance counter stats for 'bun run leibniz.js' (10 runs):
+
+          5,520.95 msec task-clock:u                     #   10.110 CPUs utilized               ( +-  9.57% )
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            13,878      page-faults:u                    #    4.564 K/sec                       ( +-  9.59% )
+    23,191,798,957      cycles:u                         #    7.627 GHz                         ( +-  9.57% )
+        31,380,598      stalled-cycles-frontend:u        #    0.25% frontend cycles idle        ( +-  9.47% )
+     9,367,244,187      stalled-cycles-backend:u         #   73.36% backend cycles idle         ( +-  9.58% )
+    82,443,233,498      instructions:u                   #    6.46  insn per cycle
+                                                  #    0.06  stalled cycles per insn     ( +-  9.57% )
+    14,841,660,779      branches:u                       #    4.881 G/sec                       ( +-  9.57% )
+         2,515,897      branch-misses:u                  #    0.03% of all branches             ( +-  9.57% )
+
+          0.546066 +- 0.000991 seconds time elapsed  ( +-  0.18% )
+
+-----
+Running Zonkey
+zonkey 1.0.1
+
+ Performance counter stats for 'zonkey run leibniz.zonk' (10 runs):
+
+         38,464.08 msec task-clock:u                     #    9.996 CPUs utilized               ( +-  9.56% )
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             4,407      page-faults:u                    #  207.645 /sec                        ( +-  9.57% )
+   164,882,257,913      cycles:u                         #    7.769 GHz                         ( +-  9.57% )
+        26,697,777      stalled-cycles-frontend:u        #    0.03% frontend cycles idle        ( +-  8.49% )
+    60,352,561,414      stalled-cycles-backend:u         #   66.48% backend cycles idle         ( +-  9.61% )
+   568,995,197,913      instructions:u                   #    6.27  insn per cycle
+                                                  #    0.06  stalled cycles per insn     ( +-  9.57% )
+    84,335,733,504      branches:u                       #    3.974 G/sec                       ( +-  9.57% )
+           483,535      branch-misses:u                  #    0.00% of all branches             ( +-  8.88% )
+
+           3.84786 +- 0.00895 seconds time elapsed  ( +-  0.23% )
+
+-----

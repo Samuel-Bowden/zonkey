@@ -569,6 +569,12 @@ start {
 					.add_param("Integer", "duration")
 					.add_description("Pauses the script for the given duration in milliseconds.")
 					.build())
+			.add(CallableDef("power")
+					.add_param("Integer", "base")
+					.add_param("Integer", "exponent")
+					.add_description("Raises the base to the exponent.")
+					.add_return_type("Integer")
+					.build())
 		;
 
 	set_page(page);

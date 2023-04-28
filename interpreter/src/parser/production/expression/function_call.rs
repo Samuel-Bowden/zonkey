@@ -85,6 +85,10 @@ impl Parser {
                         Box::new(arguments.remove(0)),
                         true,
                     )))),
+                    "power" => Ok(Expr::Integer(IntegerExpr::NativeCall(NativeCallInteger::Power(
+                        Box::new(arguments.remove(0).to_integer_expr()),
+                        Box::new(arguments.remove(0).to_integer_expr()),
+                    )))),
                     "install_application" => Ok(Expr::None(NoneExpr::NativeCall(
                         NativeCallNone::InstallApplication(
                             arguments.remove(0).to_object_expr(),

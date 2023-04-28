@@ -83,7 +83,7 @@ impl<'a> ErrReporter<'a> {
         for (i, grapheme) in self.graphemes.iter().enumerate() {
             if start < i {
                 break;
-            } else if grapheme == &"\n" {
+            } else if grapheme == &"\n" || grapheme == &"\r\n" || grapheme == &"\r" {
                 line_num += 1;
                 line_start = i + 1;
             }

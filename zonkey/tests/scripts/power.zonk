@@ -1,0 +1,8 @@
+start {
+    let assert = true;
+    assert = assert & (power(2, 4) == 16);
+    assert = assert & (power(3, 2) == 9);
+    assert = assert & (power(4, 4) == 256);
+    assert = assert & (power(8, 4) == 4096);
+    println(assert);
+}

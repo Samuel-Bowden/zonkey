@@ -45,6 +45,15 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
     );
 
     functions.insert(
+        Rc::new("power".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Integer, ValueType::Integer],
+            return_type: Some(ValueType::Integer),
+        },
+    );
+
+    functions.insert(
         Rc::new("sleep".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,

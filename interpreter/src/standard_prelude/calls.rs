@@ -22,6 +22,7 @@ pub enum NativeCallInteger {
     ArrayLength(Box<ObjectExpr>),
     FromString(Box<StringExpr>, Token),
     FromFloat(Box<FloatExpr>),
+    Power(Box<IntegerExpr>, Box<IntegerExpr>),
 }
 
 #[derive(Debug, Clone)]
