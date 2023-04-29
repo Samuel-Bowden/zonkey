@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'bun run fibonacci.js' (10 runs):
+
+            583.96 msec task-clock:u                     #   10.521 CPUs utilized               ( +-  9.49% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            12,906      page-faults:u                    #   39.864 K/sec                       ( +-  9.53% )
+       559,554,225      cycles:u                         #    1.728 GHz                         ( +-  9.37% )
+        25,946,665      stalled-cycles-frontend:u        #    8.26% frontend cycles idle        ( +-  8.77% )
+        95,011,721      stalled-cycles-backend:u         #   30.23% backend cycles idle         ( +-  9.60% )
+       908,972,828      instructions:u                   #    2.89  insn per cycle            
+                                                  #    0.06  stalled cycles per insn     ( +-  9.57% )
+       151,051,540      branches:u                       #  466.567 M/sec                       ( +-  9.57% )
+         3,370,144      branch-misses:u                  #    4.06% of all branches             ( +-  9.20% )
+
+           0.05551 +- 0.00102 seconds time elapsed  ( +-  1.83% )
+

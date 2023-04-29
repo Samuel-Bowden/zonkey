@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'clox hello_world.lox' (100 runs):
+
+             23.91 msec task-clock:u                     #   44.264 CPUs utilized               ( +-  2.86% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             5,784      page-faults:u                    #  469.139 K/sec                       ( +-  2.90% )
+        23,325,822      cycles:u                         #    1.892 GHz                         ( +-  2.90% )
+         1,984,205      stalled-cycles-frontend:u        #   16.57% frontend cycles idle        ( +-  2.89% )
+         6,000,577      stalled-cycles-backend:u         #   50.12% backend cycles idle         ( +-  2.91% )
+        13,724,979      instructions:u                   #    1.15  insn per cycle            
+                                                  #    0.23  stalled cycles per insn     ( +-  2.90% )
+         2,908,687      branches:u                       #  235.923 M/sec                       ( +-  2.90% )
+           262,683      branch-misses:u                  #   17.88% of all branches             ( +-  2.89% )
+
+         0.0005401 +- 0.0000137 seconds time elapsed  ( +-  2.54% )
+

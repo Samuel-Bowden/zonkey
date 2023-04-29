@@ -1,0 +1,17 @@
+
+ Performance counter stats for './hello_world' (100 runs):
+
+             79.01 msec task-clock:u                     #   77.575 CPUs utilized               ( +-  2.88% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            12,192      page-faults:u                    #  308.011 K/sec                       ( +-  2.90% )
+       179,229,169      cycles:u                         #    4.528 GHz                         ( +-  2.88% )
+         5,004,924      stalled-cycles-frontend:u        #    5.50% frontend cycles idle        ( +-  2.90% )
+        78,481,731      stalled-cycles-backend:u         #   86.21% backend cycles idle         ( +-  2.86% )
+       249,520,285      instructions:u                   #    2.74  insn per cycle            
+                                                  #    0.16  stalled cycles per insn     ( +-  2.90% )
+        43,132,527      branches:u                       #    1.090 G/sec                       ( +-  2.90% )
+         1,314,920      branch-misses:u                  #    6.04% of all branches             ( +-  2.90% )
+
+         0.0010185 +- 0.0000234 seconds time elapsed  ( +-  2.30% )
+

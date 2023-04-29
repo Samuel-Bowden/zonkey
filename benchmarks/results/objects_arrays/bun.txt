@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'bun run objects_arrays.js' (10 runs):
+
+            838.76 msec task-clock:u                     #   11.927 CPUs utilized               ( +-  9.53% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            14,368      page-faults:u                    #   30.866 K/sec                       ( +-  9.57% )
+     2,378,884,324      cycles:u                         #    5.110 GHz                         ( +-  9.52% )
+        34,206,900      stalled-cycles-frontend:u        #    2.59% frontend cycles idle        ( +-  9.55% )
+       642,366,244      stalled-cycles-backend:u         #   48.62% backend cycles idle         ( +-  9.57% )
+     6,480,800,026      instructions:u                   #    4.91  insn per cycle            
+                                                  #    0.05  stalled cycles per insn     ( +-  9.58% )
+     1,785,046,965      branches:u                       #    3.835 G/sec                       ( +-  9.58% )
+         6,517,756      branch-misses:u                  #    0.66% of all branches             ( +-  9.58% )
+
+           0.07033 +- 0.00105 seconds time elapsed  ( +-  1.50% )
+

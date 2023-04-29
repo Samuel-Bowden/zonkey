@@ -1,0 +1,8 @@
+fun fib(n, a, b) {
+    print a;
+    if (n > 1) fib(n - 1, b, a + b);
+}
+
+for (var i = 0; i < 1000; i = i + 1) {
+    fib(40, 0, 1);
+}

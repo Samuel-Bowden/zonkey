@@ -1,0 +1,17 @@
+
+ Performance counter stats for './leibniz' (10 runs):
+
+          5,121.61 msec task-clock:u                     #    9.985 CPUs utilized               ( +-  9.57% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             1,292      page-faults:u                    #  457.736 /sec                        ( +-  9.58% )
+    22,086,725,519      cycles:u                         #    7.825 GHz                         ( +-  9.57% )
+           891,442      stalled-cycles-frontend:u        #    0.01% frontend cycles idle        ( +-  9.88% )
+    10,727,992,590      stalled-cycles-backend:u         #   88.14% backend cycles idle         ( +-  9.57% )
+    74,774,981,825      instructions:u                   #    6.14  insn per cycle            
+                                                  #    0.08  stalled cycles per insn     ( +-  9.57% )
+    11,004,321,254      branches:u                       #    3.899 G/sec                       ( +-  9.57% )
+           137,154      branch-misses:u                  #    0.00% of all branches             ( +-  9.57% )
+
+           0.51291 +- 0.00203 seconds time elapsed  ( +-  0.40% )
+

@@ -6,4 +6,4 @@ function calc_pi(n) {
     return result * 4;
 }
 
-console.log(calc_pi(50_000_000));
+console.log(calc_pi(50000000));

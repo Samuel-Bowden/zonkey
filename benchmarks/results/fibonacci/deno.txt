@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'deno run fibonacci.js' (10 runs):
+
+          1,758.56 msec task-clock:u                     #   11.833 CPUs utilized               ( +-  9.48% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            55,525      page-faults:u                    #   57.801 K/sec                       ( +-  9.59% )
+     4,967,218,217      cycles:u                         #    5.171 GHz                         ( +-  9.39% )
+       158,176,532      stalled-cycles-frontend:u        #    5.78% frontend cycles idle        ( +-  9.13% )
+       535,724,324      stalled-cycles-backend:u         #   19.56% backend cycles idle         ( +-  9.40% )
+     8,118,529,741      instructions:u                   #    2.96  insn per cycle            
+                                                  #    0.04  stalled cycles per insn     ( +-  9.59% )
+     1,618,817,818      branches:u                       #    1.685 G/sec                       ( +-  9.58% )
+        13,260,625      branch-misses:u                  #    1.49% of all branches             ( +-  9.23% )
+
+           0.14862 +- 0.00298 seconds time elapsed  ( +-  2.00% )
+

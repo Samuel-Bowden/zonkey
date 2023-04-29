@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'bun run leibniz.js' (10 runs):
+
+          5,496.09 msec task-clock:u                     #   10.102 CPUs utilized               ( +-  9.56% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            14,239      page-faults:u                    #    4.702 K/sec                       ( +-  9.66% )
+    23,166,325,057      cycles:u                         #    7.649 GHz                         ( +-  9.57% )
+        25,102,197      stalled-cycles-frontend:u        #    0.20% frontend cycles idle        ( +-  9.00% )
+     9,373,743,724      stalled-cycles-backend:u         #   73.55% backend cycles idle         ( +-  9.58% )
+    82,436,813,908      instructions:u                   #    6.47  insn per cycle            
+                                                  #    0.06  stalled cycles per insn     ( +-  9.57% )
+    14,840,307,447      branches:u                       #    4.900 G/sec                       ( +-  9.57% )
+         2,518,054      branch-misses:u                  #    0.03% of all branches             ( +-  9.57% )
+
+          0.544069 +- 0.000939 seconds time elapsed  ( +-  0.17% )
+

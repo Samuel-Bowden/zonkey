@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'python fibonacci.py' (10 runs):
+
+            903.42 msec task-clock:u                     #    9.920 CPUs utilized               ( +-  9.40% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             8,713      page-faults:u                    #   16.910 K/sec                       ( +-  9.57% )
+     1,927,052,798      cycles:u                         #    3.740 GHz                         ( +-  9.26% )
+       105,936,389      stalled-cycles-frontend:u        #    9.44% frontend cycles idle        ( +-  8.60% )
+       370,360,608      stalled-cycles-backend:u         #   33.02% backend cycles idle         ( +-  9.55% )
+     3,353,583,425      instructions:u                   #    2.99  insn per cycle            
+                                                  #    0.06  stalled cycles per insn     ( +-  9.58% )
+       701,900,200      branches:u                       #    1.362 G/sec                       ( +-  9.58% )
+        10,253,964      branch-misses:u                  #    2.66% of all branches             ( +-  9.24% )
+
+           0.09107 +- 0.00260 seconds time elapsed  ( +-  2.85% )
+

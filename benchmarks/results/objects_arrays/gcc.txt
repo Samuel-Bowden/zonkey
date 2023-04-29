@@ -1,0 +1,17 @@
+
+ Performance counter stats for './objects_arrays' (10 runs):
+
+            207.93 msec task-clock:u                     #    9.736 CPUs utilized               ( +-  9.71% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+             2,310      page-faults:u                    #   20.408 K/sec                       ( +-  9.58% )
+       422,781,264      cycles:u                         #    3.735 GHz                         ( +-  9.56% )
+         3,565,199      stalled-cycles-frontend:u        #    1.55% frontend cycles idle        ( +-  9.27% )
+        67,200,126      stalled-cycles-backend:u         #   29.17% backend cycles idle         ( +-  9.53% )
+       889,973,867      instructions:u                   #    3.86  insn per cycle            
+                                                  #    0.04  stalled cycles per insn     ( +-  9.57% )
+       162,139,395      branches:u                       #    1.432 G/sec                       ( +-  9.57% )
+           299,456      branch-misses:u                  #    0.34% of all branches             ( +-  9.44% )
+
+          0.021356 +- 0.000456 seconds time elapsed  ( +-  2.13% )
+

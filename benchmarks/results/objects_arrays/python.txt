@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'python objects_arrays.py' (10 runs):
+
+         31,545.64 msec task-clock:u                     #    9.998 CPUs utilized               ( +-  9.56% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            15,122      page-faults:u                    #  873.138 /sec                        ( +-  9.57% )
+   135,501,061,934      cycles:u                         #    7.824 GHz                         ( +-  9.56% )
+        33,969,866      stalled-cycles-frontend:u        #    0.05% frontend cycles idle        ( +- 10.43% )
+    77,347,489,051      stalled-cycles-backend:u         #  103.84% backend cycles idle         ( +-  9.57% )
+   498,163,492,276      instructions:u                   #    6.69  insn per cycle            
+                                                  #    0.09  stalled cycles per insn     ( +-  9.55% )
+    96,313,097,687      branches:u                       #    5.561 G/sec                       ( +-  9.54% )
+         5,954,141      branch-misses:u                  #    0.01% of all branches             ( +-  9.61% )
+
+           3.15531 +- 0.00837 seconds time elapsed  ( +-  0.27% )
+

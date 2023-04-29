@@ -1,0 +1,17 @@
+
+ Performance counter stats for 'deno run objects_arrays.js' (10 runs):
+
+          1,938.68 msec task-clock:u                     #   11.320 CPUs utilized               ( +-  9.57% )
+                 0      context-switches:u               #    0.000 /sec                      
+                 0      cpu-migrations:u                 #    0.000 /sec                      
+            67,950      page-faults:u                    #   63.531 K/sec                       ( +-  9.59% )
+     6,686,054,583      cycles:u                         #    6.251 GHz                         ( +-  9.58% )
+        49,810,737      stalled-cycles-frontend:u        #    1.35% frontend cycles idle        ( +-  9.64% )
+     4,919,447,255      stalled-cycles-backend:u         #  133.58% backend cycles idle         ( +-  9.57% )
+     7,523,358,846      instructions:u                   #    2.04  insn per cycle            
+                                                  #    0.36  stalled cycles per insn     ( +-  9.58% )
+     2,064,997,322      branches:u                       #    1.931 G/sec                       ( +-  9.58% )
+         7,709,088      branch-misses:u                  #    0.68% of all branches             ( +-  9.58% )
+
+          0.171265 +- 0.000474 seconds time elapsed  ( +-  0.28% )
+

@@ -1,12 +1,23 @@
 class Person {
     Integer id; Integer age; Float weight;
+
     constructor(Integer id, Integer age, Float weight) {
         @id = id;
         @age = age;
         @weight = weight;
     }
-    method age_to_hundred() -> Person { while (@age < 100) @age += 1; return self; }
-    method increase_weight(Float increment) -> Person { @weight += increment; return self; }
+
+    method age_to_hundred() -> Person { 
+        while (@age < 100)
+            @age += 1;
+        return self;
+    }
+
+    method increase_weight(Float increment) -> Person {
+        @weight += increment;
+        return self;
+    }
+
     method print_result() -> String {
         return "Person " +
                 integer_to_string(@id) +
@@ -19,8 +30,13 @@ class Person {
 
 start {
     let people = Person[];
-    for (let i = 1, i <= 10000, i += 1) people.push(Person(i, 100 - i, integer_to_float(80000 - i)));
+
+    for (let i = 1, i <= 10000, i += 1)
+        people.push(Person(i, 100 - i, integer_to_float(80000 - i)));
+
     for (let i = 0, i < 10000, i += 1)
         people.get(i).age_to_hundred().increase_weight(integer_to_float(i + 1));
-    for (let i = 0, i < 10000, i += 1) println(people.get(i).print_result());
+
+    for (let i = 0, i < 10000, i += 1)
+        println(people.get(i).print_result());
 }
