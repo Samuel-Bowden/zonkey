@@ -12,6 +12,7 @@ Zonkey is a new programming language and browser that I've created for my final 
     - [First Taste Of The Language](#first-taste-of-the-language)
     - [The Browser](#the-browser)
 - [Documentation and Learning Material](#documentation-and-learning-material)
+- [Repository Organisation](#repository-organisation)
 - [Compliation](#compilation)
 - [Testing](#testing)
     - [Unit and Integration Testing](#unit-and-integration-testing)
@@ -114,9 +115,8 @@ Open a terminal where the file is located and run the following command:
 $ zonkey run hello_world.zonk
 Hello World!
 ```
-Well done on writing your first Zonkey script! 
 
-Lets try something slightly more fancy so you can see the power of Zonkey.
+Lets try something slightly more fancy to see how GUIs are created with the Zonkey programming language.
 
 Open another file in your code editor and enter the following.
 
@@ -124,7 +124,7 @@ Open another file in your code editor and enter the following.
 start {
     let blue = "#0000AA";
 
-    let message = Text("Hello GUI?")
+    let message = Text("Hello GUI!")
         .set_colour(blue)
         .set_size(50.0);
 
@@ -141,13 +141,11 @@ Save this file as `hello_gui.zonk` and run like so.
 $ zonkey run hello_gui.zonk
 ```
 
-Congratulations! You've just taken your first steps into the exciting world of GUI development with Zonkey!
-
-Please visit the documentation in the browser, as discussed in the [documentation section](#documentation) to learn more about the Zonkey programming language.
+Please visit the documentation in the browser, as discussed in the [documentation section](#documentation-and-learning-material) to learn more about the Zonkey programming language.
 
 ### The Browser
 
-With Zonkey, you have the ability to easily browse and access other applications that have been created using the language. This includes built in applications, those available over the internet and even those on your own filesystem. By installing Zonkey, you should have automatically received a shortcut on your desktop or start menu that grants you instant access to this exciting feature.
+With Zonkey, you have the ability to easily browse and access other applications that have been created using the language. This includes built in applications, those available over the internet and even those on your own filesystem. By installing Zonkey, you should have automatically received a shortcut on your desktop or start menu that grants you access to this feature.
 
 If you want, you can launch the browser on the command line like so, which is useful for testing your own applications.
 
@@ -166,11 +164,24 @@ Zonkey applications found in the browser can offer installation to your system f
 
 Zonkey's documentation and learning material, written in Zonkey script itself, is easily accessible within the browser at `zonkey:documentation/index.zonk` - a link to this can be found on the homepage of the browser.
 
+This covers how to use the language and guides on how to use the GUI API, and also documentation of the standard prelude.
+
+The source code for the documentation and learning material is located under `interpreter/assets/documentation`.
+
+## Repository Organisation
+
+- `zonkey/` is the package for the browser and command line interface to Zonkey. It also contains `zonkey/wix`, which is a subfolder containing the configuration for creating the installer on Windows.
+- `interpreter/` is the package for the interpreting zonkey code. It also contains the **documentation** source code and key **zonkey scripts** such as the calculator under `interpreter/assets/`, as these need to be accessible to native calls in Zonkey scripts.
+- `installer/` contains the files required for installing the application on Windows and Linux.
+- `fuzz-test/` contains the code for generating the fuzz testing binary.
+- `editor-config/` contains the configuration for syntax highlighting in Vim/Neovim. This needs to be installed under the vim syntax folder, which is detailed [here](https://neovim.io/doc/user/syntax.html).
+- `benchmarks/` contains the scripts and programs for benchmarking the Zonkey language, along with my results.
+
 ## Compilation 
 
 A functioning installation of a Rust toolchain is required to compile Zonkey. Instructions on how to set this up can be found at <https://www.rust-lang.org/tools/install>.
 
-Please be aware that the initial compilation of Zonkey can take a significant amount of time, often upwards of 15-30 minutes depending on your hardware. **For optimal stability, it is essential to compile in release mode**. Unoptimized builds will place structures and enumerations that are vastly larger than release builds on the stack, which can result in a stack overflow, although this will only happen with very complex scripts.
+Please be aware that the initial compilation of Zonkey can take a significant amount of time, often upwards of 15-30 minutes depending on your hardware. **For optimal stability, it is essential to compile in release mode**. Unoptimized builds will place structures and enumerations that are very large on the stack, which can result in a stack overflow in the recursive descent parser, although this will only happen with very complex scripts. Release builds will not have this problem.
 
 There should be no need for additional requirements as the necessary development headers are included with Windows, Ubuntu, and Fedora. However, if your compilation is failing, please read the failed compilation output as it will detail what the development headers it could not find, this may happen a few times on minimal distributions of Linux such as Arch.
 
@@ -277,7 +288,7 @@ $ bash verifier.sh objects_arrays lox
 
 ## Third Party Code Used
 
-Third party crates are automatically downloaded by Cargo when you compile my project, and these dependencies to download are defined within the Cargo.toml file specified in each of my Rust packages. Therefore, none of the code for those third party crates is in this repository.
+Third party crates are automatically downloaded by Cargo when you compile my project, and these dependencies to download are defined within the Cargo.toml file specified in each of my Rust packages.
 
 I will link to the websites of these crates below, however, I would first like to mention that the svg's for the icons in the web browser, defined in `zonkey/src/tab/control_bar.rs`, were sourced from [Remix Icon](https://remixicon.com/), licensed under Apache License 2.0.
 
@@ -290,7 +301,7 @@ I will link to the websites of these crates below, however, I would first like t
 - [ryu](https://crates.io/crates/ryu): Apache-2.0/BSL-1.0, used to efficiently convert floats to bytes to print on the command line.
 - [rustc-hash](https://crates.io/crates/rustc-hash): MIT/Apache-2.0, used as an efficient hashmap in the parser.
 - [unicode-segmentation](https://crates.io/crates/unicode-segmentation): MIT/Apache-2.0, used to break a string into graphemes for the lexer to operate on.
-- [iced](https://crates.io/crates/iced): MIT, used as the main GUI library to provide widgets for the browser and scripts and run application windows.
+- [iced](https://crates.io/crates/iced): MIT, used as the GUI library to create the browser.
 - [colorsys](https://crates.io/crates/colorsys): MIT, used as a helpful function to convert string hex codes into RGB8.
 - [reqwest](https://crates.io/crates/reqwest): MIT/Apache-2.0, used for the sending and receiving information over http/https.
 - [include-dir](https://crates.io/crates/include-dir): MIT, used to include assets in the binary of the executable, such as inbuilt zonkey scripts.
