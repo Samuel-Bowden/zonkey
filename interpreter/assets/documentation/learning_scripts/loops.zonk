@@ -1,0 +1,20 @@
+start {
+    loop {
+        let exit = prompt("Enter exit:");
+        if (exit == "exit") break;
+    }
+
+    for (let i = 0, i < 10, i += 1) {
+        println(i);
+    }
+
+    let j = 10;
+
+    while (j > 0) {
+        println(j);
+        j -= 1;
+    }
+}
+
+
+

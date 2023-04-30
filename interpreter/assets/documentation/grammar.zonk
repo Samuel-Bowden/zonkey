@@ -1,0 +1,16 @@
+start {
+	let page = Page()
+			.set_title("Grammar")
+			.center()
+			.set_max_width(800.)
+			.set_background_colour("#FDF6E3")
+			.set_text_colour("#5C6A72")
+			.add(Text("Grammar").set_size(40.0))
+			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+    page.add(Text("Here is the grammar for the Zonkey programming language. Although it may not be the most beginner-friendly resource, it is designed to help experienced programmers understand the language quickly."));
+
+    page.add(Text(read_string("zonkey:documentation/grammar.txt")).set_colour("#6a0dad"));
+
+    set_page(page);
+}

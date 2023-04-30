@@ -572,8 +572,14 @@ start {
 			.add(CallableDef("power")
 					.add_param("Integer", "base")
 					.add_param("Integer", "exponent")
-					.add_description("Raises the base to the exponent.")
+					.add_description("Raises an integer base to an integer exponent.")
 					.add_return_type("Integer")
+					.build())
+			.add(CallableDef("powerf")
+					.add_param("Float", "base")
+					.add_param("Float", "exponent")
+					.add_description("Raises a float base to a float exponent.")
+					.add_return_type("Float")
 					.build())
 		;
 

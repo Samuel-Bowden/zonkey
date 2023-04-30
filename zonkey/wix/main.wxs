@@ -147,7 +147,6 @@
               Target="[APPLICATIONFOLDER]bin\zonkey.exe"
               Arguments="browser"
               Show="minimized"
-              Icon="ProductICO"
 					    WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
 				    <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
 				    <RegistryValue Root="HKCU" Key="rocks\sambowden\zonkey" Name="StartShortcutR" Type="integer" Value="1" KeyPath="yes"/>
@@ -162,7 +161,6 @@
 					    Target="[APPLICATIONFOLDER]bin\zonkey.exe"
               Arguments="browser"
               Show="minimized"
-              Icon="ProductICO"
 					    WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
 				    <RemoveFolder Id="DesktopFolder" On="uninstall"/>
 				    <RegistryValue Root="HKCU" Key="rocks\sambowden\zonkey" Name="DesktopShortcutR" Type="integer" Value="1" KeyPath="yes"/>
@@ -227,8 +225,10 @@
           The product icon is the graphic that appears in the Add/Remove
           Programs control panel for the application.
         -->
+        <!--
         <Icon Id='ProductICO' SourceFile='zonkey\wix\desktop.ico'/>
         <Property Id='ARPPRODUCTICON' Value='ProductICO' />
+        -->
 
         
         <!--

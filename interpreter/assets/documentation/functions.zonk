@@ -8,23 +8,27 @@ start {
 			.add(Text("Functions").set_size(40.0))
 			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 
-	page.add(Text("You can define your own functions using the syntax below."));
+	page.add(Text("In Zonkey, there are several native functions included in the standard prelude that can be used without any additional setup. These functions perform common tasks, such as printing output to the console, performing mathematical operations, and getting input from the user. Some examples of native functions in Zonkey include:
 
-	page.add(Image("zonkey:documentation/pictures/function.png"));
+- print(): This function outputs a given value to the console.
+- println(): Similar to print(), but adds a newline character at the end of the output.
+- power(): This function calculates the power of a given integer to a specified exponent.
+- powerf(): This function calculates the power of a given float to a specified exponent.
+- prompt(): This function displays a message to the user and waits for them to enter a value. The value entered by the user is returned as a string."));
 
-	page.add(Text("On line 1, you see the definition of the function. '(Integer a, Integer b)' specifies that 'a_plus_b' requires two parameters, a and b, which both have the type Integer. The section '-> Integer' specifies that 'a_plus_b' returns an Integer value to the caller."));
+page.add(Hyperlink("You can see all the functions available in Zonkey in the standard prelude documentation.", "zonkey:documentation/standard_prelude.zonk"));
 
-	page.add(Text("You can call this function using the syntax seen previously, passing values of the correct type as arguments for a and b."));
+page.add(Text("While these native functions can be very useful, it is also possible for you to define you own functions inside your scripts. Functions allow you to encapsulate a block of code that performs a specific task and then reuse that code throughout the program. This can help to make code more modular, readable, and easier to maintain! An example of this is shown below:"));
 
-	page.add(Image("zonkey:documentation/pictures/calling_function.png"));
+	page.add(Image("zonkey:documentation/pictures/circle_area.png"));
 
-	page.add(Text("Note that in Zonkey you must always place the function definition above where it is called, e.g. the following is invalid."));
+	page.add(Text("In Zonkey, when you define a function, you must specify the types of the arguments it expects and the type of the value it will return. This is called a function signature. By doing this, it helps to ensure that the function is being used correctly and can prevent errors in the code.
 
-	page.add(Image("zonkey:documentation/pictures/call_below_function.png"));
+In the example of the circle_area function, it takes a single argument, which is the radius of the circle, and it is expected to be a floating-point number (Float type). Inside the function, the value of pi is defined as a variable. Finally, the function returns the result of pi times the square of the radius, which is signified by `-> Float` in the function signature.
 
-	page.add(Text("Here is another function definition. Note that this does not return a value - this is valid in Zonkey, however, you cannot use the call in an expression (as no value is returned)."));
+By using these explicit type definitions, it makes it easier for someone else who might use your code to understand what your function is doing and what types of values it expects and returns."));
 
-	page.add(Image("zonkey:documentation/pictures/function_without_return.png"));
+	page.add(Text("Please note that when you define a function, you need to put it before any code that uses it. This is because the interpreter needs to know what the function does before it can use it. If you try to call a function before you define it, your code won't work and you'll get an error. Just remember to write your functions at the top of your code and you should be good to go! In a future version of Zonkey, I aim to remove this limitation."));
 
 	page.add(Hyperlink("Next page", "zonkey:documentation/classes.zonk"));
 

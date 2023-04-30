@@ -461,7 +461,7 @@ impl<'a> TreeWalker<'a> {
                         .load_bytes()
                         .unwrap_or_else(|_| {
                             crate::address::PROJECT_DIR
-                                .get_file("image_load_failed")
+                                .get_file("image_load_failed.png")
                                 .unwrap()
                                 .contents()
                                 .to_vec()

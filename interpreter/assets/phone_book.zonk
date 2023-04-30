@@ -1,0 +1,71 @@
+class Entry {
+    Button delete;
+    Button info;
+    
+    constructor(String name, String phone_number) { 
+        @delete = Button("Delete");
+        @info = Button(name + ", " + phone_number)
+            .set_width_fill();
+    }
+
+    method delete() -> Button { return @delete; }
+    method info() -> Button { return @info; }
+}
+
+start {
+    # Create the page
+    let title = "Phone Book";
+    let page_title = Text(title).set_size(50.0);
+
+    let name_input = Input("Enter name...");
+    let phone_number_input = Input("Enter phone number...");
+    let add_button = Button("Add");
+    let input_row = Row()
+        .add(name_input)
+        .add(phone_number_input)
+        .add(add_button);
+
+    let subtitle = Text("Added Entries").set_size(30.0);
+    let info_column = Column().set_max_width(600.0);
+    let delete_column = Column();
+    let entries_row = Row()
+        .add(info_column)
+        .add(delete_column)
+        .center();
+
+    set_page(Page()
+        # Setup page settings
+        .set_title(title)
+        .center()
+        .set_max_width(800.0)
+        # Add Elements
+        .add(page_title)
+        .add(input_row)
+        .add(subtitle)
+        .add(entries_row)
+    );
+
+    # React to events
+    let entries = Entry[];
+
+    while (wait_for_event()) {
+        if (add_button.clicked()) {
+            let entry = Entry(name_input.get_text(), phone_number_input.get_text());
+            entries.push(entry);
+            info_column.add(entry.info());
+            delete_column.add(entry.delete());
+        }
+
+        for (let i = 0, i < entries.len(), i += 1) {
+            let entry = entries.get(i);
+            if (entry.delete().clicked()) {
+                entries.remove(i);
+                info_column.remove(entry.info());
+                delete_column.remove(entry.delete());
+                break;
+            } 
+        }
+    }
+}
+
+

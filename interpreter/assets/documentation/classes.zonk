@@ -8,7 +8,26 @@ start {
 			.add(Text("Classes").set_size(40.0))
 			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 	
-	page.add(Image("zonkey:documentation/pictures/first_page.png"));
+    page.add(Text("In Zonkey, a class is like a blueprint or a template for creating objects. It specifies the properties (like 'name' and 'lines_of_code_written') and the actions (like 'say_hello' or 'write_code') that objects of that class can have.
+
+An object is an instance of a class. It's like a specific realization of the class's blueprint. For example, if we have a 'Programmer' class, we can create an object of that class with the name 'Sam'. The values we set for these properties will determine the output of the methods, like 'say_hello' or 'write_code'.
+
+To create an object of a class in Zonkey, you use a special function called a constructor that you define in the class template. The constructor sets the initial values for the object's properties when it is created. Properties are accessed using the @syntax. Methods can also be called inside a classes constructor or methods using self.<method_name>(). If a value for a property is not set during object creation, it will be initialized to a default value, such as 0 for numeric types, an empty string, null reference for objects, or false for booleans. Here is an example of a class definition for a programmer below.
+"));
+
+	page.add(Image("zonkey:documentation/pictures/class_def.png"));
+
+    page.add(Text("You can then create instances of the Programmer class below the definition like so."));
+
+	page.add(Image("zonkey:documentation/pictures/class_use.png"));
+
+    page.add(Text("Running this program gives the following output."));
+
+	page.add(Image("zonkey:documentation/pictures/class_run.png"));
+
+    page.add(Text("Now that you understand classes and objects, you're ready to move on and create your first page in Zonkey!"));
+
+	page.add(Hyperlink("Next page", "zonkey:documentation/overview_of_gui_classes.zonk"));
 
 	set_page(page);
 }

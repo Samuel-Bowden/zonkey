@@ -1,0 +1,17 @@
+start {
+    let page = Page();
+    
+    let button = Button("Click me");
+    page.add(button);
+
+    set_page(page);
+
+    while (wait_for_event()) {
+        if (button.clicked()) {
+            button.set_text("I've been clicked");
+        }
+    }
+}
+
+
+

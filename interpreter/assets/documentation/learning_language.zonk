@@ -14,10 +14,6 @@ start {
 
 	page.add(Text("In order to learn how to create GUIs with Zonkey, it is necessary to learn the basics of the programming language first."));
 	
-	page.add(Text("Here is a taste of what the programming language looks like. If you're new to programming, don't be scared, all will be explained in the following sections."));
-
-	page.add(Image("zonkey:documentation/pictures/a_taste_of_zonkey.png"));
-
 	page.add(Text("For those who are wondering, the language is named after the cross between a Donkey and a Zebra. The scripting language you will learn was used to create the documentation you are reading!"));
 
 	page.add(Hyperlink("Get started", "zonkey:documentation/creating_running_first_script.zonk"));

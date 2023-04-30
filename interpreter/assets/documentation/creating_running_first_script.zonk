@@ -10,19 +10,24 @@ start {
 
 	set_page(page);
 
-	page.add(Text("Enter the following program into the file."));
+	page.add(Text("Enter the following program into a file named `greet_me.zonk`."));
 
 	page.add(Image("zonkey:documentation/pictures/greet_me.png"));
 
-	page.add(Text("At the top of the file, you can see a comment. This is ignored when running your program, and can be used to make notes throughout your code. Anything after the hash symbol on the same line is ignored."));
+	page.add(Text("At the beginning of a Zonkey script, you can see a comment that is marked by a hash symbol. Comments are not executed when running the script and can be used to add notes and explanations within the code. Essentially, comments are meant for human readers to understand the code better. Anything written after the hash symbol on the same line is ignored by the Zonkey interpreter and is only for human reference."));
 
-	page.add(Text("Then we see the start block. This is the entry point of every Zonkey program, and a program will refuse to run without one. It might seem an inconvenience now, but one of my intentions with this block is to make it easier to spot where your program starts in a larger file."));
+	page.add(Text("The `start block` is the required entry point of every Zonkey program. Without it, the program will not run. Although it may seem like an extra step to include this block in every script, it serves a useful purpose. By having a designated start block, it becomes easier to identify where the program begins, especially in larger and more complex files. Therefore, while it may appear as a minor inconvenience initially, including the start block in your code can ultimately save you time and effort when working on larger projects."));
 
-	page.add(Text("Lets runs this program to see if it works. Navigate to the directory where you saved the file you created in your terminal emulator, and run the following command below depending on your operating system, entering your name when your program requests to. For Linux, run the script with 'zonkey greet_me.zonk', whilst for Windows, run the script with 'zonkey.exe greet_me.zonk'"));
+	page.add(Text("Lets run this program to see if it works."));
+
+    page.add(Text("1. Open your terminal emulator."));
+    page.add(Text("2. Navigate to the directory where you saved the file using the cd command."));
+    page.add(Text("3. Run the program by typing the command: zonkey run greet_me.zonk and press enter."));
+    page.add(Text("4. When prompted by your program, enter your name and press enter."));
 
 	page.add(Image("zonkey:documentation/pictures/run_greet_me.png"));
 
-	page.add(Text("Congratulations on creating your first program in Zonkey."));
+	page.add(Text("If the program runs without any errors, congratulations! You have successfully created your first program in Zonkey."));
 
 	page.add(Hyperlink("Next page", "zonkey:documentation/variables_types_and_expressions.zonk"));
 }

@@ -1,0 +1,24 @@
+start {
+	let page = Page()
+		.set_title("Loops and Arrays")
+		.center()
+		.set_max_width(800.)
+		.set_background_colour("#FDF6E3")
+		.set_text_colour("#5C6A72")
+		.add(Text("Loops and Arrays").set_size(40.0))
+		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+	page.add(Image("zonkey:documentation/pictures/loops.png"));
+
+    page.add(Text("Loops in Zonkey are a way to repeat a block of code multiple times. There are three formats for loops. The first format is a loop block, which keeps repeating its code block until a break statement is encountered. The second format is a for loop, which lets you perform a specific number of iterations or iterate over a sequence of values. In a for loop, you specify an initial value, a condition that must be true for the loop to continue, and an operation to be performed at the end of each iteration. The third format is a while loop, which executes its code block repeatedly as long as a specified condition is true. You can use a break statement to immediately exit any of these loops and a continue statement to skip to the next iteration without executing any remaining statements in the current iteration."));
+
+	page.add(Image("zonkey:documentation/pictures/array.png"));
+
+    page.add(Text("In Zonkey, arrays are a useful way to keep multiple values of the same type in one place. You can create an array by specifying the type of elements you want to include, and then listing the values in square brackets. For instance, Integer[1, 2, 3, 4] is an array of integers that has four values. By using the get() method, you can access specific values in an array by providing the index of the element you want to retrieve. Additionally, you can change the contents of an array by using methods like remove() or push(). Keep in mind that arrays in Zonkey start with the first index at zero, not one. The type name for an array in Zonkey is the element type enclosed in square brackets, such as [String] for an array of strings. Currently, Zonkey only supports one-dimensional arrays.
+
+In the example given, an array is utilized to store a list of buttons, with a helper function to add buttons of a particular name and color to the array. After that, you can use a for loop to iterate over these buttons and add them to the page."));
+
+	page.add(Hyperlink("Next page", "zonkey:documentation/a_more_advanced_page.zonk"));
+
+	set_page(page);
+}

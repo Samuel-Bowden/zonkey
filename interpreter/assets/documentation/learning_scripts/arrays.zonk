@@ -1,0 +1,22 @@
+function add_button([Button] buttons, String name, String colour) -> [Button] {
+    return buttons.push(Button(name).set_background_colour(colour));
+}
+
+start {
+    let btn_array = Button[];
+    add_button(btn_array, "Red", "#FF0000");
+    add_button(btn_array, "Green", "#00FF00");
+    add_button(btn_array, "Blue", "#0000FF");
+
+    let page = Page();
+
+    for (let i = 0, i < btn_array.len(), i += 1) {
+        page.add(btn_array.get(i));
+    }
+
+    set_page(page);
+}
+
+
+
+

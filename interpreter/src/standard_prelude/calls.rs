@@ -31,6 +31,7 @@ pub enum NativeCallFloat {
     FloatArrayRemove(Box<ObjectExpr>, Box<IntegerExpr>, Token),
     FromString(Box<StringExpr>, Token),
     FromInteger(Box<IntegerExpr>),
+    PowerF(Box<FloatExpr>, Box<FloatExpr>),
 }
 
 #[derive(Debug, Clone)]

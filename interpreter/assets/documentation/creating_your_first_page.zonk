@@ -1,0 +1,36 @@
+start {
+	let page = Page()
+			.set_title("Creating your first page")
+			.center()
+			.set_max_width(800.)
+			.set_background_colour("#FDF6E3")
+			.set_text_colour("#5C6A72")
+			.add(Text("Creating your first page").set_size(40.0))
+			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+    set_page(page);
+
+	page.add(Image("zonkey:documentation/pictures/first_page.png"));
+
+    page.add(Text("With the code above, we will create your first graphical user interface using Zonkey. In this example, a simple page is created with a button that changes its text when clicked. You can use this example as a starting point to create your own GUIs.
+
+First, the code creates a Page object, which represents the page that will be displayed in the GUI. Then, a Button object is created with the text 'Click me' and added to the page using the add method.
+
+Next, the set_page function is called to display the page in the browser.
+
+The wait_for_event function is used to handle events in the GUI. It will pause the script until an event happens in the user interface, such as a button click. When an event occurs, wait_for_event returns true, and the code inside the while loop will run. The purpose of the while loop is to check each relevant object in the UI that you would like to react to events from, and then perform any necessary actions to react to that event, such as changing the value of some text in the GUI.
+
+The if statement inside the while loop checks if the button has been clicked using the clicked method of the button object. If the button has been clicked, the set_text method is used to change the text on the button to 'I've been clicked'.
+
+If the wait_for_event function returns false, it means the browser has requested that the application close, such as when the user presses the close button on the tab. In this case, your program must exit, performing any necessary cleanup."));
+
+    page.add(Text("Now, let's try running the code you just learned. Open up your text editor and type the code provided into a new file, then save it as hello_gui.zonk. You can run the program in different ways:
+
+1. To view the GUI in the browser, type the file path into the browser's address bar.
+2. To run the GUI in a window, open up the command line and enter zonkey run hello_gui.zonk.
+3. To launch the GUI in the browser using the command line, enter zonkey browser hello_gui.zonk."));
+
+    page.add(Text("Assuming that everything has worked out as expected, we can proceed to the next section, where I will explain loops and arrays. These are important elements of the language that are necessary for building more sophisticated applications using Zonkey."));
+
+	page.add(Hyperlink("Next page", "zonkey:documentation/loops_and_arrays.zonk"));
+}

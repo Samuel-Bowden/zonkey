@@ -34,14 +34,19 @@ class ZonkeyDocumentation {
 
 		@sections = Section[
 			Section()
-				.add_intro("Language Basics", "learning_language.zonk")
+				.add_intro("Getting started", "learning_language.zonk")
 				.add_subsection("Creating And Running Your First Script", "creating_running_first_script.zonk")
 				.add_subsection("Variables, Types And Expressions", "variables_types_and_expressions.zonk")
 				.add_subsection("Functions", "functions.zonk")
 				.add_subsection("Classes", "classes.zonk")
-				.add_subsection("Loops and Arrays", "loop_and_arrays.zonk"),
+				.add_subsection("Overview of GUI classes", "overview_of_gui_classes.zonk")
+				.add_subsection("Creating your first page", "creating_your_first_page.zonk")
+				.add_subsection("Loops and Arrays", "loops_and_arrays.zonk")
+				.add_subsection("A More Advanced Page", "a_more_advanced_page.zonk"),
 			Section()
-				.add_intro("Overview of the available APIs", "overview_apis.zonk")
+				.add_intro("Standard Prelude Reference", "standard_prelude.zonk"),
+			Section()
+				.add_intro("Grammar", "grammar.zonk")
 		];
 
 		@page = Page()
@@ -50,10 +55,7 @@ class ZonkeyDocumentation {
 			.set_max_width(800.)
 			.set_background_colour("#FDF6E3")
 			.set_text_colour("#5C6A72")
-			.add(Text("Zonkey Documentation").set_size(70.0))
-			.add(Text("Standard Prelude Reference").set_size(40.0))
-			.add(Hyperlink("Read here", "zonkey:documentation/standard_prelude.zonk"))
-			.add(Text("Learning Zonkey").set_size(40.0));
+			.add(Text("Zonkey Documentation").set_size(70.0));
 
 		for (let i = 0, i < @sections.len(), i += 1) {
 			let section = @sections.get(i);

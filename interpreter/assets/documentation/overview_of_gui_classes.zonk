@@ -1,0 +1,126 @@
+function text_styling_button(String text) -> Button {
+    return Button(text)
+        .set_width_fill()
+        .set_text_colour("#000000")
+        .set_background_colour("#c6dac6");
+}
+
+start {
+	let page = Page()
+			.set_title("Overview of GUI classes")
+			.center()
+			.set_max_width(800.)
+			.set_background_colour("#FDF6E3")
+			.set_text_colour("#5C6A72")
+			.add(Text("Overview of GUI classes").set_size(40.0))
+			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+    page.add(Text("Before discussing how to create a page, I'll give an overview of the potential objects you can create in your GUI with the available classes in the standard prelude."));
+
+    # Button
+    page.add(Text("Button").set_colour("#6a0dad").set_size(30.0));
+    page.add(Text("A simple button that allows users to interact with your program."));
+    let button = Button("Don't click me!").set_background_colour("#990000");
+    page.add(Row().add(button).center());
+
+    # Input
+    page.add(Text("Input").set_colour("#6a0dad").set_size(30.0));
+    page.add(Text("This allows you to get a string of text from the user. You can react to the user pressing enter to confirm their choice. Try it out below."));
+    let input_text = Text("Enter something in the input box:");
+    let input = Input("Enter some information.");
+    page.add(Row().add(Column().add(input_text).add(input).set_max_width(300.0)).center());
+    
+    # Hyperlink
+    page.add(Text("Hyperlink").set_colour("#6a0dad").set_size(30.0));
+    page.add(Text("This lets you direct the user to another script."));
+    let hyperlink = Hyperlink("Try out the calculator written in Zonkey!", "zonkey:calculator/app.zonk");
+    page.add(Row().add(hyperlink).center());
+
+    # Row
+    page.add(Text("Row").set_colour("#6a0dad").set_size(30.0));
+    page.add(Text("This lets you align a series of elements in a row, which can be centered."));
+    let question = Text("What is your favorite colour?");
+    let red = Button("Red").set_background_colour("#990000");
+    let green = Button("Green").set_background_colour("#009900");
+    let blue = Button("Blue").set_background_colour("#000099");
+    let row = Row().add(question).add(red).add(green).add(blue).center();
+    page.add(row);
+
+    # Column
+    page.add(Text("Column").set_colour("#6a0dad").set_size(30.0));
+    page.add(Text("A Column can be combined with Row to create a grid which controls the width of elements."));
+    let grid_row = Row().center();
+    for (let i = 0, i < 3, i += 1) {
+        let grid_column = Column().set_max_width(35.0);
+        for (let j = 0, j < 3, j += 1) {
+            grid_column.add(Button(integer_to_string((j*3) + i + 1)).set_width_fill());
+        }
+        grid_row.add(grid_column);
+    }
+    page.add(grid_row);
+
+    # Text
+    page.add(Text("Text").set_colour("#6a0dad").set_size(30.0));
+    page.add(Text("Finally, there is Text, which allows you to create a resizeable and recolourable piece of text as seen below."));
+    let size = 30.0;
+    let text = Text("  I am a piece of text").set_size(size).set_colour("#00AA00");
+    let decrease_size = text_styling_button("Decrease");
+    let increase_size = text_styling_button("Increase");
+    let text_red = text_styling_button("Red");
+    let text_green = text_styling_button("Green");
+    let text_blue = text_styling_button("Blue");
+    let text_column = Column()
+        .add(decrease_size)
+        .add(increase_size)
+        .add(text_red)
+        .add(text_green)
+        .add(text_blue)
+        .set_max_width(100.0);
+    let text_row = Row().add(text_column).add(text);
+
+    page.add(text_row);
+
+    page.add(Text("Remember that the standard prelude documentation defines all these classes in detail. Now we will move on and create an actual script that uses these classes."));
+
+	page.add(Hyperlink("Next page", "zonkey:documentation/creating_your_first_page.zonk"));
+
+    set_page(page);
+
+    # React to events
+    while (wait_for_event()) {
+        if (button.clicked()) button.set_text("You just started a nuclear countdown. Good luck!");
+        if (input.confirmed()) input_text.set_text("You entered: " + input.get_text());
+        if (text_red.clicked()) text.set_colour("#990000");
+        if (text_green.clicked()) text.set_colour("#009900");
+        if (text_blue.clicked()) text.set_colour("#000099");
+
+        let red_clicked = red.clicked();
+        let green_clicked = green.clicked();
+        let blue_clicked = blue.clicked();
+
+        if (red_clicked | green_clicked | blue_clicked) {
+            row.remove(red).remove(green).remove(blue);
+            if (red_clicked) {
+                question.set_text("You chose red.");
+            } else if (green_clicked) {
+                question.set_text("You chose green.");
+            } else if (blue_clicked) {
+                question.set_text("You chose blue.");
+            }
+        }
+
+        if (decrease_size.clicked()) {
+            if (size > 10.0) {
+                size -= 5.0;
+                text.set_size(size);
+            }
+        }
+
+        if (increase_size.clicked()) {
+            if (size < 60.0) {
+                size += 5.0;
+                text.set_size(size);
+            }
+        }
+    }
+}

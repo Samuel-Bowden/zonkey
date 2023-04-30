@@ -1,11 +1,32 @@
-start {
-	let page = Page();
+class Programmer {
+    String name;
+    Integer lines_of_code_written;
 
-	let text = Text("Hello world!");
+    constructor(String name) {
+        @name = name;
+    }
 
-	page.add(text);
+    method say_hello() {
+        print("Hello, my name is " + @name);
+        print(" and I am a programmer. I have written ");
+        print(@lines_of_code_written);
+        println(" lines of code.");
+    }
 
-	set_page(page);
+    method write_code(Integer lines) {
+        @lines_of_code_written += lines;
+    }
 }
 
+start {
+    let sam = Programmer("Sam");
+    sam.write_code(48129);
+    sam.write_code(9148);
 
+    let steve = Programmer("Steve");
+    steve.write_code(49181);
+    steve.write_code(4357);
+
+    steve.say_hello();
+    sam.say_hello();
+}

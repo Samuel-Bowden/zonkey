@@ -4,6 +4,12 @@ use crate::standard_prelude::calls::NativeCallFloat;
 impl<'a> TreeWalker<'a> {
     pub fn native_call_float(&mut self, call: &NativeCallFloat) -> Result<f64, TreeWalkerErr> {
         match call {
+            NativeCallFloat::PowerF(base, exponent) => {
+                let base = self.eval_float(base)?;
+                let exponent = self.eval_float(exponent)?;
+
+                Ok(f64::powf(base, exponent))
+            }
             NativeCallFloat::FloatArrayGet(array, index, token) => {
                 let mut array_obj = self.eval_object(&array)?;
                 let index = self.eval_int(index)? as usize;

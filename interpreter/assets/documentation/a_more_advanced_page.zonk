@@ -1,0 +1,30 @@
+start {
+	let page = Page()
+		.set_title("A More Advanced Page")
+		.center()
+		.set_max_width(800.)
+		.set_background_colour("#FDF6E3")
+		.set_text_colour("#5C6A72")
+		.add(Text("A More Advanced Page").set_size(40.0))
+		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
+
+    page.add(Text("To give an idea of how to create a relatively complex application with Zonkey, I will guide you through some code used to create a phone book application."));
+
+	page.add(Image("zonkey:documentation/pictures/phone_1.png"));
+
+    page.add(Text("The Entry class represents a single entry in the phone book and has two buttons, one for deleting the entry and one for displaying the entry's information."));
+
+	page.add(Image("zonkey:documentation/pictures/phone_2.png"));
+
+    page.add(Text("Inside the start block, the Page class is used to create the user interface for the phone book, including input fields for adding new entries and columns for displaying the added entries and their delete buttons."));
+
+	page.add(Image("zonkey:documentation/pictures/phone_3.png"));
+
+    page.add(Text("The start block also sets up an event loop to handle user interactions. When the add button is clicked, a new Entry object is created with the name and phone number entered by the user, and the entry's information and delete button are added to their respective columns in the user interface. When a delete button is clicked, the corresponding Entry object is removed from the phone book and its information and delete button are removed from the user interface."));
+
+    page.add(Text("Thank you for reading this guide to Zonkey! For more information on advanced topics such as networking and persistence, please refer to the Zonkey standard prelude documentation. Happy coding!"));
+
+    page.add(Hyperlink("You can try out the phone book here", "zonkey:phone_book.zonk"));
+
+	set_page(page);
+}

@@ -54,6 +54,15 @@ pub fn new() -> FxHashMap<Rc<String>, CallableDeclaration> {
     );
 
     functions.insert(
+        Rc::new("powerf".to_string()),
+        CallableDeclaration {
+            callable_type: CallableType::Native,
+            parameters: vec![ValueType::Float, ValueType::Float],
+            return_type: Some(ValueType::Float),
+        },
+    );
+
+    functions.insert(
         Rc::new("sleep".to_string()),
         CallableDeclaration {
             callable_type: CallableType::Native,
