@@ -15,17 +15,27 @@ fn get_failed_parser_err(tokens: Vec<Token>) -> ParserErr {
 
 macro_rules! test_script_error {
     ( $x:literal ) => {
-        let source = include_str!(concat!("scripts/", $x, ".zonk"));
+        let builder = std::thread::Builder::new().stack_size(crate::REQUIRED_STACK_SIZE);
 
-        let (error, graphemes) = match Lexer::run(source) {
-            (Ok(tokens), graphemes) => (
-                InterpreterErrType::ParserFailed(get_failed_parser_err(tokens)),
-                graphemes,
-            ),
-            (Err(lexer_err), graphemes) => (InterpreterErrType::LexerFailed(lexer_err), graphemes),
-        };
+        let handle = builder
+            .spawn(move || {
+                let source = include_str!(concat!("scripts/", $x, ".zonk"));
 
-        let error_message = InterpreterErr::new(error, graphemes).get_err_messages();
+                let (error, graphemes) = match Lexer::run(source) {
+                    (Ok(tokens), graphemes) => (
+                        InterpreterErrType::ParserFailed(get_failed_parser_err(tokens)),
+                        graphemes,
+                    ),
+                    (Err(lexer_err), graphemes) => {
+                        (InterpreterErrType::LexerFailed(lexer_err), graphemes)
+                    }
+                };
+
+                InterpreterErr::new(error, graphemes).get_err_messages()
+            })
+            .expect("Failed to create thread to test lexer and parser.");
+
+        let error_message = handle.join().expect("Failed to join thread running test.");
 
         assert_eq!(
             error_message
@@ -84,6 +94,16 @@ fn test_sizes() {
 #[test]
 fn method_call_expected_name() {
     test_script_error!("mcall_ex_name");
+}
+
+#[test]
+fn sub_expression_limit() {
+    test_script_error!("sub_expression_limit");
+}
+
+#[test]
+fn scope_limit() {
+    test_script_error!("scope_limit");
 }
 
 #[test]

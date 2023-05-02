@@ -1,5 +1,5 @@
 use crate::tab::Address;
-use clap::{Parser, Subcommand, Args};
+use clap::{Args, Parser, Subcommand};
 use interpreter::{
     event::InterpreterEvent,
     iced::{self, Application, Settings},
@@ -35,15 +35,14 @@ struct RunArgs {
     ///Disable the console (Windows only)
     disable_console: bool,
 
-    #[arg(short, long, raw = true)]
     ///Arguments to be passed to the script
     arguments: Vec<String>,
 
-    #[arg(default_value_t = 1280, short, long)]
+    #[arg(default_value_t = 1280, long)]
     ///Width of the window launched
     width: u32,
 
-    #[arg(default_value_t = 720, short, long)]
+    #[arg(default_value_t = 720, long)]
     ///Height of the window launched
     height: u32,
 }
@@ -59,7 +58,6 @@ struct BrowserArgs {
     ///Enable the console (Windows only)
     enable_console: bool,
 
-    #[arg(short, long, raw = true)]
     ///Arguments to be passed to the script
     arguments: Vec<String>,
 }
@@ -120,13 +118,17 @@ fn command_line_tool(address: Address, width: u32, height: u32) -> ExitCode {
 
     let address_copy = address.clone();
 
-    thread::spawn(move || {
-        interpreter::run_with_error_messages(
-            address_copy,
-            interpreter_event_sender,
-            page_event_receiver,
-        );
-    });
+    let builder = thread::Builder::new().stack_size(interpreter::REQUIRED_STACK_SIZE);
+
+    builder
+        .spawn(move || {
+            interpreter::run_with_error_messages(
+                address_copy,
+                interpreter_event_sender,
+                page_event_receiver,
+            );
+        })
+        .expect("Failed to spawn interpreter thread.");
 
     match interpreter_event_receiver.recv() {
         Ok(InterpreterEvent::SetPage(page)) => {

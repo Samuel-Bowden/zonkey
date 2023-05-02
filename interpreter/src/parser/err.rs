@@ -33,6 +33,8 @@ pub enum ParserErrType {
     BreakOutsideLoop(Token),
     ContinueOutsideLoop(Token),
     CannotCreateVariableCalledSelf(Token),
+    SubExpressionLimit(Token),
+    NestedScopeLimit(Token),
 
     // Callable Declaration errors
     DeclarationInvalidReturnExpressionType(Token, Option<ValueType>, Option<ValueType>),

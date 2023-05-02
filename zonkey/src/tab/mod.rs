@@ -217,13 +217,18 @@ impl Tab {
                     let (interpreter_sender, tab_receiver) = mpsc::channel();
                     let (tab_sender, interpreter_receiver) = mpsc::channel();
 
-                    thread::spawn(move || {
-                        interpreter::run_with_error_messages(
-                            source,
-                            interpreter_sender,
-                            interpreter_receiver,
-                        );
-                    });
+                    let builder =
+                        thread::Builder::new().stack_size(interpreter::REQUIRED_STACK_SIZE);
+
+                    builder
+                        .spawn(move || {
+                            interpreter::run_with_error_messages(
+                                source,
+                                interpreter_sender,
+                                interpreter_receiver,
+                            );
+                        })
+                        .expect("Failed to spawn interpreter thread.");
 
                     (
                         (index, Message::StartedScript(tab_sender)),

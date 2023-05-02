@@ -158,7 +158,7 @@ fn build_image<'a>(image: Arc<Mutex<element::Image>>) -> Element<'a, Message> {
 
 pub fn script_error_page<'a>(error: &str) -> Element<'a, Message> {
     Column::new()
-        .push(text("Failed to run application").size(100))
+        .push(text("Failed to run application").size(40))
         .push(text("Execution of the script failed:"))
         .push(text(error))
         .padding(20)
@@ -168,7 +168,7 @@ pub fn script_error_page<'a>(error: &str) -> Element<'a, Message> {
 
 pub fn load_address_error_page<'a>(error: &str) -> Element<'a, Message> {
     Column::new()
-        .push(text("Failed to load application").size(100))
+        .push(text("Failed to load application").size(40))
         .push(text(error))
         .padding(20)
         .spacing(20)

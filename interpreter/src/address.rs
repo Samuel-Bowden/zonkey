@@ -25,7 +25,7 @@ pub struct Address {
     pub location: String,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AddressType {
     Zonkey,
     File,
@@ -251,5 +251,59 @@ pub fn network_write(protocol: &str, location: &str, string: String) -> Result<S
             Err(e) => Err(AddressErr::NetworkFailure(e)),
         },
         Err(e) => Err(AddressErr::NetworkFailure(e)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{address::AddressType, Address};
+
+    #[test]
+    fn zonkey_address_ok() {
+        let address = Address::new("zonkey:home.zonk", vec![]);
+        assert_eq!(address.location, "home.zonk");
+        assert_eq!(address.address_type, AddressType::Zonkey);
+    }
+
+    #[test]
+    fn installed_address_ok() {
+        let address = Address::new("installed:Calculator/app.zonk", vec![]);
+        assert!(address.location.contains("Calculator/app.zonk"));
+        assert_eq!(address.address_type, AddressType::File);
+    }
+
+    #[test]
+    fn http_address_ok() {
+        let address = Address::new("http://somewhere.com/app.zonk", vec![]);
+        assert_eq!(address.location, "//somewhere.com/app.zonk");
+        assert_eq!(address.address_type, AddressType::HTTP { secure: false });
+    }
+
+    #[test]
+    fn https_address_ok() {
+        let address = Address::new("https://localhost:8000/documents/test.zonk", vec![]);
+        assert_eq!(address.location, "//localhost:8000/documents/test.zonk");
+        assert_eq!(address.address_type, AddressType::HTTP { secure: true });
+    }
+
+    #[test]
+    fn file_addresses_ok() {
+        let address = Address::new("file:/home/user/documents/scripts/test.zonk", vec![]);
+        assert_eq!(address.location, "/home/user/documents/scripts/test.zonk");
+        assert_eq!(address.address_type, AddressType::File);
+
+        let address = Address::new(
+            "file:D:\\Documents\\Pictures\\Holiday\\First Picture.png",
+            vec![],
+        );
+        assert_eq!(
+            address.location,
+            "D:\\Documents\\Pictures\\Holiday\\First Picture.png"
+        );
+        assert_eq!(address.address_type, AddressType::File);
+
+        let address = Address::new("/home/user/documents/scripts/test.zonk", vec![]);
+        assert_eq!(address.location, "/home/user/documents/scripts/test.zonk");
+        assert_eq!(address.address_type, AddressType::File);
     }
 }

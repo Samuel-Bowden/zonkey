@@ -15,7 +15,22 @@ impl Parser {
         debug_information!("statement");
 
         match self.current_token_type() {
-            Some(TokenType::LeftBrace) => self.block(),
+            Some(TokenType::LeftBrace) => {
+                self.nested_scope_limit += 1;
+
+                if self.nested_scope_limit > 50 {
+                    self.error.add(ParserErrType::NestedScopeLimit(
+                        self.tokens[self.current].clone(),
+                    ));
+                    return Err(ParserStatus::Unwind);
+                }
+
+                let result = self.block();
+
+                self.nested_scope_limit -= 1;
+
+                result
+            }
             Some(TokenType::If) => {
                 self.current += 1;
                 self.if_statement()

@@ -15,8 +15,7 @@ start {
     }
 
     set_page(page);
+
+    sleep(2000);
+    close_tab();
 }
-
-
-
-

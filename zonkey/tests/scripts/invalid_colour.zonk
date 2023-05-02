@@ -1,0 +1,7 @@
+start {
+    let button = Button("Hello");
+
+    button.set_background_colour("#FFFFFF"); # OK
+
+    button.set_text_colour("iaonsehtiaosenht aisoenht asiohtne asiohetn aisohent"); # Should throw error
+}

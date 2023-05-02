@@ -1,0 +1,9 @@
+start {
+    println(!!!!false);
+    println(!!!false);
+    println(!!!!!!!!!!false);
+
+    println(------------9);
+    println(--8);
+    println(-----1);
+}

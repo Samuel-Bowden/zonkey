@@ -1,0 +1,4 @@
+(ERROR) Zonkey's parser encountered an expression that exceeds the limit of 50 nested sub-expressions. Please simplify the expression.
+	2 |  ((((((((((((((((((((((((((((((((((((((((((((((((((<(>(((((((((((((((((((((((((((((((((((((((((((((((((0))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+
+(ABORTING) Cannot start execution of script due to 1 error(s).

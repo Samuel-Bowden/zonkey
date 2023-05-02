@@ -15,18 +15,20 @@ impl Parser {
     pub fn program(&mut self) {
         debug_information!("program");
 
-        while !self.is_at_end() {
-            let result = match self.current_token_type() {
-                Some(TokenType::Start) => self.start(),
-                Some(TokenType::Function) => self.function(),
-                Some(TokenType::Class) => self.class(),
-                Some(_) => {
+        while let Some(token_type) = self.current_token_type() {
+            debug_information!(
+                format!("Current program token: {:?}", self.current_token_type()).as_str()
+            );
+            let result = match token_type {
+                TokenType::Start => self.start(),
+                TokenType::Function => self.function(),
+                TokenType::Class => self.class(),
+                _ => {
                     self.error.add(ParserErrType::UnexpectedTokenInGlobal(
                         self.tokens[self.current].clone(),
                     ));
                     Err(ParserStatus::Unwind)
                 }
-                None => Ok(()),
             };
 
             match result {
@@ -50,6 +52,8 @@ impl Parser {
                     self.returned_value = false;
                 }
             };
+
+            debug_information!("Completed program");
         }
     }
 
@@ -63,10 +67,6 @@ impl Parser {
             Expr::None(_) => None,
             Expr::Object(type_name, ..) => Some(ValueType::Class(Rc::clone(type_name))),
         }
-    }
-
-    fn is_at_end(&self) -> bool {
-        self.current >= self.tokens.len()
     }
 
     fn current_token_type(&self) -> Option<&TokenType> {

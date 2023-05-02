@@ -11,6 +11,8 @@ pub use iced_native;
 use permission::PermissionLevel;
 use std::sync::mpsc::{Receiver, Sender};
 
+pub const REQUIRED_STACK_SIZE: usize = 8 * 1024 * 1024;
+
 #[cfg(test)]
 mod tests;
 

@@ -36,6 +36,8 @@ pub struct Parser {
     error: ParserErr,
     start_definition: Option<(Token, Option<Stmt>)>,
     current: usize,
+    sub_expression_limit: usize,
+    nested_scope_limit: usize,
 }
 
 impl Parser {
@@ -58,6 +60,8 @@ impl Parser {
             error: ParserErr::new(),
             start_definition: None,
             current: 0,
+            sub_expression_limit: 0,
+            nested_scope_limit: 0,
         };
 
         parser_debug!("Production rule path:");

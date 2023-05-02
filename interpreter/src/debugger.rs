@@ -32,7 +32,7 @@ macro_rules! tree_walker_debug {
 
 #[macro_export]
 macro_rules! debug_information {
-    ($message:literal) => {
+    ($message:expr) => {
         #[cfg(debug_assertions)]
         println!("  {}", $message);
     };

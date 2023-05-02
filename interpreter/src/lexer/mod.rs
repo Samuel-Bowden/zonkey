@@ -98,12 +98,7 @@ impl<'a> Lexer<'a> {
                     true => self.add_token(TokenType::MinusEqual),
                     false => match self.next_grapheme(">") {
                         true => self.add_token(TokenType::Arrow),
-                        false => match self.next_grapheme_number() {
-                            true => {
-                                self.number()?;
-                            }
-                            false => self.add_token(TokenType::Minus),
-                        },
+                        false => self.add_token(TokenType::Minus),
                     },
                 };
             }
@@ -166,20 +161,6 @@ impl<'a> Lexer<'a> {
 
         self.current += 1;
         true
-    }
-
-    fn next_grapheme_number(&mut self) -> bool {
-        if self.is_at_end() {
-            return false;
-        }
-
-        if let "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" =
-            self.graphemes[self.current]
-        {
-            return true;
-        }
-
-        false
     }
 
     fn string(&mut self) -> Result<(), LexerErr> {

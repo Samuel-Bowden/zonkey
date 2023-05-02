@@ -1,0 +1,10 @@
+function circle_area(Float radius) -> Float {
+    let pi = 3.14159;
+    return pi * powerf(radius, 2.);
+}
+
+start {
+    println(circle_area(5.0));
+    println(circle_area(10.0));
+    println(circle_area(2.5));
+}

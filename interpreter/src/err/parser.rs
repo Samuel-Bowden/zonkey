@@ -2,12 +2,15 @@ use super::err_reporter::ErrReporter;
 use crate::{
     parser::err::{ParserErr, ParserErrType},
     parser::value::print_type,
+    parser_debug,
 };
 
 pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
     let len = parser_err.get_length();
 
-    for error in parser_err.errors {
+    parser_debug!(format!("Error length: {}", len).as_str());
+
+    for error in parser_err.errors.iter().take(100) {
         err_reporter.error_prefix();
 
         match error {
@@ -22,6 +25,20 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 );
                 err_reporter.report_token(before);
                 err_reporter.report_next_token(after);
+            }
+
+            ParserErrType::SubExpressionLimit(location) => {
+                err_reporter.writeln(
+                    "Zonkey's parser encountered an expression that exceeds the limit of 50 nested sub-expressions. Please simplify the expression.",
+                );
+                err_reporter.report_token(location);
+            }
+
+            ParserErrType::NestedScopeLimit(location) => {
+                err_reporter.writeln(
+                    "Zonkey's parser has encountered a series of nested blocks that exceeds the limit of 50. Please simplify the nested blocks to avoid triggering this error.",
+                );
+                err_reporter.report_token(location);
             }
 
             ParserErrType::UnexpectedTokenInGlobal(unexpected_token) => {
@@ -231,7 +248,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::IfConditionNotBool(start, end) => {
                 err_reporter
                     .writeln("The condition of the if statement does not evaluate to a boolean.");
-                err_reporter.report_section(start, end);
+                err_reporter.report_section(*start, *end);
             }
             //
 
@@ -262,7 +279,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
 
             ParserErrType::WhileConditionNotBool(start, end) => {
                 err_reporter.writeln("While statement condition does not evaluate to a boolean.");
-                err_reporter.report_section(start, end);
+                err_reporter.report_section(*start, *end);
             }
             //
             ParserErrType::ForExpectedLet(before, after) => {
@@ -305,7 +322,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             ParserErrType::ForConditionNotBool(start, end) => {
                 err_reporter
                     .writeln("For statement test condition does not evaluate to a boolean.");
-                err_reporter.report_section(start, end);
+                err_reporter.report_section(*start, *end);
             }
 
             ParserErrType::ForExpectedComma1(before, after) => {
@@ -410,7 +427,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.writeln(
                     format!(
                         "Declaration did not return the required type '{}' in all branches of code block.",
-                        print_type(&Some(req_type)),
+                        print_type(&Some(req_type.clone())),
                     )
                     .as_str(),
                 );
@@ -439,7 +456,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                     format!(
                         "Cannot use assignment operator '{}' with value of type '{}'.",
                         assignment_operator.token_type,
-                        print_type(&Some(value_type)),
+                        print_type(&Some(value_type.clone())),
                     )
                     .as_str(),
                 );
@@ -499,7 +516,7 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
                 err_reporter.writeln(
                     "The expression to assign to the variable does not evaluate to a value.",
                 );
-                err_reporter.report_section(start, end);
+                err_reporter.report_section(*start, *end);
                 err_reporter.give_tip("An expression to assign to a variable must evaluate to a value such as an Integer, Float, String or Boolean. You may have assigned the result of a callable that does not return a value by mistake.");
             }
             //
@@ -787,6 +804,10 @@ pub fn err_handler(err_reporter: &mut ErrReporter, parser_err: ParserErr) {
             }
         }
         err_reporter.newln();
+    }
+
+    if len > 100 {
+        err_reporter.writeln("More than 100 errors found, aborting error message output.")
     }
 
     err_reporter.aborting_prefix();

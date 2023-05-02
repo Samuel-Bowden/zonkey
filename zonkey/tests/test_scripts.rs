@@ -1,5 +1,5 @@
-use assert_cmd::prelude::*;
-use std::{error::Error, fs::read_to_string, process::Command};
+use assert_cmd::Command;
+use std::{error::Error, fs::read_to_string};
 
 macro_rules! test_success {
     ( $script_name:literal, $argument:literal) => {
@@ -78,14 +78,77 @@ fn file_does_not_exist() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn learning_var_types_expr() -> Result<(), Box<dyn Error>> {
+    test_success!(
+        "learning_var_type_expr",
+        "tests/scripts/learning_var_type_expr.zonk"
+    );
+    Ok(())
+}
+
+#[test]
+fn learning_arrays() -> Result<(), Box<dyn Error>> {
+    test_success!("learning_arrays", "tests/scripts/learning_arrays.zonk");
+    Ok(())
+}
+
+#[test]
 fn and_or_script() -> Result<(), Box<dyn Error>> {
     test_success!("and_or", "tests/scripts/and_or.zonk");
     Ok(())
 }
 
 #[test]
+fn first_page() -> Result<(), Box<dyn Error>> {
+    test_success!("first_page", "tests/scripts/first_page.zonk");
+    Ok(())
+}
+
+#[test]
+fn method_chain_stress_test() -> Result<(), Box<dyn Error>> {
+    test_success!("method_chain", "tests/scripts/method_chain.zonk");
+    Ok(())
+}
+
+#[test]
+fn learning_classes() -> Result<(), Box<dyn Error>> {
+    test_success!("learning_classes", "tests/scripts/learning_classes.zonk");
+    Ok(())
+}
+
+#[test]
+fn unary() -> Result<(), Box<dyn Error>> {
+    test_success!("unary", "tests/scripts/unary.zonk");
+    Ok(())
+}
+
+#[test]
+fn nested_subexpression_scope_approaching_limit() -> Result<(), Box<dyn Error>> {
+    test_success!(
+        "nested_subexpr_scope_limit",
+        "tests/scripts/nested_subexpr_scope_limit.zonk"
+    );
+    Ok(())
+}
+
+#[test]
 fn power() -> Result<(), Box<dyn Error>> {
     test_success!("power", "tests/scripts/power.zonk");
+    Ok(())
+}
+
+#[test]
+fn powerf() -> Result<(), Box<dyn Error>> {
+    test_success!("powerf", "tests/scripts/powerf.zonk");
+    Ok(())
+}
+
+#[test]
+fn learning_circle_area() -> Result<(), Box<dyn Error>> {
+    test_success!(
+        "learning_circle_area",
+        "tests/scripts/learning_circle_area.zonk"
+    );
     Ok(())
 }
 
@@ -210,6 +273,21 @@ fn divide_by_zero() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn invalid_hex_colour() -> Result<(), Box<dyn Error>> {
+    test_fail!("invalid_colour", "tests/scripts/invalid_colour.zonk");
+    Ok(())
+}
+
+#[test]
+fn complex_expressions() -> Result<(), Box<dyn Error>> {
+    test_success!(
+        "complex_expressions",
+        "tests/scripts/complex_expressions.zonk"
+    );
+    Ok(())
+}
+
+#[test]
 fn get_request() -> Result<(), Box<dyn Error>> {
     test_success!("get_request", "tests/scripts/get_request.zonk");
     let written_data = read_to_string("get_request_response.txt").expect("Unable to read file");
@@ -254,6 +332,33 @@ fn read_and_write_file() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn input() -> Result<(), Box<dyn Error>> {
+    assert_eq!(
+        std::str::from_utf8(
+            &Command::cargo_bin("zonkey")
+                .unwrap()
+                .arg("run")
+                .arg("tests/scripts/input.zonk")
+                .write_stdin("Sam Bowden")
+                .assert()
+                .success()
+                .get_output()
+                .stdout
+        )
+        .unwrap()
+        .chars()
+        .filter(|char| !char.is_whitespace())
+        .collect::<String>(),
+        include_str!("expected_output/input.txt")
+            .chars()
+            .filter(|char| !char.is_whitespace())
+            .collect::<String>()
+    );
+
+    Ok(())
+}
+
+#[test]
 fn args() -> Result<(), Box<dyn Error>> {
     assert_eq!(
         std::str::from_utf8(
@@ -261,7 +366,6 @@ fn args() -> Result<(), Box<dyn Error>> {
                 .unwrap()
                 .arg("run")
                 .arg("tests/scripts/args.zonk")
-                .arg("-a")
                 .arg("one")
                 .arg("two")
                 .arg("three")
@@ -275,6 +379,33 @@ fn args() -> Result<(), Box<dyn Error>> {
         .filter(|char| !char.is_whitespace())
         .collect::<String>(),
         include_str!("expected_output/args.txt")
+            .chars()
+            .filter(|char| !char.is_whitespace())
+            .collect::<String>()
+    );
+
+    Ok(())
+}
+
+#[test]
+fn learning_loops() -> Result<(), Box<dyn Error>> {
+    assert_eq!(
+        std::str::from_utf8(
+            &Command::cargo_bin("zonkey")
+                .unwrap()
+                .arg("run")
+                .arg("tests/scripts/learning_loops.zonk")
+                .write_stdin("exit")
+                .assert()
+                .success()
+                .get_output()
+                .stdout
+        )
+        .unwrap()
+        .chars()
+        .filter(|char| !char.is_whitespace())
+        .collect::<String>(),
+        include_str!("expected_output/learning_loops.txt")
             .chars()
             .filter(|char| !char.is_whitespace())
             .collect::<String>()

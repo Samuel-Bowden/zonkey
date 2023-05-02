@@ -1,0 +1,8 @@
+start {
+    let assert = true;
+    assert = assert & (powerf(2.0, 4.0) == 16.0);
+    assert = assert & (powerf(3.0, 2.0) == 9.0);
+    assert = assert & (powerf(4.0, 4.0) == 256.0);
+    assert = assert & (powerf(8.0, 4.0) == 4096.0);
+    println(assert);
+}

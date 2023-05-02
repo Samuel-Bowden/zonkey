@@ -12,6 +12,33 @@ impl Parser {
         object: ObjectExpr,
     ) -> Result<Expr, ParserStatus> {
         debug_information!("method_call");
+        let mut result = self.method_call_handler(class, object);
+
+        while let Some(TokenType::Dot) = self.current_token_type() {
+            match result {
+                Ok(Expr::Object(class, expr)) => {
+                    result = self.method_call_handler(class, expr);
+                }
+                Err(_) => return result,
+                Ok(value) => {
+                    self.error.add(ParserErrType::MethodCallNotObject(
+                        self.tokens[self.current].clone(),
+                        self.expr_type(&value),
+                    ));
+                    return Err(ParserStatus::Unwind);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    fn method_call_handler(
+        &mut self,
+        class: Rc<String>,
+        object: ObjectExpr,
+    ) -> Result<Expr, ParserStatus> {
+        debug_information!("method_call_handler");
 
         let token_pos = self.current;
         self.current += 1;
@@ -114,7 +141,7 @@ impl Parser {
                 return Err(ParserStatus::Unwind);
             }
 
-            let result = match call.callable_type {
+            match call.callable_type {
                 CallableType::Native => match class.as_str() {
                     "Hyperlink" => match name.as_str() {
                         "add_argument" => Ok(Expr::Object(
@@ -454,23 +481,6 @@ impl Parser {
                         }
                     }
                 }
-            };
-
-            // Calling a method on the result of a method
-            if let Some(TokenType::Dot) = self.current_token_type() {
-                match result {
-                    Ok(Expr::Object(class, expr)) => self.method_call(class, expr),
-                    Err(_) => result,
-                    Ok(value) => {
-                        self.error.add(ParserErrType::MethodCallNotObject(
-                            self.tokens[self.current].clone(),
-                            self.expr_type(&value),
-                        ));
-                        return Err(ParserStatus::Unwind);
-                    }
-                }
-            } else {
-                result
             }
         } else {
             self.error.add(ParserErrType::MethodCallNotFound(

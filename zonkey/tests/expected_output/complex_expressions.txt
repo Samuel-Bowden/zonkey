@@ -1,0 +1,5 @@
+-143243123.99387208
+12339714
+false
+true
+The dog jumped high over the wall

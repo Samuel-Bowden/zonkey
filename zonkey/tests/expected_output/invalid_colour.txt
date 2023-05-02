@@ -1,0 +1,1 @@
+(EXCEPTION) InvalidHexColour("iaonsehtiaosenht aisoenht asiohtne asiohetn aisohent")

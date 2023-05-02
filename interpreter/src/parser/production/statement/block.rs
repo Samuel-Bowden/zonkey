@@ -53,11 +53,21 @@ impl Parser {
                             let mut braces_seen = 0;
 
                             loop {
+                                parser_debug!(format!(
+                                    "Current Token {:?}",
+                                    self.current_token_type()
+                                )
+                                .as_str());
                                 match self.current_token_type() {
                                     // Statement end
                                     Some(TokenType::SemiColon) => {
                                         if braces_seen == 0 {
                                             self.current += 1;
+                                            parser_debug!(format!(
+                                                "Found semicolon at {}",
+                                                self.current
+                                            )
+                                            .as_str());
                                             break;
                                         }
                                     }
@@ -91,7 +101,11 @@ impl Parser {
                                 self.current += 1;
                             }
 
-                            parser_debug!("Synchronised inside block successfully");
+                            parser_debug!(format!(
+                                "Synchronised inside block successfully at {:?}",
+                                self.current_token_type()
+                            )
+                            .as_str());
                         }
                         Err(ParserStatus::End) => return Err(ParserStatus::End),
                     }

@@ -6,12 +6,12 @@ start {
 
     set_page(page);
 
+    sleep(1000);
+    close_tab();
+
     while (wait_for_event()) {
         if (button.clicked()) {
             button.set_text("I've been clicked");
         }
     }
 }
-
-
-

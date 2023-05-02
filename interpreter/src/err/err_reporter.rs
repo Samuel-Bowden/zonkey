@@ -38,7 +38,7 @@ impl<'a> ErrReporter<'a> {
         self.graphemes[position]
     }
 
-    pub fn report_token(&mut self, token: Token) {
+    pub fn report_token(&mut self, token: &Token) {
         self.report_section(token.start, token.end);
     }
 
@@ -92,7 +92,7 @@ impl<'a> ErrReporter<'a> {
         (line_num, line_start)
     }
 
-    pub fn report_next_token(&mut self, token: Option<Token>) {
+    pub fn report_next_token(&mut self, token: &Option<Token>) {
         if let Some(token) = token {
             writeln!(
                 &mut self.stderr,

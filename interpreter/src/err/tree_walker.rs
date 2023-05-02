@@ -4,7 +4,7 @@ use crate::tree_walker::err::TreeWalkerErr;
 pub fn err_handler(err_reporter: &mut ErrReporter, tree_walker_err: TreeWalkerErr) {
     err_reporter.exception_prefix();
 
-    match tree_walker_err {
+    match &tree_walker_err {
         TreeWalkerErr::PropertyNotInitialised(prop_name) => {
             err_reporter.writeln("PropertyNotInitialised");
             err_reporter.writeln(
