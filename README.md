@@ -18,7 +18,7 @@ Zonkey is a new programming language and browser that I've created for my final 
     - [Unit and Integration Testing](#unit-and-integration-testing)
     - [Fuzz-Testing](#fuzz-testing)
 - [Benchmarking](#benchmarking)
-- [Third Party Code Used](#third_party_code_used)
+- [Third Party Code Used](#third-party-code-used)
 
 ## Requirements
 
@@ -34,7 +34,7 @@ Zonkey is pre-compiled for supported operating systems, and can be installed fol
 
 ### Windows
 
-Please download the file named "Zonkey-1.0.1-x86_64.msi" inside the installer directory of this repository. Double click on the downloaded MSI file, and the installer will guide you through the process of adding Zonkey to your system.
+Please download the file named "Zonkey-1.0.2-x86_64.msi" inside the installer directory of this repository. Double click on the downloaded MSI file, and the installer will guide you through the process of adding Zonkey to your system.
 
 After installation, "zonkey" will be added to your path and a shortcut and desktop entry to the browser will be created.
 
@@ -181,9 +181,9 @@ The source code for the documentation and learning material is located under `in
 
 A functioning installation of a Rust toolchain is required to compile Zonkey. Instructions on how to set this up can be found at <https://www.rust-lang.org/tools/install>.
 
-Please be aware that the initial compilation of Zonkey can take a significant amount of time, often upwards of 15-30 minutes depending on your hardware. **For optimal stability, it is essential to compile in release mode**. Unoptimized builds will place structures and enumerations that are very large on the stack, which can result in a stack overflow in the recursive descent parser, although this will only happen with very complex scripts. Release builds will not have this problem.
+Please be aware that the initial compilation of Zonkey can take a significant amount of time, around 15-30 minutes depending on your hardware.
 
-There should be no need for additional requirements as the necessary development headers are included with Windows, Ubuntu, and Fedora. However, if your compilation is failing, please read the failed compilation output as it will detail what the development headers it could not find, this may happen a few times on minimal distributions of Linux such as Arch.
+There should be no need for additional requirements as the necessary development headers are included with Windows, Ubuntu, and Fedora. However, if your compilation is failing, please read the failed compilation output as it will detail what the development headers it could not find, as this may happen on minimal distributions of Linux.
 
 Once you have a functioning toolchain for Rust, first clone the repository:
 
@@ -210,7 +210,7 @@ $ cargo run -r -p zonkey -- --version
 $ ./target/release/zonkey --version
 ```
 
-If you are interested in testing the debug mode of Zonkey, which prints the current state of the interpreter during execution, you can try using the debug build profile. However, please be aware that this creates unoptimized code that can create stack overflows as mentioned before, so use it with caution. This will need will go through the compiliation process again, but shouldn't take as long as unoptimised code is being generated.
+If you are interested in testing the debug mode of Zonkey, which prints the current state of the interpreter during execution, you can try using the debug build profile. This will need will go through the compiliation process again, but shouldn't take as long as unoptimised code is being generated.
 
 ```sh
 cargo build --profile debug-info -p zonkey
@@ -292,7 +292,7 @@ Third party crates are automatically downloaded by Cargo when you compile my pro
 
 I will link to the websites of these crates below, however, I would first like to mention that the svg's for the icons in the web browser, defined in `zonkey/src/tab/control_bar.rs`, were sourced from [Remix Icon](https://remixicon.com/), licensed under Apache License 2.0.
 
-## Crates Used
+### Crates Used
 - [clap](https://crates.io/crates/clap): MIT/Apache-2.0, used for the command line arguments parser.
 - [non-empty-vec](https://crates.io/crates/non-empty-vec): MIT, a data structure used to ensure that the vector that contains the browser history can never be empty.
 - [assert-cmd](https://crates.io/crates/assert-cmd): MIT/Apache-2.0, used for running integration tests by running the "zonkey" binary and asserting its stdout/stderr.
