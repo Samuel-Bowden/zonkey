@@ -262,6 +262,12 @@ $ python server.py
 ```
 Ensure that port 8000 is free. Then in the browser, you can either click the link on the homepage to `Binary Bulletin`, or type `http://localhost:8000` in the address bar to load the homepage. To clean the comments added, you can run `http://localhost:8000/clean`.
 
+Optionally, if you want the server to go faster, you can use Waitress (requires installation through pip).
+```sh
+$ cd example-news-server
+$ python waitress_server.py
+```
+
 ## Benchmarking
 
 Results from my testing are already available in `benchmarks/results`.

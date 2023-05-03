@@ -18,12 +18,16 @@ def article_title(path):
 
 @app.route('/article/<int:id>/comments/total', methods=['GET'])
 def total_comments(id):
-    return str(len(os.listdir("article/" + str(id) + "/comment")))
+    path = "article/" + str(id) + "/comment"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return str(len(os.listdir(path)))
 
 @app.route('/article/<int:id>/comments/add', methods=['GET', 'POST'])
 def add_comment(id):
-    next_comment = len(os.listdir("article/" + str(id) + "/comment"))
-    file = open('article/' + str(id) + '/comment/' + str(next_comment), 'wb')
+    path = "article/" + str(id) + "/comment"
+    next_comment = len(os.listdir(path))
+    file = open(path + '/' + str(next_comment), 'wb')
     file.write(request.data)
     file.close()
     return "Success"
