@@ -14,7 +14,7 @@ start {
 
 	page.add(Image("zonkey:documentation/pictures/greet_me.png"));
 
-	page.add(Text("At the beginning of a Zonkey script, you can see a comment that is marked by a hash symbol. Comments are not executed when running the script and can be used to add notes and explanations within the code. Essentially, comments are meant for human readers to understand the code better. Anything written after the hash symbol on the same line is ignored by the Zonkey interpreter and is only for human reference."));
+	page.add(Text("At the beginning of the Zonkey script, you can see a comment that is marked by a hash symbol. Comments are not executed when running the script and can be used to add notes and explanations within your code. Essentially, comments are meant for yourself and others to understand the code better. Anything written after the hash symbol on the same line is ignored by the Zonkey interpreter."));
 
 	page.add(Text("The `start block` is the required entry point of every Zonkey program. Without it, the program will not run. Although it may seem like an extra step to include this block in every script, it serves a useful purpose. By having a designated start block, it becomes easier to identify where the program begins, especially in larger and more complex files. Therefore, while it may appear as a minor inconvenience initially, including the start block in your code can ultimately save you time and effort when working on larger projects."));
 

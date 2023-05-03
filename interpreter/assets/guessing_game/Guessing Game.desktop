@@ -2,5 +2,5 @@
 Type=Application
 Version=1.0
 Name=Guessing Game
-Exec=sh -c "zonkey installed:GuessingGame/app.zonk -a installed"
+Exec=sh -c "zonkey run --width 500 --height 200 'installed:Guessing Game/app.zonk' installed"
 Terminal=false

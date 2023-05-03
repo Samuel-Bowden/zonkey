@@ -16,57 +16,60 @@ class Token {
 
     method get_number() -> Float { return string_to_float(@lexeme); }
 
-    method higher() -> Boolean {
+    method is_higher_precedence() -> Boolean {
         return @lexeme == "/" | @lexeme == "*";
     }
 
     method lexeme() -> String { return @lexeme; }
 }
 
-class Calculator {
-    String screen_state;
+class CalculatorState {
+    String output;
     [Token] expression;
-    [Token] output;
     String current_number;
 
     constructor() {
-        @screen_state = "0";
+        @output = "0";
         @expression = Token[];
     }
 
     method syntax_error() {
         @expression = Token[];
         @current_number = "";
-        @screen_state = "Syntax Error";
+        @output = "Syntax Error";
     }
 
-    method shunting_yard() {
+    method shunting_yard([Token] expression) -> [Token] {
         let operators_stack = Token[];
-        @output = Token[];
+        let rpn = Token[]; # Reverse polish notation
 
-        for (let i = 0, i < @expression.len(), i += 1) {
-            let token = @expression.get(i);
+        for (let i = 0, i < expression.len(), i += 1) {
+            let token = expression.get(i);
             
             if (token.is_number()) {
-                @output.push(token);
+                rpn.push(token);
             } else {
-                while (operators_stack.len() > 0 & operators_stack.get(operators_stack.len() - 1).higher()) {
-                    @output.push(operators_stack.remove(operators_stack.len() - 1));
+                loop {
+                    let pos = operators_stack.len() - 1;
+                    if (pos < 0) break;
+                    if (!operators_stack.get(pos).is_higher_precedence()) break;
+                    rpn.push(operators_stack.remove(pos));
                 }
                 operators_stack.push(token);
             }
         }
 
-        while (operators_stack.len() > 0) {
-            @output.push(operators_stack.remove(operators_stack.len() - 1));
-        }
+        while (operators_stack.len() > 0)
+            rpn.push(operators_stack.remove(operators_stack.len() - 1));
+
+        return rpn;
     }
 
-    method evaluate() {
+    method evaluate([Token] rpn) {
         let stack = Float[];
 
-        for (let i = 0, i < @output.len(), i += 1) {
-            let token = @output.get(i);
+        for (let i = 0, i < rpn.len(), i += 1) {
+            let token = rpn.get(i);
 
             if (token.is_number()) {
                 stack.push(token.get_number());
@@ -90,11 +93,11 @@ class Calculator {
         let result = float_to_string(stack.get(0));
         if (result == "inf") {
             @current_number = "";
-            @screen_state = "Infinite Number Error";
+            @output = "Infinite Number Error";
         }
         else {
             @current_number = result;
-            @screen_state = result;
+            @output = result;
         }
     }
 
@@ -110,14 +113,14 @@ class Calculator {
             last_token_op = this_token_op;
         }
 
-        self.shunting_yard();
-        self.evaluate();
+        let rpn = self.shunting_yard(@expression);
+        self.evaluate(rpn);
         #Make sure to reset expression
         @expression = Token[];
     }
 
     method reset() {
-        @screen_state = "0";
+        @output = "0";
         @expression = Token[];
         @current_number = "";
     }
@@ -143,13 +146,13 @@ class Calculator {
             @current_number += label;
         }
 
-        if (@screen_state == "0" | @screen_state == "Infinite Number Error" | @screen_state == "Syntax Error")
-            @screen_state = label;
+        if (@output == "0" | @output == "Infinite Number Error" | @output == "Syntax Error")
+            @output = label;
         else
-            @screen_state += label;
+            @output += label;
     }
 
-    method screen_state() -> String { return @screen_state; }
+    method output() -> String { return @output; }
 }
 
 class KeypadButton {
@@ -166,7 +169,7 @@ class KeypadButton {
 
     method get_btn() -> Button { return @btn; }
 
-    method update(Calculator calc) {
+    method update(CalculatorState calc) {
         if (@btn.clicked())
             calc.update(@btn.get_text());
     }
@@ -174,7 +177,7 @@ class KeypadButton {
 
 class CalculatorApp {
     Button calc_screen;
-    Calculator calculator;
+    CalculatorState calculator_state;
     [KeypadButton] keypad_buttons;
 
     Button install;
@@ -183,7 +186,7 @@ class CalculatorApp {
     Page page;
 
     constructor() {
-        @calculator = Calculator();
+        @calculator_state = CalculatorState();
 
         @calc_screen = Button("0")
             .set_width_fill()
@@ -228,7 +231,7 @@ class CalculatorApp {
         while (wait_for_event()) {
             for (let i = 0, i < @keypad_buttons.len(), i += 1) {
                 let keypad_button = @keypad_buttons.get(i);
-                keypad_button.update(@calculator);
+                keypad_button.update(@calculator_state);
             }
             
             if (@install.clicked()) {
@@ -242,9 +245,9 @@ class CalculatorApp {
             }
 
             if (@dismiss.clicked()) @page.remove(@install_row);
-            if (@calc_screen.clicked()) @calculator.reset();
+            if (@calc_screen.clicked()) @calculator_state.reset();
 
-            @calc_screen.set_text(@calculator.screen_state());
+            @calc_screen.set_text(@calculator_state.output());
         }
     }
 }

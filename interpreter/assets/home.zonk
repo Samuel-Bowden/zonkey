@@ -9,12 +9,13 @@ start {
         .add(Text("Documentation").set_size(50.))
         .add(Hyperlink("Learn how to write applications in the Zonkey language", "zonkey:documentation/index.zonk"))
         .add(Text("Example apps").set_size(50.))
-        .add(Text("Here are some hyperlinks to example apps that I have made in Zonkey. These show the potential of what you can create with the Zonkey language. The source code is available for you to read in the browser below."))
-        .add(Text("Links to applications:").set_size(35.))
+        .add(Text("Here are some hyperlinks to example apps that I have made in Zonkey. These show the potential of what you can create with the Zonkey language."))
+        .add(Text("Links to applications:").set_size(25.))
         .add(Hyperlink("Calculator", "zonkey:calculator/app.zonk"))
-        .add(Hyperlink("Twigville Local News", "zonkey:news.zonk"))
         .add(Hyperlink("Simple counter", "zonkey:counter.zonk"))
         .add(Hyperlink("Guessing game", "zonkey:guessing_game/app.zonk"))
-        .add(Text("View the source code of these applications:").set_size(35.))
+        .add(Text("Please make sure you are running the required local server before accessing the Binary Bulletin:").set_colour("#CC5500"))
+        .add(Hyperlink("The Binary Bulletin", "http://localhost:8000"))
+        .add(Text("You can also see the source code of some of the applications in the browser with the following:"))
         .add(Hyperlink("Source code viewer", "zonkey:source_code_viewer.zonk")));
 }

@@ -9,38 +9,31 @@ start {
 		.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 
 
-	page.add(Text("In programming, a variable is a container that holds a value that can be used later in the program. In the code example given below, the variable 'a' has been assigned the value of 5. This means that whenever 'a' is used later in the program, it will represent the value 5. It's important to note that variables can be given any name, as long as it follows certain rules (such as not starting with a number).
+	page.add(Text("A variable is a container that holds a value that can be used later in a program. In the code example given below, the variable 'a' has been assigned the value of 5. This means that whenever 'a' is used later in the program, it will represent the value 5. It's important to note that variables must be given a name that is made up of the characters from lower/upper case characters A-Z and underscores.
 
-In Zonkey, each value (such as the value of 5) has a specific type. A type is a classification of data that determines what operations can be performed on that data. For example, integers (like 5) can be added, subtracted, multiplied, and divided using arithmetic operators. Other common types in Zonkey include strings (for text), floats (for decimal numbers), and booleans (for true/false values).
+In Zonkey, each value (such as the value 5 seen below) has a specific type. A type is a classification of data that determines what operations can be performed on it. For example, integers (like 5) can be added, subtracted, multiplied, and divided using arithmetic operators. Other common types in Zonkey include strings (for text), floats (for decimal numbers), and booleans (for true/false values).
 
-Zonkey is a statically-typed language, which means that the type of a variable is determined just before your script starts executing and cannot be changed during runtime. This allows for more efficient code and helps catch errors early in the development process. Zonkey will refuse to run a program if it contains type errors, which occur when a variable or value is used in a way that is not consistent with its type.
+Zonkey is a statically-typed language, which means that the type of a variable is determined just before your script starts executing and cannot be changed during runtime. This allows for more efficient code and helps you catch errors earlier. Zonkey will refuse to run a program if it contains type errors, which occur when a variable or value is used in a way that is not appropriate for its type.
 
-Overall, understanding variables and types is a crucial foundation for programming in Zonkey (and in many other programming languages)."));
-
-	page.add(Text("You can assign another value to 'a' with the following assignment statements."));
+Overall, understanding variables and types is important for programming in Zonkey and many other languages."));
 
 	page.add(Image("zonkey:documentation/pictures/variable_ass.png"));
 
-
 	set_page(page);
 	
-	page.add(Text("An expression in programming is a combination of values, variables, operators, and/or functions that produce a single value. In Zonkey, expressions are used to perform operations such as calculations and comparisons on data. Methods, which are functions associated with specific objects, can also be used as part of an expression to manipulate or retrieve information from objects.
+	page.add(Text("An expression is a combination of values, variables, operators, and/or functions that produce a single value. In Zonkey, expressions are used to perform operations such as calculations and comparisons. Methods, which are functions associated with specific objects, a topic we will cover later on, can also be used as part of an expression to manipulate or retrieve information from objects.
 
 The syntax for creating expressions in Zonkey is relatively simple. As shown in the example code below, expressions can be created by combining values, variables, and operators. For instance, the expression 'a + 3' evaluates to the value of the variable 'a' (which in this case is 5) plus the value of 3, which is 8.
 
-Zonkey supports a wide range of operators for creating expressions, including arithmetic operators (+, -, *, /), comparison operators (>, <, ==, !=, >=, <=), and logical operators (&, |). These operators can be used to create more complex expressions by combining multiple values, variables, and/or other expressions together.
+Zonkey supports a wide range of operators for creating expressions, including arithmetic operators (+, -, *, /), comparison operators (>, <, ==, !=, >=, <=), logical operators (&, |) and unary operators (-, !). These operators can be used to create more complex expressions by combining multiple values, variables, and/or other expressions together.
 
-It's important to note that expressions are evaluated based on the order of operations, which determines the priority of each operator in the expression. For example, in the expression 'a + b * c', the multiplication operator has higher priority than the addition operator, so it will be evaluated first.
+It's important to note that expressions are evaluated based on the order of operations, which determines the priority of each operator in the expression. For example, in the expression 'a + b * c', the multiplication has a higher priority than addition, so it will be evaluated first.
 
-Sub-expressions are expressions that are enclosed in parentheses. They are used to group parts of an expression together and specify the order of operations.
-
-For example, consider the expression 'a + b * c'. This expression will evaluate b multiplied by c first, and then add the result to a. However, if we want to evaluate 'a' plus the result of '(b * c)' first, we can use parentheses to group the second part of the expression: 'a + (b * c)'."));
-
-    page.add(Text("Here is an example of a more complex expression below:"));
+Expressions can be enclosed in parentheses to nest them. They are used to group parts of an expression together and specify the order of operations. For example, consider the expression 'a + b * c'. This expression will evaluate b multiplied by c first, and then add the result to a. However, if we want to evaluate 'a' plus the result of '(b * c)' first, we can use parentheses to group the second part of the expression: 'a + (b * c)'. An example of a more complex expression is shown below."));
 
 	page.add(Image("zonkey:documentation/pictures/eval_order.png"));
 
-	page.add(Text("This other example demonstrates the use of some of the main types in Zonkey, including integers, strings, floats, and booleans:"));
+	page.add(Text("Here is an overview of what operations are allowed with each data type, and how they are used:"));
 
 	page.add(Image("zonkey:documentation/pictures/available_types.png"));
 

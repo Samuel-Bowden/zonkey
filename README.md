@@ -17,6 +17,7 @@ Zonkey is a new programming language and browser that I've created for my final 
 - [Testing](#testing)
     - [Unit and Integration Testing](#unit-and-integration-testing)
     - [Fuzz-Testing](#fuzz-testing)
+    - [News Server](#news-server)
 - [Benchmarking](#benchmarking)
 - [Third Party Code Used](#third-party-code-used)
 
@@ -251,6 +252,15 @@ Finally, start the fuzz tester, feeding it some scripts to seed with in one of m
 ```sh
 cargo afl fuzz -i interpreter/src/tests/scripts -o out target/fuzz-testing/fuzz-test
 ```
+
+### News Server
+
+The news server requires Python and Flask to be installed to the system. Navigate to the `example-news-server` directory and run the server:
+```
+$ cd example-news-server
+$ python server.py
+```
+Ensure that port 8000 is free. Then in the browser, you can either click the link on the homepage to `Binary Bulletin`, or type `http://localhost:8000` in the address bar to load the homepage. To clean the comments added, you can run `http://localhost:8000/clean`.
 
 ## Benchmarking
 

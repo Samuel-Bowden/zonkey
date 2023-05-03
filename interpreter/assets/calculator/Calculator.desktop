@@ -2,5 +2,5 @@
 Type=Application
 Version=1.0
 Name=Calculator
-Exec=sh -c "zonkey installed:Calculator/app.zonk -a installed"
+Exec=sh -c "zonkey run --width 500 --height 600 installed:Calculator/app.zonk installed"
 Terminal=false

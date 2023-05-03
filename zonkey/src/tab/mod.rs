@@ -4,9 +4,6 @@ use interpreter::iced::widget::text;
 use interpreter::iced::widget::Container;
 use interpreter::iced::Element;
 pub use interpreter::iced_native;
-use interpreter::iced_native::alignment::Horizontal;
-use interpreter::iced_native::alignment::Vertical;
-use interpreter::iced_native::Length;
 pub use interpreter::Address;
 pub use interpreter::{
     element::Page,
@@ -107,12 +104,7 @@ impl Tab {
         if let Some(page) = &self.page {
             page_builder::build_page(page).map(|msg| (self.position, msg))
         } else {
-            Container::new(text("Loading page").size(40))
-                .align_x(Horizontal::Center)
-                .align_y(Vertical::Center)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .into()
+            Container::new(text("")).into()
         }
     }
 

@@ -1,0 +1,132 @@
+function button_theme(Button btn) -> Button {
+	return btn
+		.set_background_colour("#FFFFFF")
+		.set_text_colour("#000000");
+}
+
+class Article {
+	Page page;
+    Integer id;
+    Button article_link;
+    Button return_home;
+    Input add_comment;
+    Integer comments_len;
+    String prefix;
+    Text no_comments_message;
+    Boolean generated;
+    
+    method generate() {
+        @prefix = "http://localhost:8000/article/" + integer_to_string(@id) + "/";
+        let content = read_string(@prefix + "content");
+        let width = string_to_float(read_string(@prefix + "width"));
+
+		@page
+		    .add(Row().add(Image(@prefix + "image").set_max_width(width)).center())
+		    .add(Text(content))
+		    .add(Row().add(@return_home).center())
+            .add(Text(""))
+			.add(Text("Comments").set_size(40.).set_colour("#fff9c4"))
+            .add(@add_comment);
+
+        @comments_len = string_to_integer(read_string(@prefix + "comments/total"));
+
+        for (let id = 0, id < @comments_len, id += 1) {
+            let comment = read_string(@prefix + "comment/" + integer_to_string(id));
+            @page.add(Text(integer_to_string(id + 1) + ": " + comment));
+        }
+
+        @no_comments_message = Text("No comments at the moment");
+
+        if (@comments_len == 0)
+            @page.add(@no_comments_message);
+    }
+
+	constructor(Integer id, String title, String date) {
+		@article_link = button_theme(Button(title + date)
+			.set_width_fill());
+
+        @add_comment = Input("Add your own comment");
+
+	    @return_home = button_theme(Button("Back to home page"));
+
+        @id = id;
+
+		@page = Page()
+			.set_title(title)
+            .set_background_colour("#404040")
+			.set_text_colour("#fff")
+			.center()
+			.set_max_width(800.)
+			.add(Text("The Binary Bulletin").set_size(50.).set_colour("#8bc34a"))
+            .add(Text(""))
+			.add(Text(title).set_size(40.).set_colour("#fff9c4"))
+			.add(Text(date));
+	}
+
+	method link() -> Button { return @article_link; }
+
+	method check(Page home) {
+		if (@return_home.clicked())
+			set_page(home);
+		else if (@article_link.clicked()) {
+            if (!@generated) {
+                self.generate();
+                @generated = true;
+            }
+			set_page(@page);
+        } else if (@add_comment.confirmed() & @add_comment.get_text() != "") {
+            @page.remove(@no_comments_message);
+            let comment = @add_comment.get_text();
+            @comments_len += 1;
+            @page.add(Text(integer_to_string(@comments_len) + ": " + comment));
+            write_string(@prefix + "comments/add", comment);
+            @add_comment.set_text("");
+        }
+	}
+}
+
+class News {
+	[Article] articles;
+	Page home;
+
+	constructor() {
+        let network = false;
+
+        @articles = Article[];
+
+        let prefix = "http://localhost:8000/";
+
+        let article_length = string_to_integer(read_string(prefix + "articles/total"));
+
+        for (let id = 0, id < article_length, id += 1) {
+            let article_title = read_string(prefix + "article/" + integer_to_string(id) + "/title");
+            let article_date = read_string(prefix + "article/" + integer_to_string(id) + "/date");
+
+            @articles.push(Article(id, article_title, article_date));
+        }
+	
+		@home = Page()
+			.set_title("The Binary Bulletin")
+			.set_background_colour("#404040")
+			.set_text_colour("#fff")
+			.set_max_width(500.)
+			.center()
+			.add(Text("The Binary Bulletin").set_size(50.).set_colour("#8bc34a"))
+			.add(Text("Posts:").set_size(40.).set_colour("#fff9c4"));
+        
+        for (let i = 0, i < @articles.len(), i += 1)
+			@home.add(@articles.get(i).link());
+
+		set_page(@home);
+	}
+
+	method run() {
+		while (wait_for_event())
+            for (let i = 0, i < @articles.len(), i += 1)
+                @articles.get(i).check(@home);
+	}
+}
+
+start {
+	News().run();
+}

@@ -1,0 +1,9 @@
+As a beginner programmer, have you ever felt frustrated by the complexity of creating graphical user interface (GUI) applications? If so, let me introduce you to Zonkey - a new scripting language that simplifies the creation and distribution of GUI apps. And what's a Zonkey, you ask? It's a hybrid of a donkey and a zebra!
+
+The language is tightly integrated with a set of GUI classes, meaning that developers can create the frontend to their applications using a single script. This makes creating GUI apps simple and concise, unlike traditional web development, which typically requires knowledge of three different languages (HTML, CSS, and JS).
+
+The Zonkey ecosystem also emphasizes the installation of browser-based applications on users' local systems, which enables offline usage and improved desktop integration. This means that you can create and use Zonkey apps even when you don't have an internet connection!
+
+To make learning Zonkey even easier, the language's documentation and learning material have been written in the scripting language itself, available through the Zonkey browser. And if you're worried about making errors while coding, don't worry - the interpreter has a detailed error message system to help you learn from your mistakes.
+
+So what are you waiting for? Say hello to Zonkey and start creating your own GUI apps today!

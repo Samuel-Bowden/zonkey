@@ -8,7 +8,7 @@ start {
 			.add(Text("Functions").set_size(40.0))
 			.add(Hyperlink("Back to contents", "zonkey:documentation/index.zonk"));
 
-	page.add(Text("In Zonkey, there are several native functions included in the standard prelude that can be used without any additional setup. These functions perform common tasks, such as printing output to the console, performing mathematical operations, and getting input from the user. Some examples of native functions in Zonkey include:
+	page.add(Text("In Zonkey, there are several native functions included in the standard prelude that can be used to perform common tasks, such as printing output to the console, performing mathematical operations, and getting input from the user. Some examples of native functions in Zonkey include:
 
 - print(): This function outputs a given value to the console.
 - println(): Similar to print(), but adds a newline character at the end of the output.
@@ -18,7 +18,7 @@ start {
 
 page.add(Hyperlink("You can see all the functions available in Zonkey in the standard prelude documentation.", "zonkey:documentation/standard_prelude.zonk"));
 
-page.add(Text("While these native functions can be very useful, it is also possible for you to define you own functions inside your scripts. Functions allow you to encapsulate a block of code that performs a specific task and then reuse that code throughout the program. This can help to make code more modular, readable, and easier to maintain! An example of this is shown below:"));
+page.add(Text("While these native functions can be very useful, it is also possible for you to define you own functions inside your scripts. Functions allow you to encapsulate a block of code that performs a specific task and then reuse that code throughout the script. This can help to make your code more modular, readable, and easier to maintain! An example of this is shown below:"));
 
 	page.add(Image("zonkey:documentation/pictures/circle_area.png"));
 

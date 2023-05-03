@@ -1,3 +1,5 @@
 /target
 /out
 /.vscode
+/fuzz-test/out/
+/fuzz-test/merged_input/
