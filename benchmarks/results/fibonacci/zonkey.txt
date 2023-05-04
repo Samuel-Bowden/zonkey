@@ -1,17 +1,17 @@
 
  Performance counter stats for 'zonkey run fibonacci.zonk' (10 runs):
 
-            214.19 msec task-clock:u                     #    9.767 CPUs utilized               ( +-  9.48% )
+            220.91 msec task-clock:u                     #    9.809 CPUs utilized               ( +-  9.53% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             5,096      page-faults:u                    #   44.428 K/sec                       ( +-  9.57% )
-       264,933,221      cycles:u                         #    2.310 GHz                         ( +-  9.59% )
-         3,697,192      stalled-cycles-frontend:u        #    2.53% frontend cycles idle        ( +-  9.58% )
-        40,243,247      stalled-cycles-backend:u         #   27.52% backend cycles idle         ( +-  9.58% )
-       607,074,271      instructions:u                   #    4.15  insn per cycle            
-                                                  #    0.04  stalled cycles per insn     ( +-  9.57% )
-       104,312,478      branches:u                       #  909.417 M/sec                       ( +-  9.57% )
-         1,764,197      branch-misses:u                  #    3.08% of all branches             ( +-  9.57% )
+             5,105      page-faults:u                    #   39.831 K/sec                       ( +-  9.56% )
+       268,265,472      cycles:u                         #    2.093 GHz                         ( +-  9.61% )
+         4,225,089      stalled-cycles-frontend:u        #    2.86% frontend cycles idle        ( +-  9.47% )
+        36,805,035      stalled-cycles-backend:u         #   24.92% backend cycles idle         ( +-  9.97% )
+       607,052,085      instructions:u                   #    4.11  insn per cycle            
+                                                  #    0.03  stalled cycles per insn     ( +-  9.57% )
+       104,302,971      branches:u                       #  813.816 M/sec                       ( +-  9.57% )
+         1,757,164      branch-misses:u                  #    3.06% of all branches             ( +-  9.57% )
 
-          0.021930 +- 0.000836 seconds time elapsed  ( +-  3.81% )
+           0.02252 +- 0.00110 seconds time elapsed  ( +-  4.88% )
 

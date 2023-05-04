@@ -1,17 +1,17 @@
 
  Performance counter stats for './fibonacci' (10 runs):
 
-            125.10 msec task-clock:u                     #    9.256 CPUs utilized               ( +-  9.18% )
+            132.62 msec task-clock:u                     #    9.298 CPUs utilized               ( +-  9.39% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             2,887      page-faults:u                    #   40.772 K/sec                       ( +-  9.56% )
-        98,524,463      cycles:u                         #    1.391 GHz                         ( +-  9.56% )
-           864,347      stalled-cycles-frontend:u        #    1.62% frontend cycles idle        ( +-  9.60% )
-        41,660,872      stalled-cycles-backend:u         #   77.90% backend cycles idle         ( +-  9.56% )
-       220,572,207      instructions:u                   #    4.12  insn per cycle            
-                                                  #    0.10  stalled cycles per insn     ( +-  9.57% )
-        37,218,893      branches:u                       #  525.628 M/sec                       ( +-  9.57% )
-           219,319      branch-misses:u                  #    1.07% of all branches             ( +-  9.57% )
+             2,894      page-faults:u                    #   42.514 K/sec                       ( +-  9.60% )
+        99,543,632      cycles:u                         #    1.462 GHz                         ( +-  9.58% )
+           885,192      stalled-cycles-frontend:u        #    1.63% frontend cycles idle        ( +-  9.52% )
+        43,467,397      stalled-cycles-backend:u         #   80.09% backend cycles idle         ( +-  9.59% )
+       220,566,281      instructions:u                   #    4.06  insn per cycle            
+                                                  #    0.11  stalled cycles per insn     ( +-  9.57% )
+        37,217,209      branches:u                       #  546.734 M/sec                       ( +-  9.57% )
+           219,237      branch-misses:u                  #    1.07% of all branches             ( +-  9.57% )
 
-           0.01352 +- 0.00115 seconds time elapsed  ( +-  8.51% )
+           0.01426 +- 0.00165 seconds time elapsed  ( +- 11.55% )
 

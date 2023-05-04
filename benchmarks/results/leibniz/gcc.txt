@@ -1,17 +1,17 @@
 
  Performance counter stats for './leibniz' (10 runs):
 
-          5,119.40 msec task-clock:u                     #    9.990 CPUs utilized               ( +-  9.57% )
+          5,141.51 msec task-clock:u                     #    9.990 CPUs utilized               ( +-  9.58% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             1,302      page-faults:u                    #  462.325 /sec                        ( +-  9.58% )
-    22,145,544,191      cycles:u                         #    7.864 GHz                         ( +-  9.57% )
-         1,015,287      stalled-cycles-frontend:u        #    0.01% frontend cycles idle        ( +-  8.93% )
-    10,606,729,256      stalled-cycles-backend:u         #   87.06% backend cycles idle         ( +-  9.57% )
-    76,024,982,848      instructions:u                   #    6.24  insn per cycle            
+             1,293      page-faults:u                    #  457.476 /sec                        ( +-  9.59% )
+    22,129,650,304      cycles:u                         #    7.830 GHz                         ( +-  9.58% )
+         1,098,411      stalled-cycles-frontend:u        #    0.01% frontend cycles idle        ( +-  9.86% )
+    10,603,094,906      stalled-cycles-backend:u         #   87.13% backend cycles idle         ( +-  9.58% )
+    76,024,976,811      instructions:u                   #    6.25  insn per cycle            
                                                   #    0.08  stalled cycles per insn     ( +-  9.57% )
-    11,254,321,178      branches:u                       #    3.996 G/sec                       ( +-  9.57% )
-           243,693      branch-misses:u                  #    0.00% of all branches             ( +-  8.53% )
+    11,254,319,469      branches:u                       #    3.982 G/sec                       ( +-  9.57% )
+           217,990      branch-misses:u                  #    0.00% of all branches             ( +- 11.65% )
 
-          0.512457 +- 0.000499 seconds time elapsed  ( +-  0.10% )
+          0.514671 +- 0.000264 seconds time elapsed  ( +-  0.05% )
 

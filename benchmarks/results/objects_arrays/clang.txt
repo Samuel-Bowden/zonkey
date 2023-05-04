@@ -1,17 +1,17 @@
 
  Performance counter stats for './objects_arrays' (10 runs):
 
-            223.10 msec task-clock:u                     #    9.881 CPUs utilized               ( +-  9.54% )
+            213.53 msec task-clock:u                     #    9.868 CPUs utilized               ( +-  9.28% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             2,312      page-faults:u                    #   18.959 K/sec                       ( +-  9.58% )
-       469,465,097      cycles:u                         #    3.850 GHz                         ( +-  9.48% )
-         7,065,217      stalled-cycles-frontend:u        #    2.73% frontend cycles idle        ( +-  9.17% )
-        65,929,775      stalled-cycles-backend:u         #   25.52% backend cycles idle         ( +-  9.48% )
-       891,824,723      instructions:u                   #    3.45  insn per cycle            
+             2,313      page-faults:u                    #   18.835 K/sec                       ( +-  9.58% )
+       496,876,098      cycles:u                         #    4.046 GHz                         ( +-  9.11% )
+         8,834,534      stalled-cycles-frontend:u        #    2.99% frontend cycles idle        ( +-  8.55% )
+        64,374,349      stalled-cycles-backend:u         #   21.79% backend cycles idle         ( +-  9.54% )
+       891,818,878      instructions:u                   #    3.02  insn per cycle            
                                                   #    0.04  stalled cycles per insn     ( +-  9.57% )
-       162,398,549      branches:u                       #    1.332 G/sec                       ( +-  9.57% )
-           535,465      branch-misses:u                  #    0.60% of all branches             ( +-  9.28% )
+       162,396,880      branches:u                       #    1.322 G/sec                       ( +-  9.57% )
+           528,725      branch-misses:u                  #    0.59% of all branches             ( +-  8.55% )
 
-          0.022579 +- 0.000493 seconds time elapsed  ( +-  2.19% )
+          0.021638 +- 0.000777 seconds time elapsed  ( +-  3.59% )
 

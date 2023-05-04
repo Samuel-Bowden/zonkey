@@ -1,17 +1,17 @@
 
  Performance counter stats for 'bun run hello_world.js' (100 runs):
 
-          1,002.23 msec task-clock:u                     #   96.952 CPUs utilized               ( +-  2.90% )
+          1,067.59 msec task-clock:u                     #   96.781 CPUs utilized               ( +-  2.91% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-           104,960      page-faults:u                    #  207.462 K/sec                       ( +-  2.90% )
-     1,596,948,611      cycles:u                         #    3.157 GHz                         ( +-  2.90% )
-       109,901,471      stalled-cycles-frontend:u        #   13.62% frontend cycles idle        ( +-  2.90% )
-       389,605,457      stalled-cycles-backend:u         #   48.27% backend cycles idle         ( +-  2.90% )
-     1,429,046,420      instructions:u                   #    1.77  insn per cycle            
+           104,855      page-faults:u                    #  194.885 K/sec                       ( +-  2.90% )
+     1,623,809,258      cycles:u                         #    3.018 GHz                         ( +-  2.90% )
+       116,723,384      stalled-cycles-frontend:u        #   14.26% frontend cycles idle        ( +-  2.90% )
+       397,127,338      stalled-cycles-backend:u         #   48.53% backend cycles idle         ( +-  2.90% )
+     1,429,091,209      instructions:u                   #    1.75  insn per cycle            
                                                   #    0.14  stalled cycles per insn     ( +-  2.90% )
-       281,178,048      branches:u                       #  555.772 M/sec                       ( +-  2.90% )
-        12,067,914      branch-misses:u                  #    8.50% of all branches             ( +-  2.90% )
+       281,186,610      branches:u                       #  522.618 M/sec                       ( +-  2.90% )
+        12,064,542      branch-misses:u                  #    8.50% of all branches             ( +-  2.90% )
 
-         0.0103374 +- 0.0000644 seconds time elapsed  ( +-  0.62% )
+         0.0110309 +- 0.0000775 seconds time elapsed  ( +-  0.70% )
 

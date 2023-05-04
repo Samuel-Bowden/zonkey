@@ -3,3 +3,4 @@
 /.vscode
 /fuzz-test/out/
 /fuzz-test/merged_input/
+/example-news-server/__pycache__/

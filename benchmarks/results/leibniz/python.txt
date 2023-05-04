@@ -1,17 +1,17 @@
 
  Performance counter stats for 'python leibniz.py' (10 runs):
 
-         90,224.59 msec task-clock:u                     #    9.998 CPUs utilized               ( +-  9.56% )
+         90,824.80 msec task-clock:u                     #    9.998 CPUs utilized               ( +-  9.58% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             8,818      page-faults:u                    #  177.303 /sec                        ( +-  9.57% )
-   388,591,594,942      cycles:u                         #    7.813 GHz                         ( +-  9.55% )
-       340,752,459      stalled-cycles-frontend:u        #    0.16% frontend cycles idle        ( +-  9.98% )
-   146,353,923,243      stalled-cycles-backend:u         #   68.20% backend cycles idle         ( +-  9.56% )
- 1,128,903,846,000      instructions:u                   #    5.26  insn per cycle            
-                                                  #    0.07  stalled cycles per insn     ( +-  9.56% )
-   227,478,269,304      branches:u                       #    4.574 G/sec                       ( +-  9.55% )
-       272,101,015      branch-misses:u                  #    0.22% of all branches             ( +-  9.57% )
+             8,830      page-faults:u                    #  176.897 /sec                        ( +-  9.57% )
+   385,587,030,862      cycles:u                         #    7.725 GHz                         ( +-  9.58% )
+       344,316,387      stalled-cycles-frontend:u        #    0.16% frontend cycles idle        ( +-  9.93% )
+   145,401,111,613      stalled-cycles-backend:u         #   68.57% backend cycles idle         ( +-  9.58% )
+ 1,122,354,230,960      instructions:u                   #    5.29  insn per cycle            
+                                                  #    0.07  stalled cycles per insn     ( +-  9.58% )
+   225,778,336,898      branches:u                       #    4.523 G/sec                       ( +-  9.58% )
+       272,237,393      branch-misses:u                  #    0.22% of all branches             ( +-  9.60% )
 
-            9.0246 +- 0.0297 seconds time elapsed  ( +-  0.33% )
+            9.0842 +- 0.0142 seconds time elapsed  ( +-  0.16% )
 

@@ -1,17 +1,17 @@
 
  Performance counter stats for 'clox hello_world.lox' (100 runs):
 
-             23.91 msec task-clock:u                     #   44.264 CPUs utilized               ( +-  2.86% )
+             23.32 msec task-clock:u                     #   44.987 CPUs utilized               ( +-  2.87% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             5,784      page-faults:u                    #  469.139 K/sec                       ( +-  2.90% )
-        23,325,822      cycles:u                         #    1.892 GHz                         ( +-  2.90% )
-         1,984,205      stalled-cycles-frontend:u        #   16.57% frontend cycles idle        ( +-  2.89% )
-         6,000,577      stalled-cycles-backend:u         #   50.12% backend cycles idle         ( +-  2.91% )
-        13,724,979      instructions:u                   #    1.15  insn per cycle            
-                                                  #    0.23  stalled cycles per insn     ( +-  2.90% )
-         2,908,687      branches:u                       #  235.923 M/sec                       ( +-  2.90% )
-           262,683      branch-misses:u                  #   17.88% of all branches             ( +-  2.89% )
+             5,724      page-faults:u                    #  478.497 K/sec                       ( +-  2.91% )
+        23,043,530      cycles:u                         #    1.926 GHz                         ( +-  2.89% )
+         2,019,328      stalled-cycles-frontend:u        #   17.22% frontend cycles idle        ( +-  2.92% )
+         5,735,947      stalled-cycles-backend:u         #   48.91% backend cycles idle         ( +-  2.88% )
+        13,699,590      instructions:u                   #    1.17  insn per cycle            
+                                                  #    0.22  stalled cycles per insn     ( +-  2.90% )
+         2,901,597      branches:u                       #  242.558 M/sec                       ( +-  2.90% )
+           263,043      branch-misses:u                  #   17.95% of all branches             ( +-  2.90% )
 
-         0.0005401 +- 0.0000137 seconds time elapsed  ( +-  2.54% )
+        0.00051831 +- 0.00000957 seconds time elapsed  ( +-  1.85% )
 

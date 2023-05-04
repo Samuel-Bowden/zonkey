@@ -1,17 +1,17 @@
 
  Performance counter stats for 'zonkey run hello_world.zonk' (100 runs):
 
-            231.30 msec task-clock:u                     #   88.031 CPUs utilized               ( +-  2.90% )
+            237.92 msec task-clock:u                     #   89.430 CPUs utilized               ( +-  2.87% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-            42,736      page-faults:u                    #  367.389 K/sec                       ( +-  2.90% )
-       334,681,640      cycles:u                         #    2.877 GHz                         ( +-  2.90% )
-        14,290,553      stalled-cycles-frontend:u        #    8.44% frontend cycles idle        ( +-  2.90% )
-       154,256,681      stalled-cycles-backend:u         #   91.06% backend cycles idle         ( +-  2.89% )
-       338,163,288      instructions:u                   #    2.00  insn per cycle            
-                                                  #    0.23  stalled cycles per insn     ( +-  2.90% )
-        65,433,516      branches:u                       #  562.512 M/sec                       ( +-  2.90% )
-         2,280,877      branch-misses:u                  #    6.90% of all branches             ( +-  2.90% )
+            43,073      page-faults:u                    #  356.290 K/sec                       ( +-  2.90% )
+       330,256,833      cycles:u                         #    2.732 GHz                         ( +-  2.90% )
+        14,990,312      stalled-cycles-frontend:u        #    9.02% frontend cycles idle        ( +-  2.89% )
+       150,755,691      stalled-cycles-backend:u         #   90.68% backend cycles idle         ( +-  2.91% )
+       338,397,980      instructions:u                   #    2.04  insn per cycle            
+                                                  #    0.22  stalled cycles per insn     ( +-  2.90% )
+        65,472,016      branches:u                       #  541.570 M/sec                       ( +-  2.90% )
+         2,274,124      branch-misses:u                  #    6.88% of all branches             ( +-  2.90% )
 
-         0.0026275 +- 0.0000354 seconds time elapsed  ( +-  1.35% )
+         0.0026604 +- 0.0000361 seconds time elapsed  ( +-  1.36% )
 

@@ -1,17 +1,17 @@
 
  Performance counter stats for 'clox fibonacci.lox' (10 runs):
 
-            542.03 msec task-clock:u                     #    9.917 CPUs utilized               ( +-  9.66% )
+            534.10 msec task-clock:u                     #    9.927 CPUs utilized               ( +-  9.54% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-               616      page-faults:u                    #    2.121 K/sec                       ( +-  9.59% )
-       610,222,096      cycles:u                         #    2.102 GHz                         ( +-  9.63% )
-        14,600,265      stalled-cycles-frontend:u        #    4.62% frontend cycles idle        ( +- 10.42% )
-        32,174,352      stalled-cycles-backend:u         #   10.18% backend cycles idle         ( +-  9.42% )
-     1,137,285,601      instructions:u                   #    3.60  insn per cycle            
+               608      page-faults:u                    #    2.061 K/sec                       ( +-  9.53% )
+       551,225,809      cycles:u                         #    1.868 GHz                         ( +-  9.56% )
+         6,849,194      stalled-cycles-frontend:u        #    2.26% frontend cycles idle        ( +-  9.29% )
+        29,794,904      stalled-cycles-backend:u         #    9.83% backend cycles idle         ( +-  9.71% )
+     1,137,283,106      instructions:u                   #    3.75  insn per cycle            
                                                   #    0.01  stalled cycles per insn     ( +-  9.57% )
-       220,795,500      branches:u                       #  760.410 M/sec                       ( +-  9.57% )
-         1,801,960      branch-misses:u                  #    1.48% of all branches             ( +-  9.68% )
+       220,794,793      branches:u                       #  748.306 M/sec                       ( +-  9.57% )
+         1,262,646      branch-misses:u                  #    1.04% of all branches             ( +-  9.54% )
 
-           0.05466 +- 0.00113 seconds time elapsed  ( +-  2.07% )
+          0.053803 +- 0.000434 seconds time elapsed  ( +-  0.81% )
 

@@ -1,17 +1,17 @@
 
  Performance counter stats for 'zonkey run leibniz.zonk' (10 runs):
 
-         38,039.66 msec task-clock:u                     #    9.997 CPUs utilized               ( +-  9.56% )
+         40,575.99 msec task-clock:u                     #    9.998 CPUs utilized               ( +-  9.57% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-             4,386      page-faults:u                    #  209.327 /sec                        ( +-  9.57% )
-   162,882,275,455      cycles:u                         #    7.774 GHz                         ( +-  9.57% )
-        12,279,965      stalled-cycles-frontend:u        #    0.01% frontend cycles idle        ( +- 10.50% )
-    56,505,162,452      stalled-cycles-backend:u         #   63.08% backend cycles idle         ( +-  9.55% )
-   568,495,177,360      instructions:u                   #    6.35  insn per cycle            
-                                                  #    0.05  stalled cycles per insn     ( +-  9.57% )
-    85,835,721,787      branches:u                       #    4.097 G/sec                       ( +-  9.57% )
-           308,579      branch-misses:u                  #    0.00% of all branches             ( +-  9.69% )
+             4,415      page-faults:u                    #  197.271 /sec                        ( +-  9.57% )
+   172,804,496,275      cycles:u                         #    7.721 GHz                         ( +-  9.57% )
+        31,625,993      stalled-cycles-frontend:u        #    0.03% frontend cycles idle        ( +-  9.54% )
+    19,278,203,236      stalled-cycles-backend:u         #   20.25% backend cycles idle         ( +-  9.45% )
+   590,995,190,455      instructions:u                   #    6.21  insn per cycle            
+                                                  #    0.02  stalled cycles per insn     ( +-  9.57% )
+    91,335,721,284      branches:u                       #    4.081 G/sec                       ( +-  9.57% )
+           305,971      branch-misses:u                  #    0.00% of all branches             ( +-  9.71% )
 
-           3.80503 +- 0.00720 seconds time elapsed  ( +-  0.19% )
+            4.0585 +- 0.0136 seconds time elapsed  ( +-  0.33% )
 

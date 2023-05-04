@@ -1,17 +1,17 @@
 
  Performance counter stats for 'python hello_world.py' (100 runs):
 
-          1,185.26 msec task-clock:u                     #   95.819 CPUs utilized               ( +-  2.90% )
+          1,191.28 msec task-clock:u                     #   95.948 CPUs utilized               ( +-  2.90% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-            86,928      page-faults:u                    #  145.158 K/sec                       ( +-  2.90% )
-     4,143,251,151      cycles:u                         #    6.919 GHz                         ( +-  2.90% )
-       119,767,357      stalled-cycles-frontend:u        #    5.73% frontend cycles idle        ( +-  2.90% )
-       907,014,925      stalled-cycles-backend:u         #   43.38% backend cycles idle         ( +-  2.90% )
-     5,962,361,171      instructions:u                   #    2.85  insn per cycle            
-                                                  #    0.08  stalled cycles per insn     ( +-  2.90% )
-     1,267,543,998      branches:u                       #    2.117 G/sec                       ( +-  2.90% )
-        43,712,700      branch-misses:u                  #    6.83% of all branches             ( +-  2.90% )
+            86,998      page-faults:u                    #  144.649 K/sec                       ( +-  2.90% )
+     4,114,542,545      cycles:u                         #    6.841 GHz                         ( +-  2.90% )
+       116,255,133      stalled-cycles-frontend:u        #    5.59% frontend cycles idle        ( +-  2.90% )
+       874,676,232      stalled-cycles-backend:u         #   42.09% backend cycles idle         ( +-  2.91% )
+     5,965,988,288      instructions:u                   #    2.87  insn per cycle            
+                                                  #    0.07  stalled cycles per insn     ( +-  2.90% )
+     1,268,330,421      branches:u                       #    2.109 G/sec                       ( +-  2.90% )
+        43,745,364      branch-misses:u                  #    6.83% of all branches             ( +-  2.90% )
 
-         0.0123699 +- 0.0000402 seconds time elapsed  ( +-  0.33% )
+         0.0124160 +- 0.0000307 seconds time elapsed  ( +-  0.25% )
 

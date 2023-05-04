@@ -1,17 +1,17 @@
 
  Performance counter stats for './hello_world' (100 runs):
 
-             79.94 msec task-clock:u                     #   78.457 CPUs utilized               ( +-  2.85% )
+             75.14 msec task-clock:u                     #   80.434 CPUs utilized               ( +-  2.84% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-            12,195      page-faults:u                    #  293.571 K/sec                       ( +-  2.90% )
-       178,591,594      cycles:u                         #    4.299 GHz                         ( +-  2.90% )
-         5,053,528      stalled-cycles-frontend:u        #    5.58% frontend cycles idle        ( +-  2.90% )
-        77,982,239      stalled-cycles-backend:u         #   86.06% backend cycles idle         ( +-  2.90% )
-       249,483,123      instructions:u                   #    2.75  insn per cycle            
-                                                  #    0.16  stalled cycles per insn     ( +-  2.90% )
-        43,127,811      branches:u                       #    1.038 G/sec                       ( +-  2.90% )
-         1,311,841      branch-misses:u                  #    6.02% of all branches             ( +-  2.90% )
+            12,204      page-faults:u                    #  313.848 K/sec                       ( +-  2.91% )
+       168,593,263      cycles:u                         #    4.336 GHz                         ( +-  2.90% )
+         5,138,813      stalled-cycles-frontend:u        #    6.04% frontend cycles idle        ( +-  2.91% )
+        69,795,473      stalled-cycles-backend:u         #   82.01% backend cycles idle         ( +-  2.91% )
+       249,421,820      instructions:u                   #    2.93  insn per cycle            
+                                                  #    0.14  stalled cycles per insn     ( +-  2.90% )
+        43,110,611      branches:u                       #    1.109 G/sec                       ( +-  2.90% )
+         1,312,682      branch-misses:u                  #    6.03% of all branches             ( +-  2.90% )
 
-         0.0010189 +- 0.0000219 seconds time elapsed  ( +-  2.15% )
+         0.0009342 +- 0.0000160 seconds time elapsed  ( +-  1.72% )
 

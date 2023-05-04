@@ -1,17 +1,17 @@
 
  Performance counter stats for 'zonkey run objects_arrays.zonk' (10 runs):
 
-         20,320.09 msec task-clock:u                     #    9.968 CPUs utilized               ( +-  9.59% )
+         15,230.23 msec task-clock:u                     #    9.986 CPUs utilized               ( +-  9.57% )
                  0      context-switches:u               #    0.000 /sec                      
                  0      cpu-migrations:u                 #    0.000 /sec                      
-            12,439      page-faults:u                    #    1.114 K/sec                       ( +-  9.58% )
-    86,534,913,014      cycles:u                         #    7.747 GHz                         ( +-  9.57% )
-        79,893,198      stalled-cycles-frontend:u        #    0.17% frontend cycles idle        ( +- 10.01% )
-    53,448,706,531      stalled-cycles-backend:u         #  112.29% backend cycles idle         ( +-  9.57% )
-   167,874,051,202      instructions:u                   #    3.53  insn per cycle            
-                                                  #    0.18  stalled cycles per insn     ( +-  9.57% )
-    32,745,481,217      branches:u                       #    2.932 G/sec                       ( +-  9.57% )
-           549,357      branch-misses:u                  #    0.00% of all branches             ( +-  9.64% )
+            12,422      page-faults:u                    #    1.483 K/sec                       ( +-  9.57% )
+    64,673,317,607      cycles:u                         #    7.723 GHz                         ( +-  9.58% )
+         8,024,116      stalled-cycles-frontend:u        #    0.02% frontend cycles idle        ( +-  9.34% )
+    34,182,317,347      stalled-cycles-backend:u         #   96.09% backend cycles idle         ( +-  9.52% )
+   167,873,838,235      instructions:u                   #    4.72  insn per cycle            
+                                                  #    0.11  stalled cycles per insn     ( +-  9.57% )
+    32,745,851,480      branches:u                       #    3.910 G/sec                       ( +-  9.57% )
+           491,414      branch-misses:u                  #    0.00% of all branches             ( +-  9.17% )
 
-           2.03853 +- 0.00416 seconds time elapsed  ( +-  0.20% )
+           1.52518 +- 0.00179 seconds time elapsed  ( +-  0.12% )
 
