@@ -10,10 +10,17 @@ Welcome to my final year computer science project, Zonkey. For this project, a n
 
 
 <div align="center">
-    <p><b>Fig 2. Developing the calculator app, running in the browser on the left, with a portion of the Zonkey script displayed on the right.</b></p>
+    <p><b>Fig 2. Developing the calculator app, with a portion of the Zonkey script displayed on the right.</b></p>
 </div>
 
 ![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/b1d73311-81b2-41a2-b763-68752dd04cd4)
+
+<div align="center">
+    <p><b>Fig 3. Calculator app installed on an Ubuntu system, running as an individual app.</b></p>
+</div>
+
+![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/86782567-eeb8-4334-ba62-2806a2370c79)
+
 
 ## Table of Contents
 
@@ -176,7 +183,7 @@ Zonkey's documentation and learning material, written in Zonkey script itself, i
 This covers how to use the language and guides on how to use the GUI API, and also documentation of the standard prelude.
 
 <div align="center">
-    <p><b>Fig 3. An example page inside the documentation.</b></p>
+    <p><b>Fig 4. An example page inside the documentation.</b></p>
 </div>
 
 ![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/2d4b1431-3384-4909-9a7b-a30e0adee462)
