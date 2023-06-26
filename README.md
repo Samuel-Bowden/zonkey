@@ -1,6 +1,19 @@
 # Zonkey
 
-Welcome to my final year computer science project, Zonkey. This project presents a novel scripting language, which is used to write GUI applications for a desktop browser application I developed with the [Iced toolkit](https://github.com/iced-rs/iced). The aim of this project is to explore an easier way for novice developers to create their first graphical applications, which are then capable of being easily loaded by friends and family over the internet. It focuses on being an easier to learn alternative to existing web technologies.
+Welcome to my final year computer science project, Zonkey. For this project, a novel scripting language was created, which is used to write graphical applications for a browser developed with the [Iced GUI toolkit](https://github.com/iced-rs/iced). The aim of this project is to explore a simplier way for novice developers to create their first graphical applications, which can then be loaded by friends and family over the internet. It aims to be easier to learn compared to existing web technologies. Furthermore, applications written for Zonkey can optionally be installed to the system (using the Zonkey runtime in the background), allowing offline usage and tighter integration with the desktop environment.
+
+<div align="center">
+    <p><b>Fig 1. Zonkey browser running a "Binary Bulletin" news application loaded over the network.</b></p>
+</div>
+
+![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/7e43bd6f-7709-4096-996a-bd18e92a8b4b)
+
+
+<div align="center">
+    <p><b>Fig 2. Developing the calculator app, running in the browser on the left, with a portion of the Zonkey script displayed on the right.</b></p>
+</div>
+
+![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/b1d73311-81b2-41a2-b763-68752dd04cd4)
 
 ## Table of Contents
 
@@ -12,13 +25,12 @@ Welcome to my final year computer science project, Zonkey. This project presents
     - [First Taste Of The Language](#first-taste-of-the-language)
     - [The Browser](#the-browser)
 - [Documentation and Learning Material](#documentation-and-learning-material)
-- [Repository Organisation](#repository-organisation)
 - [Compilation](#compilation)
 - [Testing](#testing)
     - [Unit and Integration Testing](#unit-and-integration-testing)
-    - [Fuzz-Testing](#fuzz-testing)
+    - [Fuzz Testing](#fuzz-testing)
     - [News Server](#news-server)
-- [Benchmarking](#benchmarking)
+    - [Benchmarking](#benchmarking)
 
 ## Requirements
 
@@ -163,6 +175,12 @@ Zonkey's documentation and learning material, written in Zonkey script itself, i
 
 This covers how to use the language and guides on how to use the GUI API, and also documentation of the standard prelude.
 
+<div align="center">
+    <p><b>Fig 3. An example page inside the documentation.</b></p>
+</div>
+
+![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/2d4b1431-3384-4909-9a7b-a30e0adee462)
+
 The source code for the documentation and learning material is located under `interpreter/assets/documentation`.
 
 ## Compilation 
@@ -246,17 +264,17 @@ $ python server.py
 ```
 Ensure that port 8000 is free. Then in the browser, you can either click the link on the homepage to `Binary Bulletin`, or type `http://localhost:8000` in the address bar to load the homepage. To clean the comments added, you can run `http://localhost:8000/clean`.
 
-## Benchmarking
+### Benchmarking
 
 To run the benchmarks, the following compilers and interpreters need to be installed, along with some additional software. Note that benchmarking only currently works on Linux.
 
 - Rustc (will be included with the Rust toolchain)
 - Clang
 - GCC
-- Python
+- CPython
 - Bun
 - Deno
-- Lox (has to be manually compiled from their repository and added to path)
+- clox (has to be manually compiled from their [repository](https://github.com/munificent/craftinginterpreters) and added to path)
 - Zonkey itself installed to the path.
 - Perf
 - Diffuse for verification
