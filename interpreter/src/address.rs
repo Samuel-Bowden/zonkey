@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
+pub static PROJECT_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/../assets");
 
 fn http_name(secure: bool) -> &'static str {
     if secure {

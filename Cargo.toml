@@ -1,11 +1,29 @@
-[workspace]
+[package]
+name = "zonkey"
+version = "1.0.2"
+edition = "2021"
+description = "The Zonkey Programming Language And Browser."
+authors = ["Samuel Bowden"]
 
+[dependencies]
+clap = { version = "4.2.2", features = ["derive"] }
+interpreter = { path = "interpreter" }
+non-empty-vec = "0.2.3"
+
+[dev-dependencies]
+assert_cmd = "2"
+
+[package.metadata.wix]
+name = "Zonkey"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3.9", features = ["wincon"] }
+
+[workspace]
 members = [
 	"interpreter",
-	"zonkey",
-	"fuzz-test",
+	"tests/fuzzer",
 ]
-
 resolver = "2"
 
 [profile.release]
@@ -22,6 +40,6 @@ debug-assertions = false
 inherits = "dev"
 debug-assertions = true 
 
-[profile.fuzz-testing]
+[profile.fuzzer]
 inherits = "dev"
 debug-assertions = true 

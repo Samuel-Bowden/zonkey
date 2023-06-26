@@ -1,5 +1,5 @@
 function button_theme(Button btn) -> Button {
-	return btn
+  return btn
 		.set_background_colour("#FFFFFF")
 		.set_text_colour("#000000");
 }
