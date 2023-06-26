@@ -1,6 +1,6 @@
 # Zonkey
 
-Zonkey is a new programming language and browser that I've created for my final year project. The design focuses on allowing adults and children inexperienced in software development to very easily develop GUI applications which they can share with people across the world.
+Welcome to my final year computer science project, Zonkey. This project presents a novel scripting language, which is used to write GUI applications for a desktop browser application I developed with the [Iced toolkit](https://github.com/iced-rs/iced). The aim of this project is to explore an easier way for novice developers to create their first graphical applications, which are then capable of being easily loaded by friends and family over the internet. It focuses on being an easier to learn alternative to existing web technologies.
 
 ## Table of Contents
 
@@ -13,13 +13,12 @@ Zonkey is a new programming language and browser that I've created for my final 
     - [The Browser](#the-browser)
 - [Documentation and Learning Material](#documentation-and-learning-material)
 - [Repository Organisation](#repository-organisation)
-- [Compliation](#compilation)
+- [Compilation](#compilation)
 - [Testing](#testing)
     - [Unit and Integration Testing](#unit-and-integration-testing)
     - [Fuzz-Testing](#fuzz-testing)
     - [News Server](#news-server)
 - [Benchmarking](#benchmarking)
-- [Icons](#icons)
 
 ## Requirements
 
@@ -156,7 +155,6 @@ To launch your first GUI script that you developed before in the browser interfa
 $ zonkey browser hello_gui.zonk
 ```
 
-
 Zonkey applications found in the browser can offer installation to your system for offline use and a better integration with your desktop, which is demonstrated with the applications located at `zonkey:calculator/app.zonk` and `zonkey:guessing_game/app.zonk` - links to these can be found on the homepage of the browser.
 
 ## Documentation and Learning Material
@@ -171,19 +169,17 @@ The source code for the documentation and learning material is located under `in
 
 A functioning installation of a Rust toolchain is required to compile Zonkey. Instructions on how to set this up can be found at <https://www.rust-lang.org/tools/install>.
 
-Please be aware that the initial compilation of Zonkey can take a significant amount of time, around 15-30 minutes depending on your hardware.
-
 There should be no need for additional requirements as the necessary development headers are included with Windows, Ubuntu, and Fedora. However, if your compilation is failing, please read the failed compilation output as it will detail what the development headers it could not find, as this may happen on minimal distributions of Linux.
 
 Once you have a functioning toolchain for Rust, first clone the repository:
 
 ```sh
-$ git clone https://campus.cs.le.ac.uk/gitlab/ug_project/22-23/srb55
+$ git clone https://github.com/Samuel-Bowden/zonkey
 ```
 
 Navigate into the directory and start the compilation.
 ```sh
-$ cd srb55
+$ cd zonkey
 $ cargo build --release
 ```
 Once this has completed, the binary will be located at `target/release/zonkey`. To install this to your system path, you can do:
@@ -193,7 +189,7 @@ $ cargo install --path .
 $ zonkey --version
 ```
 
-To run it the program without installing to your path, you can do the following.
+To run the program without installing to your path, you can do the following.
 ```sh
 $ cargo run -r -- --version
 # Or
@@ -238,7 +234,7 @@ cargo afl build -p tests/fuzzer --profile fuzzer
 ```
 Finally, start the fuzzer, feeding it some scripts to seed with in one of the testing directories.
 ```sh
-cargo afl fuzz -i interpreter/src/tests/scripts -o out target/fuzzer/fuzz-test
+cargo afl fuzz -i interpreter/src/tests/scripts -o out target/fuzzer/fuzzer
 ```
 
 ### News Server
@@ -281,7 +277,3 @@ $ bash verifier.sh fibonacci lox
 $ bash verifier.sh leibniz lox
 $ bash verifier.sh objects_arrays lox
 ```
-
-## Icons
-
-The icons in the web browser, defined in `zonkey/src/tab/control_bar.rs`, were sourced from [Remix Icon](https://remixicon.com/), licensed under Apache License 2.0.

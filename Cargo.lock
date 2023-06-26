@@ -1099,7 +1099,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fuzz-test"
+name = "fuzzer"
 version = "0.1.0"
 dependencies = [
  "afl",
