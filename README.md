@@ -1,26 +1,25 @@
 # Zonkey
 
-Welcome to my final year computer science project, Zonkey. For this project, a novel scripting language was created, which is used to write graphical applications for a browser developed with the [Iced GUI toolkit](https://github.com/iced-rs/iced). The aim of this project is to explore a simplier way for novice developers to create their first graphical applications, which can then be loaded by friends and family over the internet. It aims to be easier to learn compared to existing web technologies. Furthermore, applications written for Zonkey can optionally be installed to the system (using the Zonkey runtime in the background), allowing offline usage and tighter integration with the desktop environment.
+Welcome to my final year computer science project, Zonkey. For this project, a novel scripting language was created, which is used to write graphical applications for a browser developed with the [Iced GUI toolkit](https://github.com/iced-rs/iced). The aim of this project is to explore a simplier way for novice developers to create their first graphical applications, which can then be loaded by friends and family over the internet. It aims to be easier to learn compared to existing web technologies. Applications written for Zonkey can optionally be installed to the system (using the Zonkey runtime in the background), allowing offline usage and tighter integration with the desktop environment.
 
 <div align="center">
-    <p><b>Fig 1. Zonkey browser running a "Binary Bulletin" news application loaded over the network.</b></p>
+    <p><b>Fig 1. The Zonkey browser running the "Binary Bulletin" news site, which is written in Zonkey script and loaded over the internet</b></p>
 </div>
 
-![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/7e43bd6f-7709-4096-996a-bd18e92a8b4b)
+![zonkey-fig-1](https://github.com/Samuel-Bowden/zonkey/assets/91887909/66ff6f3c-f363-46c1-8ed8-e53efd25edd0)
 
 
 <div align="center">
     <p><b>Fig 2. Developing the calculator app, with a portion of the Zonkey script displayed on the right.</b></p>
 </div>
 
-![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/b1d73311-81b2-41a2-b763-68752dd04cd4)
+![zonkey-fig-2](https://github.com/Samuel-Bowden/zonkey/assets/91887909/5ef4a47d-a61b-4516-a9a3-6b8e8da4fc3b)
 
 <div align="center">
-    <p><b>Fig 3. Calculator app installed on an Ubuntu system, running as an individual app.</b></p>
+    <p><b>Fig 3. Calculator app installed on an Ubuntu system, running as an individual application outside the browser.</b></p>
 </div>
 
-![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/86782567-eeb8-4334-ba62-2806a2370c79)
-
+![zonkey-fig-3](https://github.com/Samuel-Bowden/zonkey/assets/91887909/2b736185-ac25-45b3-b31d-4c7a9e9f3c1f)
 
 ## Table of Contents
 
@@ -52,24 +51,26 @@ Zonkey is pre-compiled for supported operating systems, and can be installed fol
 
 ### Windows
 
-Please download the file named "Zonkey-1.0.2-x86_64.msi" inside the releases. Double click on the downloaded MSI file, and the installer will guide you through the process of adding Zonkey to your system.
+Please download the file named `Zonkey-1.0.2-x86_64-windows.msi` inside the releases section.
+
+Double click on the downloaded MSI file, and the installer will guide you through the process of adding Zonkey to your system.
 
 After installation, "zonkey" will be added to your path and a shortcut and desktop entry to the browser will be created.
 
-To uninstall, either launch this MSI installer again and select uninstall, or go to add or remove programs in Windows settings.
+To uninstall, either launch this MSI installer again and select uninstall, or go to "Add or remove programs" in Windows settings.
 
 You can now move onto the [usage](#usage) section.
 
 ### Linux
 
-For Linux users, download the `linux-installer.zip` file inside the releases section.
+Please download the file named `Zonkey-1.0.2-x86_64-linux.zip` file inside the releases section.
 
 Then navigate into your downloads, decompress the folder and run the install script.
 
 ```sh
 $ cd Downloads
-$ unzip linux-installer.zip
-$ cd linux-installer/
+$ unzip Zonkey-1.0.2-x86_64-linux.zip
+$ cd Zonkey-1.0.2-x86_64-linux/
 $ bash install.sh
 ```
 
@@ -183,10 +184,10 @@ Zonkey's documentation and learning material, written in Zonkey script itself, i
 This covers how to use the language and guides on how to use the GUI API, and also documentation of the standard prelude.
 
 <div align="center">
-    <p><b>Fig 4. An example page inside the documentation.</b></p>
+    <p><b>Fig 4. Documentation inside the browser.</b></p>
 </div>
 
-![screenshot](https://github.com/Samuel-Bowden/zonkey/assets/91887909/2d4b1431-3384-4909-9a7b-a30e0adee462)
+![zonkey-fig-4](https://github.com/Samuel-Bowden/zonkey/assets/91887909/0badaf35-1104-4064-ab92-b977d054a634)
 
 The source code for the documentation and learning material is located under `interpreter/assets/documentation`.
 
